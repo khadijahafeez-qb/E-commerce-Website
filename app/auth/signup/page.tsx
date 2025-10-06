@@ -1,42 +1,35 @@
 'use client';
 
-import { useState } from 'react';
-
+import { useForm } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
 import { notification } from 'antd';
 
-import AuthForm from '../authform';
+import AuthForm, { type Field } from '../authform';
 import { signupSchema, type SignupData } from '@/lib/validation/auth';
 
 export default function SignupPage() {
-  const [errors, setErrors] = useState<Record<string, string>>({});
   const [api, contextHolder] = notification.useNotification();
-  const [disable, setdisable] = useState(false);
-  async function handleSubmit(data: SignupData) {
-    setErrors({});
-    setdisable(true);
-    const parsed = signupSchema.safeParse(data);
-    if (!parsed.success) {
-      const fieldErrors: Record<string, string> = {};
-      parsed.error.issues.forEach((issue) => {
-        const field = issue.path[0] as string;
-        fieldErrors[field] = issue.message;
-      });
-      setErrors(fieldErrors);
-      setdisable(false);
-      return;
-    }
+  const { register, handleSubmit, formState: { errors, isSubmitting } } = useForm<SignupData>({
+    resolver: zodResolver(signupSchema),
+    mode: 'onBlur',
+    reValidateMode: 'onBlur'
+  });
+  async function onSubmit(data: SignupData) {
     try {
       const res = await fetch('/api/auth/signup', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(parsed.data),
+        body: JSON.stringify(data),
       });
       const result = await res.json();
       if (!res.ok) {
-        setErrors(result.errors || {});
+        api.error({
+          message: 'Signup Failed',
+          description: result.message || 'Something went wrong',
+          placement: 'topRight',
+        });
         return;
       }
-      setErrors({});
       api.success({
         message: 'Signup Successful',
         description: 'Your account has been created. Redirecting to login...',
@@ -47,29 +40,31 @@ export default function SignupPage() {
         window.location.href = '/auth/login';
       }, 2000);
     } catch (err) {
-      setErrors({ general: 'Network error. Please try again.' });
-    } finally {
-      setdisable(false);
+      api.error({
+        message: 'Network Error',
+        description: 'Please try again later',
+        placement: 'topRight',
+      });
     }
   }
-  const fields = [
-    { name: 'fullname', type: 'text', placeholder: 'Fullname', label: 'Fullname' },
-    { name: 'email', type: 'email', placeholder: 'email address', label: 'Email Address' },
-    { name: 'mobile', type: 'tel', placeholder: 'mobile number', label: 'Mobile' },
-    { name: 'password', type: 'password', placeholder: 'password', label: 'Password' },
-    { name: 'confirmpassword', type: 'password', placeholder: 'Password', label: 'Confirm Password' },
+  const fields: Field<SignupData>[] = [
+    { name: 'fullname', type: 'text', placeholder: 'Enter your full name', label: 'Full name', required: true },
+    { name: 'email', type: 'email', placeholder: 'Enter your email e.g (khadija@gmail.com)', label: 'Email address', required: true },
+    { name: 'mobile', type: 'tel', placeholder: 'Enter your mobile number e.g 03333769005)', label: 'Mobile number', required: true },
+    { name: 'password', type: 'password', placeholder: 'Enter your password', label: 'Password', required: true },
+    { name: 'confirmpassword', type: 'password', placeholder: 'Enter your password again', label: 'Confirm password', required: true },
   ];
   return (
     <>
-
       {contextHolder}
-      <AuthForm
+      <AuthForm<SignupData>
         heading="SignUp"
         fields={fields}
         buttonLabel="Sign Up"
         buttonType="submit"
-        disabled={disable}
-        onSubmit={handleSubmit}
+        disabled={isSubmitting}
+        onSubmit={handleSubmit(onSubmit)}
+        register={register}
         errors={errors}
         footer={
           <>

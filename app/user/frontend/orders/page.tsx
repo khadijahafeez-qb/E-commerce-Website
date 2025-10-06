@@ -34,7 +34,7 @@ const Orders: React.FC = () => {
   );
 
   useEffect(() => {
-    dispatch(fetchOrders({ page: 1, search:debouncedSearch }));
+    dispatch(fetchOrders({ page: 1, search: debouncedSearch }));
   }, [dispatch, debouncedSearch]);
 
   const columns: ColumnsType<ordertable> = [
@@ -42,9 +42,17 @@ const Orders: React.FC = () => {
       title: <span className={tableClasses.heading}>Date</span>,
       dataIndex: 'Date',
       key: 'Date',
-      render: (text: string) => (
-        <span className={tableClasses.cellLight}>{text}</span>
-      ),
+      render: (createdAt: string) => {
+        const dateObj = new Date(createdAt);
+        const dateStr = dateObj.toLocaleDateString('en-US'); 
+        const timeStr = dateObj.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: true }); 
+        return (
+          <div>
+            <div>{dateStr}</div>
+            <div>{timeStr}</div>
+          </div>
+        );
+      },
     },
     {
       title: <span className={tableClasses.heading}>Order#</span>,
@@ -87,7 +95,7 @@ const Orders: React.FC = () => {
   ];
   const formattedData: ordertable[] = (data ?? []).map((order: Order) => ({
     key: order.id,
-    Date: new Date(order.createdAt).toLocaleDateString(),
+    Date: order.createdAt,
     Order: `#${order.id}`,
     Products: order._count?.items,
     Amount: order.total,

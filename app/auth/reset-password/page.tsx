@@ -1,43 +1,37 @@
 'use client';
 
-import { useState } from 'react';
 import { useSearchParams } from 'next/navigation';
+import { useForm } from 'react-hook-form';
 
 import { notification } from 'antd';
 
-import AuthForm from '../authform';
+import AuthForm, { type Field } from '../authform';
 import { resetPasswordSchema, ResetPasswordData } from '@/lib/validation/auth';
+import { zodResolver } from '@hookform/resolvers/zod';
 
 export default function ResetpassPage() {
   const searchParams = useSearchParams();
   const email = searchParams.get('email') || '';
   const token = searchParams.get('token') || '';
-  const [errors, setErrors] = useState<Record<string, string>>({});
   const [api, contextHolder] = notification.useNotification();
-  const [disable, setdisable] = useState(false);
-  async function handleSubmit(data: ResetPasswordData) {
-    setErrors({});
-    setdisable(true);
-    const parsed = resetPasswordSchema.safeParse(data);
-    if (!parsed.success) {
-      const fieldErrors: Record<string, string> = {};
-      parsed.error.issues.forEach((issue) => {
-        const field = issue.path[0] as string;
-        fieldErrors[field] = issue.message;
-      });
-      setErrors(fieldErrors);
-      setdisable(false);
-      return;
-    }
+  const { register, handleSubmit, formState: { errors, isSubmitting } } = useForm<ResetPasswordData>({
+    resolver: zodResolver(resetPasswordSchema),
+    mode: 'onBlur',
+    reValidateMode: 'onBlur'
+  });
+  async function onSubmit(data: ResetPasswordData) {
     try {
       const res = await fetch('/api/auth/reset-password', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ email, token, password: data.password }),
       });
-      const result = await res.json();
       if (!res.ok) {
-        setErrors({ password: result.error || 'Something went wrong' });
+        api.error({
+          message: 'Network Error',
+          description: 'Please try again later',
+          placement: 'topRight',
+        });
         return;
       }
       api.success({
@@ -52,25 +46,29 @@ export default function ResetpassPage() {
       }, 2000);
 
     } catch (err) {
-      setErrors({ password: 'Network error' });
-    }finally {
-  setdisable(false); 
-}
+      api.error({
+        message: 'Network Error',
+        description: 'Please try again later',
+        placement: 'topRight',
+      });
+      return;
+    }
   }
-  const fields = [
-    { name: 'password', type: 'password', placeholder: 'enter password', label: 'Enter new Password' },
-    { name: 'confirmpassword', type: 'password', placeholder: 'confirm password', label: 'Confirm Password' },
+  const fields: Field<ResetPasswordData>[] = [
+    { name: 'password', type: 'password', placeholder: 'Enter your password', label: 'Password', required: true },
+    { name: 'confirmpassword', type: 'password', placeholder: 'Enter your password again', label: 'Confirm password', required: true },
   ];
   return (
     <>
       {contextHolder}
-      <AuthForm
+      <AuthForm<ResetPasswordData>
         heading='Reset Password'
         fields={fields}
         buttonLabel="Reset Password"
         buttonType="submit"
-        disabled={disable}
-        onSubmit={handleSubmit}
+        disabled={isSubmitting}
+        onSubmit={handleSubmit(onSubmit)}
+        register={register}
         errors={errors}
 
       />

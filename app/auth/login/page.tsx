@@ -2,21 +2,24 @@
 
 import { signIn } from 'next-auth/react';
 import { useState } from 'react';
+import { useForm } from 'react-hook-form';
 
 import { notification } from 'antd';
-
-import AuthForm from '../authform';
-import { LoginData } from '@/lib/validation/auth';
+import { zodResolver } from '@hookform/resolvers/zod';
 import { getSession } from 'next-auth/react';
 
+import AuthForm, { type Field } from '../authform';
+import { LoginData, loginSchema } from '@/lib/validation/auth';
+
 export default function LoginPage() {
-  const [errors, setErrors] = useState<Record<string, string>>({});
   const [rememberMe, setRememberMe] = useState(false);
   const [api, contextHolder] = notification.useNotification();
-  const [disable, setdisable] = useState(false);
-  async function handleSubmit(data: LoginData) {
-    setErrors({});
-    setdisable(true);
+  const { register, handleSubmit, formState: { errors, isSubmitting } } = useForm<LoginData>({
+    resolver: zodResolver(loginSchema),
+    mode: 'onBlur',
+    reValidateMode: 'onBlur'
+  });
+  async function onSubmit(data: LoginData) {
     try {
       const res = await signIn('credentials', {
         redirect: false,
@@ -25,10 +28,9 @@ export default function LoginPage() {
         rememberMe: rememberMe,
       });
       if (res?.error) {
-        setErrors({ password: 'inavlid credentials' });
         api.error({
           message: 'Login Failed',
-          description: 'Wrong username or password. Please try again.',
+          description: 'Wrong email address or password. Please try again.',
           placement: 'topRight',
           duration: 2,
         });
@@ -52,24 +54,29 @@ export default function LoginPage() {
         }, 1500);
 
       }
-    } finally {
-      setdisable(false);
+    } catch {
+      api.error({
+        message: 'Network Error',
+        description: 'Please try again later',
+        placement: 'topRight',
+      });
     }
   }
-  const fields = [
-    { name: 'email', type: 'email', placeholder: 'Enter your email', label: 'Enter email Address' },
-    { name: 'password', type: 'password', placeholder: 'Enter your password', label: 'Password' },
+  const fields: Field<LoginData>[] = [
+    { name: 'email', type: 'email', placeholder: 'Enter your email', label: 'Email address', required: true },
+    { name: 'password', type: 'password', placeholder: 'Enter your password', label: 'Password', required: true },
   ];
   return (
     <>
       {contextHolder}
-      <AuthForm
+      <AuthForm<LoginData>
         heading="Login"
         fields={fields}
-        onSubmit={handleSubmit}
         buttonLabel="Login"
         buttonType="submit"
-        disabled={disable}
+        disabled={isSubmitting}
+        onSubmit={handleSubmit(onSubmit)}
+        register={register}
         errors={errors}
         footer={
           <>

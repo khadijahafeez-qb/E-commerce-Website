@@ -43,11 +43,21 @@ const OrderDetailPage: React.FC = () => {
       ),
     },
     {
-      title: <span className={tableClasses.heading}>Price</span>,
+      title: <span className={tableClasses.heading}>Unit price</span>,
       dataIndex: 'Price',
       key: 'Price',
       render: (text: number) => (
         <span className={tableClasses.cellLight}> ${text !== undefined && text !== null ? text.toFixed(2) : '0.00'}</span>
+      ),
+    },
+     {
+      title: <span className={tableClasses.heading}>Price</span>,
+      dataIndex: 'Price',
+      key: 'Price',
+      render: (price:number,record:Product) => (
+         <span className={tableClasses.cell}>
+                  ${(price * record.Quantity).toFixed(2)}
+                </span>
       ),
     },
     {

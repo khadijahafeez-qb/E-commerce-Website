@@ -1,29 +1,21 @@
 'use client';
-import { useState } from 'react';
 
-import AuthForm from '../authform';
+import { useForm } from 'react-hook-form';
+
 import { notification } from 'antd';
+import { zodResolver } from '@hookform/resolvers/zod';
 
+import AuthForm, { type Field } from '../authform';
 import { ForgotPasswordData, forgotPasswordSchema } from '@/lib/validation/auth';
 
 export default function ForgotpassPage() {
-  const [errors, setErrors] = useState<Record<string, string>>({});
   const [api, contextHolder] = notification.useNotification();
-  const [disable, setdisable] = useState(false);
-  async function handleSubmit(data: ForgotPasswordData) {
-    setErrors({});
-    setdisable(true);
-    const parsed = forgotPasswordSchema.safeParse(data);
-    if (!parsed.success) {
-      const fieldErrors: Record<string, string> = {};
-      parsed.error.issues.forEach((issue) => {
-        const field = issue.path[0] as string; 
-        fieldErrors[field] = issue.message;
-      });
-      setErrors(fieldErrors);
-      setdisable(false);
-      return;
-    }
+  const { register, handleSubmit, formState: { errors, isSubmitting } } = useForm<ForgotPasswordData>({
+    resolver: zodResolver(forgotPasswordSchema),
+    mode: 'onBlur',
+    reValidateMode: 'onBlur'
+  });
+  async function onSubmit(data: ForgotPasswordData) {
     try {
       const res = await fetch('/api/auth/forgot-password', {
         method: 'POST',
@@ -31,12 +23,14 @@ export default function ForgotpassPage() {
         body: JSON.stringify(data),
       });
       const result = await res.json();
-
       if (!res.ok) {
-        setErrors({ email: result.error || 'Something went wrong' });
+        api.error({
+          message: 'Forgot-password Failed',
+          description: result.message || 'Something went wrong',
+          placement: 'topRight',
+        });
         return;
       }
-
       api.success({
         message: 'Email Sent',
         description: result.message || 'Reset Password Instructions has been sent to your email address. ',
@@ -44,30 +38,31 @@ export default function ForgotpassPage() {
         duration: 3,
       });
     } catch (err) {
-      setErrors({ email: 'Network error' });
-    }finally{
-      setdisable(false);
+      api.error({
+        message: 'Network Error',
+        description: 'Please try again later',
+        placement: 'topRight',
+      });
     }
   }
-  const fields = [
-    { name: 'email', type: 'email', placeholder: 'Please Enter your email', label: 'Enter email Address' },
+  const fields: Field<ForgotPasswordData>[] = [
+    { name: 'email', type: 'email', placeholder: 'Enter your email', label: 'Email address', required: true },
   ];
   return (
     <>
       {contextHolder}
-      <AuthForm
+      <AuthForm<ForgotPasswordData>
         heading='Forgot Password'
         fields={fields}
         errors={errors}
         buttonLabel="Forgot Password"
         buttonType="submit"
-        disabled={disable}
-        onSubmit={handleSubmit}
-        
+        disabled={isSubmitting}
+        onSubmit={handleSubmit(onSubmit)}
+        register={register}
         footer={
           <>
             <div className="flex flex-col items-center mt-4">
-
               <p className="text-[#5A5F7D]">
                 No, I remember my password{' '}
                 <a href='/auth/login' className='font-inter font-normal text-[#3C76FF]'>

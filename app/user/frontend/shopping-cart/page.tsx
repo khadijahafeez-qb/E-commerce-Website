@@ -136,6 +136,15 @@ const ShoppingCartPage: React.FC = () => {
       key: 'size',
       render: (size: string) => <span className={tableClasses.cell}>{size}</span>,
     },
+
+    {
+      title: <span className={tableClasses.heading}>Unit Price</span>,
+      dataIndex: 'price',
+      key: 'unitPrice',
+      render: (price: number) => (
+        <span className={tableClasses.cell}>${price.toFixed(2)}</span>
+      ),
+    },
     {
       title: <span className={tableClasses.heading}>qty</span>,
       dataIndex: 'qty',
@@ -218,7 +227,7 @@ const ShoppingCartPage: React.FC = () => {
               <p className='text-value'>${subtotal.toFixed(2)}</p>
             </div>
             <div className='text-div'>
-              <p className='text-label'>Tax:</p>
+              <p className='text-label'>Tax (10%):</p>
               <p className='text-value'>${tax.toFixed(2)}</p>
             </div>
             <div className='text-div'>
