@@ -1,0 +1,24 @@
+@import "tailwindcss";
+
+
+.cardTitle{
+   @apply  font-medium text-[14px] text-[#212529] leading-[19.2px]; 
+}
+.price-label{
+  @apply font-bold text-[14px] leading-5 text-[#868E96] 
+}
+.price{
+  @apply font-normal text-[20px] leading-[30px] text-[#007BFF]
+}
+.buttons{
+@apply !text-blue-500 !p-0 w-9 h-9 !border-[#CEE2E6] !rounded-[4px] 
+}
+.button{
+  @apply border-[#CEE2E6] !p-0 w-11 h-9 !rounded-[4px]
+}
+.add-to-cart{
+  @apply p-0 pt-[6px] pb-[6px] pl-[12px] pr-[12px] h-[36px] w-[112px] font-normal !text-white
+}
+.out-of-stock{
+  @apply font-normal text-[14px] leading-6 !text-red-500 !border-red-500 p-0 pt-[6px] pb-[6px] pl-[12px] pr-[12px] h-[36px] w-[112px]
+}

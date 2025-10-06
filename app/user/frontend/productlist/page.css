@@ -1,0 +1,25 @@
+@import "tailwindcss";
+.my-select.ant-select {
+  height: 36px !important;
+   display: flex;
+  align-items: center;  
+   font-family: "Inter", sans-serif !important;
+  font-weight: 400;
+  font-size: 14px;
+  line-height: 16px;
+  
+}
+.my-select .ant-select-selector .ant-select-selection-placeholder {
+  color: #9BA2C1 !important;
+  font-family: 'Inter', sans-serif;
+}
+
+ .products-header {
+    @apply flex flex-col md:flex-row justify-between md:items-center items-start mb-6;
+  }
+   .products-title {
+    @apply text-2xl text-blue-500 whitespace-nowrap leading-[28.8px];
+  }
+    .inputs-div {
+    @apply flex justify-end w-full items-center gap-6;
+  }

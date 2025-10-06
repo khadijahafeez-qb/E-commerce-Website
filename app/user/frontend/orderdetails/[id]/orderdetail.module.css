@@ -1,0 +1,8 @@
+.orderLabel {
+  @apply font-inter font-normal text-sm text-[#979797] ;
+}
+
+.orderValue {
+  @apply font-inter font-normal text-[12.8px] leading-[19.2px] text-[#272B41];
+}
+

@@ -1,0 +1,24 @@
+@import "tailwindcss";
+
+
+.cart-btn{
+    @apply w-8 h-8 flex items-center justify-center  rounded !border !border-[#DEE2E6] hover:bg-gray-100;
+}
+.cart-btn-display{
+    @apply w-20 h-8 flex items-center justify-center !border !border-[#DEE2E6] rounded rounded-md;
+}
+.heading{
+    @apply font-medium text-2xl text-[#007BFF] leading-[28.8px];
+}
+.text-label{
+  @apply font-normal text-[14px] leading-[20px];
+}
+.text-value{
+    @apply font-semibold text-[14px] leading-[21px];
+}
+.text-div{
+    @apply flex items-center gap-[12px];
+}
+.placeorder-button{
+  @apply   !bg-blue-600 !h-[46] !py-2 !px-[50px] font-normal text-[20px] leading-[30px];
+}

@@ -1,0 +1,57 @@
+/* layout.css */
+
+/* Sidebar common button styles */
+.sidebar-button {
+  display: flex;
+  align-items: center;
+  justify-content: start;
+  gap: 10px;
+  width: 217px;
+  height: 48px;
+  border-radius: 8px;
+  font-family: 'Inter', sans-serif;
+  font-weight: 600;
+  font-size: 16px;
+  line-height: 22px;
+  border: none;
+
+}
+
+/* Active state */
+.sidebar-button.active {
+  background-color: #007BFF !important;
+  color: #FFFFFF !important;
+}
+
+/* Inactive state */
+.sidebar-button.inactive {
+  background-color: #F7F6F680 !important;
+  color: #1C2024 !important;
+}
+
+
+
+/* Logout button */
+.logout-button {
+  display: flex;
+  align-items: center;
+  justify-content: start;
+  gap: 10px;
+  height: 48px;
+  font-family: 'Inter', sans-serif;
+  font-weight: 600;
+  font-size: 14px;
+  line-height: 22px;
+  color: #EF1014;
+  background-color: white;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+}
+
+/* Icon size for all buttons */
+.sidebar-button svg,
+.logout-button svg {
+  font-size: 20px;
+  vertical-align: middle;
+}

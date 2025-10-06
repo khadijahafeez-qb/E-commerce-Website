@@ -1,0 +1,18 @@
+.ant-table-thead > tr > th {
+  font-family: 'Inter', sans-serif !important;
+  font-weight: 500 !important;
+  font-size: 12px !important;
+  line-height: 16px !important;
+  letter-spacing: 0 !important;
+  color: #535E63 !important;
+}
+
+.ant-table-tbody > tr > td {
+  font-family: 'Inter', sans-serif;
+  font-weight: 500;
+  font-size: 12px;
+  line-height: 16px;
+  letter-spacing: 0;
+  color: #535E63;
+}
+
