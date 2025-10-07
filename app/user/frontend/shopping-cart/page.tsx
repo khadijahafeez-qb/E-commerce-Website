@@ -9,7 +9,7 @@ import { DeleteOutlined, PlusOutlined, MinusOutlined, ArrowLeftOutlined } from '
 import type { ColumnsType } from 'antd/es/table';
 
 import { useAppSelector, useAppDispatch } from '@/lib/hook';
-import { removeFromCart, updateQty, clearCart } from '@/lib/features/cart/cartSlice';
+import { selectCartItems, removeFromCart, updateQty, clearCart } from '@/lib/features/cart/cartSlice';
 import MainLayout from '@/app/components/mainlayout';
 import DeleteConfirmModal from '@/app/components/deleteconfirmmodal';
 import { tableClasses } from '@/utils/tableClasses';
@@ -31,7 +31,7 @@ const ShoppingCartPage: React.FC = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [deleteKey, setDeleteKey] = useState<string | null>(null);
   const [selectedRowKeys, setSelectedRowKeys] = useState<React.Key[]>([]);
-  const cartItems = useAppSelector((state) => state.cart.items);
+  const cartItems = useAppSelector(selectCartItems);
 
   const addplaceholder = async () => {
     const res = await fetch('/api/placeorder', {
@@ -48,7 +48,7 @@ const ShoppingCartPage: React.FC = () => {
       dispatch(clearCart());
     }
   };
-  const data: cartList[] = cartItems.map((item) => ({
+  const data: cartList[] = (cartItems || []).map((item) => ({
     key: item.id,
     title: item.title,
     color: item.colour,
@@ -58,7 +58,6 @@ const ShoppingCartPage: React.FC = () => {
     image: item.img,
     stock: item.stock
   }));
-
   const showModal = (key: string) => {
     setDeleteKey(key);
     setIsModalOpen(true);
@@ -197,7 +196,6 @@ const ShoppingCartPage: React.FC = () => {
     <>
       {contextHolder}
       <MainLayout>
-
         <div className='flex items-center mb-6 gap-2'>
           <Link href='/user/frontend/productlist'>
             <ArrowLeftOutlined className='!text-blue-500 text-lg' />
@@ -206,7 +204,6 @@ const ShoppingCartPage: React.FC = () => {
             Your Shopping Bag
           </h4>
         </div>
-
         <div className='overflow-x-auto'>
           <Table<cartList>
             columns={columns}
@@ -219,7 +216,6 @@ const ShoppingCartPage: React.FC = () => {
             className='rounded-lg min-w-[600px] '
           />
         </div>
-
         <div className='flex justify-end mt-6'>
           <div className='flex flex-col items-end  gap-[14px]'>
             <div className='text-div'>
@@ -236,7 +232,6 @@ const ShoppingCartPage: React.FC = () => {
             </div>
           </div>
         </div>
-
         <div className='flex justify-end mt-6'>
           <Button onClick={addplaceholder} type='primary' className='placeorder-button'>
             Place Order
