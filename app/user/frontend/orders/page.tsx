@@ -8,6 +8,7 @@ import './page.css';
 import { Table, Button, Input } from 'antd';
 import { ExportOutlined, ArrowLeftOutlined, SearchOutlined } from '@ant-design/icons';
 import type { ColumnsType } from 'antd/es/table';
+import OrderDetailDrawer from '@/app/components/order-detail/order-detail';
 
 import { useAppSelector, useAppDispatch } from '@/lib/hook';
 import { fetchOrders, Order } from '@/lib/features/cart/orderslice';
@@ -23,20 +24,19 @@ export interface ordertable {
   Amount: number;
 
 }
-
 const Orders: React.FC = () => {
   const [search, setSearch] = useState('');
   const [debouncedSearch] = useDebounce(search, 500);
+  const [drawerVisible, setDrawerVisible] = useState(false);
+  const [selectedOrderId, setSelectedOrderId] = useState<string | null>(null);
 
   const dispatch = useAppDispatch();
   const { data, total, page, limit, loading } = useAppSelector(
     (state: RootState) => state.orders
   );
-
   useEffect(() => {
     dispatch(fetchOrders({ page: 1, search: debouncedSearch }));
   }, [dispatch, debouncedSearch]);
-
   const columns: ColumnsType<ordertable> = [
     {
       title: <span className={tableClasses.heading}>Date</span>,
@@ -44,8 +44,8 @@ const Orders: React.FC = () => {
       key: 'Date',
       render: (createdAt: string) => {
         const dateObj = new Date(createdAt);
-        const dateStr = dateObj.toLocaleDateString('en-US'); 
-        const timeStr = dateObj.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: true }); 
+        const dateStr = dateObj.toLocaleDateString('en-US');
+        const timeStr = dateObj.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: true });
         return (
           <div>
             <div>{dateStr}</div>
@@ -83,13 +83,17 @@ const Orders: React.FC = () => {
       title: <span className={tableClasses.heading}>Actions</span>,
       key: 'Actions',
       render: (_: unknown, record: ordertable) => (
-        <Link href={`/user/frontend/orderdetails/${record.key}`}>
-          <Button
-            type='text'
-            icon={<ExportOutlined />}
 
-          />
-        </Link>
+        <Button
+          type='text'
+          icon={<ExportOutlined />}
+          onClick={() => {
+            setSelectedOrderId(record.key);
+            setDrawerVisible(true);
+          }}
+
+        />
+
       ),
     },
   ];
@@ -101,7 +105,7 @@ const Orders: React.FC = () => {
     Amount: order.total,
   }));
   return (
-    <MainLayout showHeader={false}>
+    <MainLayout >
       <div className='header'>
         <div className='flex items-center gap-2'>
           <Link href='/user/frontend/shopping-cart'>
@@ -145,7 +149,13 @@ const Orders: React.FC = () => {
           <span className="font-medium">{total}</span> Total Count
         </p>
       </div>
+      <OrderDetailDrawer
+  orderId={selectedOrderId}
+  visible={drawerVisible}
+  onClose={() => setDrawerVisible(false)}
+/>
     </MainLayout>
+    
   );
 };
 

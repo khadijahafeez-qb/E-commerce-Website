@@ -39,8 +39,8 @@ export const fetchOrderDetail = createAsyncThunk<{ products: Product[]; orderInf
             Quantity: item.Quantity,
             image: item.image,
         }));
-
-       
+        const subtotal = products.reduce((acc, product) => acc + product.Price * product.Quantity, 0);
+        const tax = subtotal * 0.10;
         const orderInfo: OrderInfo[] = data.orderInfo
             ? [
                 { label: 'Date', value: new Date(data.orderInfo.date).toLocaleDateString() },
@@ -48,6 +48,7 @@ export const fetchOrderDetail = createAsyncThunk<{ products: Product[]; orderInf
                 { label: 'User', value: `${data.orderInfo.name}` },
                 { label: 'Products', value: products.length },
                 { label: 'Amount', value: `${data.orderInfo.total}` },
+                { label: 'Tax (10%)', value: `$${tax.toFixed(2)}` },
             ]
             : [];
         return {
@@ -55,14 +56,13 @@ export const fetchOrderDetail = createAsyncThunk<{ products: Product[]; orderInf
             orderInfo
         };
     } catch (err) {
-      if (err instanceof Error) {
-        return rejectWithValue(err.message); 
-      }
-      return rejectWithValue('Unknown error'); 
+        if (err instanceof Error) {
+            return rejectWithValue(err.message);
+        }
+        return rejectWithValue('Unknown error');
     }
-  }
+}
 );
-
 const orderDetailSlice = createSlice({
     name: 'orderDetail',
     initialState,

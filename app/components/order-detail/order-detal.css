@@ -1,0 +1,17 @@
+@import "tailwindcss";
+.custom-drawer .ant-drawer-title {
+  font-size: 24px;
+  font-weight: 600;
+}
+.label-div{
+    @apply grid grid-cols-3 sm:grid-cols-3 md:grid-cols-6 gap-4 mb-8
+}
+.label{
+    @apply font-normal text-[12.8px] text-[#979797] leading-[19.2px]
+}
+.label-val{
+    @apply font-normal text-[14px] text-[#272B41] leading-[20px]
+}
+.product-heading{
+    @apply font-medium text-[#002050] text-[20px] leading-[24px] mb-6
+}
