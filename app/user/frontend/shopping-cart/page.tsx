@@ -31,6 +31,7 @@ const ShoppingCartPage: React.FC = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [deleteKey, setDeleteKey] = useState<string | null>(null);
   const [selectedRowKeys, setSelectedRowKeys] = useState<React.Key[]>([]);
+  const [isBulkDelete, setIsBulkDelete] = useState(false);
   const cartItems = useAppSelector(selectCartItems);
 
   const addplaceholder = async () => {
@@ -62,15 +63,26 @@ const ShoppingCartPage: React.FC = () => {
     setDeleteKey(key);
     setIsModalOpen(true);
   };
+  const showBulkDeleteModal = () => {
+    setIsBulkDelete(true);
+    setDeleteKey(null);
+    setIsModalOpen(true);
+  };
   const handleCancel = () => {
     setIsModalOpen(false);
     setDeleteKey(null);
+    setIsBulkDelete(false);
   };
   const handleConfirm = () => {
-    if (deleteKey) {
+    setIsModalOpen(false);
+    if (isBulkDelete) {
+      selectedRowKeys.forEach((k) => {
+        dispatch(removeFromCart(String(k)));
+      });
+      setSelectedRowKeys([]);
+    } else if (deleteKey) {
       dispatch(removeFromCart(deleteKey));
     }
-    setIsModalOpen(false);
   };
   const handleCheck = (key: string, checked: boolean) => {
     setSelectedRowKeys((prev) =>
@@ -204,6 +216,13 @@ const ShoppingCartPage: React.FC = () => {
             Your Shopping Bag
           </h4>
         </div>
+        {data.length > 0 && selectedRowKeys.length === data.length && (
+          <div className="mb-4 flex justify-end">
+            <Button danger icon={<DeleteOutlined />} onClick={showBulkDeleteModal}>
+              Delete selected
+            </Button>
+          </div>
+        )}
         <div className='overflow-x-auto'>
           <Table<cartList>
             columns={columns}
