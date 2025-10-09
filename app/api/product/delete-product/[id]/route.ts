@@ -14,7 +14,7 @@ export async function DELETE(req: NextRequest,{ params }: Params): Promise<NextR
     const { id } = params;
 
   
-    await prisma.product.delete({
+    await prisma.productVariant.delete({
       where: { id },
     });
 

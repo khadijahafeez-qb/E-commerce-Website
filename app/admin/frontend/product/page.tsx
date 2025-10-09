@@ -9,12 +9,21 @@ import { Image } from 'antd';
 import ProductModal from '@/app/components/product-model';
 import DeleteConfirmModal from '@/app/components/deleteconfirmmodal';
 import AddMultipleProductsModal from '@/app/components/add-multiple-product-model';
-export interface Product {
+export interface Variant {
   id: string;
-  title: string;
+  colour: string;
+  size: string;
+  colourcode: string;
   price: number;
   stock: number;
   img: string
+}
+
+export interface Product {
+  id: string;
+  title: string;
+  img: string;
+  variants: Variant[]; // ⬅️ Add this
 }
 
 const ProductPage: React.FC = () => {
@@ -27,6 +36,31 @@ const ProductPage: React.FC = () => {
   const [currentPage, setCurrentPage] = useState(1);
   const [total, setTotal] = useState(0);
   const pageSize = 12;
+  const [isVariantModalOpen, setIsVariantModalOpen] = useState(false);
+  const [selectedVariant, setSelectedVariant] = useState<Variant | null>(null);
+
+
+  const handleDeleteVariant = async (variantId: string, productId: string) => {
+    try {
+      const res = await fetch(`/api/variant/delete/${variantId}`, {
+        method: 'DELETE',
+      });
+
+      const result = await res.json();
+      if (!result.success) throw new Error(result.error || 'Failed to delete variant');
+
+      setData((prev) =>
+        prev.map((p) =>
+          p.id === productId
+            ? { ...p, variants: p.variants.filter((v) => v.id !== variantId) }
+            : p
+        )
+      );
+    } catch (err) {
+      console.error('Delete variant failed:', err);
+    }
+  };
+
 
   const fetchProducts = async (page: number) => {
     setLoading(true);
@@ -72,41 +106,17 @@ const ProductPage: React.FC = () => {
       title: 'Title',
       dataIndex: 'title',
       key: 'title',
-      render: (text: string, record: Product) => (
+      render: (text: string) => (
         <div className="flex items-center gap-3">
-          <Image
-            src={record.img}
-            alt={text}
-            className="!w-[24px] !h-[24px] object-cover"
-          ></Image>
           <span>{text}</span>
         </div>
       ),
-    },
-    {
-      title: 'Price',
-      dataIndex: 'price',
-      key: 'price',
-      render: (price: number) => <span>${price.toFixed(2)}</span>,
-    },
-    {
-      title: 'Stock',
-      dataIndex: 'stock',
-      key: 'stock',
-      render: (stock: number) => <span >{stock}</span>,
     },
     {
       title: 'Actions',
       key: 'actions',
       render: (record: Product) => (
         <div className="flex gap-[12px]">
-          <EditOutlined
-            className="!text-blue-500 !text-[16px] "
-            onClick={() => {
-              setSelectedProduct(record);
-              setIsEditOpen(true);
-            }}
-          />
           <DeleteOutlined
             className="!text-red-500 !text-[16px] "
             onClick={() => {
@@ -138,6 +148,102 @@ const ProductPage: React.FC = () => {
         loading={loading}
         rowKey="id"
         dataSource={data}
+        expandable={{
+          expandedRowRender: (product: Product) => {
+            const hasScroll = product.variants.length > 10;
+
+            return (
+              <div className="overflow-x-auto bg-[#fafafa] rounded-md p-4 border border-gray-200">
+                <Table<Variant>
+                  size="small"
+                  pagination={false}
+                  scroll={hasScroll ? { y: 300 } : undefined} // 👈 enable scroll if >10
+                  columns={[
+                    {
+                      title: 'Image',
+                      dataIndex: 'img',
+                      key: 'img',
+                      render: (text: string, record: Variant) => (
+
+                        <Image
+                          src={record.img}
+                          alt={text}
+                          className="!w-[24px] !h-[24px] object-cover"
+                        ></Image>
+
+
+                      ),
+                    },
+                    {
+                      title: 'Colour Code',
+                      dataIndex: 'colourcode',
+                      key: 'colourcode',
+                      render: (colourcode: string) => (
+                        <div className="flex items-center gap-2">
+                          <div
+                            style={{
+                              width: 20,
+                              height: 20,
+                              borderRadius: '50%',
+                              backgroundColor: colourcode,
+                              border: '1px solid #ccc',
+                            }}
+                          />
+                        </div>
+                      ),
+                    },
+                    { title: 'Colour', dataIndex: 'colour', key: 'colour' },
+                    { title: 'Size', dataIndex: 'size', key: 'size' },
+                    {
+                      title: 'Price',
+                      dataIndex: 'price',
+                      key: 'price',
+                      render: (price: number) => `$${price.toFixed(2)}`,
+                    },
+                    { title: 'Stock', dataIndex: 'stock', key: 'stock' },
+                    {
+                      title: 'Actions',
+                      key: 'actions',
+                      render: (variant: Variant) => (
+                        <div className="flex gap-[12px]">
+                          <EditOutlined
+                            className="!text-blue-500 !text-[16px]"
+                            onClick={() => {
+                              setSelectedVariant(variant);
+                              setSelectedProduct(product); // store parent product
+                              setIsVariantModalOpen(true);
+                            }}
+                          />
+                          <DeleteOutlined
+                            className="!text-red-500 !text-[16px]"
+                            onClick={() => handleDeleteVariant(variant.id, product.id)}
+                          />
+                        </div>
+                      ),
+                    },
+                  ]}
+                  rowKey="id"
+                  dataSource={product.variants}
+                />
+
+                {/* Optional Add Variant Button */}
+                <div className="mt-2 flex justify-end">
+                  <Button
+                    type="dashed"
+                    size="small"
+                    onClick={() => {
+                      setSelectedProduct(product);
+                      // open modal for adding variant
+                    }}
+                  >
+                    + Add Variant
+                  </Button>
+                </div>
+              </div>
+            );
+          },
+        }}
+
         pagination={{
           current: currentPage,
           pageSize,
@@ -147,7 +253,15 @@ const ProductPage: React.FC = () => {
         }}
         bordered
       />
-      <ProductModal open={isEditOpen} onCancel={() => setIsEditOpen(false)} product={selectedProduct} productId={selectedProduct?.id || null}></ProductModal>
+      <ProductModal
+        open={isVariantModalOpen}
+        onCancel={() => {
+          setIsVariantModalOpen(false);
+          setSelectedVariant(null);
+        }}
+        variant={selectedVariant}
+        productId={selectedProduct?.id || ''}
+      />
       <DeleteConfirmModal open={isDeleteOpen} onCancel={() => setIsDeleteOpen(false)}
         onConfirm={() => {
           if (selectedProduct?.id) {
