@@ -2,6 +2,7 @@ import { createSlice, PayloadAction } from '@reduxjs/toolkit';
 import { RootState } from '@/lib/store';
 
 export interface Product {
+  productId:string;
   id: string;
   title: string;
   img: string;

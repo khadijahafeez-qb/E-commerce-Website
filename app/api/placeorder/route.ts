@@ -2,7 +2,8 @@ import { auth } from '@/auth';
 import { PrismaClient } from '@prisma/client';
 
 export interface OrderItem {
-  id: string;
+  productId: string;
+  id: string,
   count: number;
   price: number;
 }
@@ -35,24 +36,29 @@ export async function POST(req: Request) {
         { status: 400 }
       );
     }
-
+    console.log('cart items', cartItems);
     for (const item of cartItems) {
-      const product = await prisma.product.findUnique({
+      const variant = await prisma.productVariant.findUnique({
         where: { id: item.id },
-        select: { stock: true, title: true },
+        select: {
+          stock: true,
+          colour: true,
+          size: true,
+          product: { select: { title: true } }
+        },
       });
 
-      if (!product) {
+      if (!variant) {
         return new Response(
-          JSON.stringify({ error: `Product ${item.title} not found` }),
+          JSON.stringify({ error: `variant ${item.title} not found` }),
           { status: 400 }
         );
       }
 
-      if (item.count > product.stock) {
+      if (item.count > variant.stock) {
         return new Response(
           JSON.stringify({
-            error: `Not enough stock for ${product.title}. Available: ${product.stock}`,
+            error: `Not enough stock for ${variant.product.title}. Available: (${variant.colour} - ${variant.size}). Available: ${variant.stock}`,
           }),
           { status: 400 }
         );
@@ -61,7 +67,7 @@ export async function POST(req: Request) {
 
     await prisma.$transaction(async (tx) => {
       for (const item of cartItems) {
-        await tx.product.update({
+        await tx.productVariant.update({
           where: { id: item.id },
           data: { stock: { decrement: item.count } },
         });
@@ -72,16 +78,25 @@ export async function POST(req: Request) {
           total,
           items: {
             create: cartItems.map((item: OrderItem) => ({
-              productId: item.id,
+              product: { connect: { id: item.productId } },
+              variant: { connect: { id: item.id } },
               quantity: item.count,
-              price: item.price
+              price: item.price,
             })),
           },
         },
+        include: {
+          items: {
+            include: {
+              variant: true,
+              product: true,
+            },
+          },
+        },
       });
-return newOrder;
+      return newOrder;
     });
- return new Response(JSON.stringify({ message: 'Order placed successfully' }));
+    return new Response(JSON.stringify({ message: 'Order placed successfully' }));
   } catch (error) {
     console.log('Place order error', error);
   }

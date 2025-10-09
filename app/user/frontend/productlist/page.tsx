@@ -8,18 +8,18 @@ import { Input, Select, Col, Row, Spin } from 'antd';
 import { SearchOutlined } from '@ant-design/icons';
 
 import MainLayout from '@/app/components/mainlayout';
-import ProductCard, { Product } from '../productcard/page';
+import ProductCard, { ProductCardProps } from '../productcard/page';
 
 interface ApiResponse {
-  products: Product[];
+  products: ProductCardProps[];
   hasMore: boolean;
 }
 
 function App() {
   const WINDOW_SIZE = 40;
   const PAGE_SIZE = 8;
-  const [visibleProducts, setVisibleProducts] = useState<Product[]>([]);
-  const allProductsCache = useRef<Product[]>([]);
+  const [visibleProducts, setVisibleProducts] = useState<ProductCardProps[]>([]);
+  const allProductsCache = useRef<ProductCardProps[]>([]);
   const firstPageRef = useRef(1);
   const lastPageRef = useRef(1);
   const [page, setPage] = useState(1);
@@ -35,6 +35,7 @@ function App() {
   const scrollTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const debouncedSearchRef = useRef<string>(debouncedSearch);
   const sortRef = useRef<string>(sort);
+
 
   useEffect(() => { debouncedSearchRef.current = debouncedSearch; }, [debouncedSearch]);
   useEffect(() => { sortRef.current = sort; }, [sort]);
@@ -192,19 +193,19 @@ function App() {
           </div>
         )}
         <Row gutter={[30, 32]}>
-          {visibleProducts.map((p: Product) => (
-            <Col key={p.id} lg={6} md={8} sm={12} xs={24}>
-              <ProductCard
-                title={p.title}
-                img={p.img}
-                price={p.price}
-                id={p.id}
-                colour={p.colour}
-                size={p.size}
-                stock={p.stock}
-              />
-            </Col>
-          ))}
+          {visibleProducts.map((p: ProductCardProps) => {
+     
+            return (
+              <Col key={p.id} lg={6} md={8} sm={12} xs={24}>
+                <ProductCard
+                 id={p.id}
+                 isDeleted={p.isDeleted}
+                  title={p.title}
+                  variants={p.variants}
+                />
+              </Col>
+            );
+          })}
         </Row>
         {isLoading && fetchDirectionRef.current !== 'prepend' && (
           <div className="flex justify-center my-6">

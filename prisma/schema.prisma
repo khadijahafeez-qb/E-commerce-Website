@@ -6,58 +6,81 @@ datasource db {
   provider = "postgresql"
   url      = env("DATABASE_URL")
 }
+
 enum Role {
-   USER
-   ADMIN
+  USER
+  ADMIN
+}
+enum VariantAvailability {
+  ACTIVE
+  INACTIVE
+
 }
 
 model User {
-  id        String @id @default(uuid())
-  fullname  String
-  email     String   @unique
-  mobile    String?
-  password  String
-  role      Role  @default(USER)
-  orders    Order[]
-  resetToken String?  
-  resetTokenExpires DateTime? 
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  id                String    @id @default(uuid())
+  fullname          String
+  email             String    @unique
+  mobile            String?
+  password          String
+  role              Role      @default(USER)
+  orders            Order[]
+  resetToken        String?
+  resetTokenExpires DateTime?
+  createdAt         DateTime  @default(now())
+  updatedAt         DateTime  @updatedAt
 }
 
 model Product {
-  id        String @id @default(uuid())
+  id        String           @id @default(uuid())
   title     String
-  colour    String?
-  size      String
-  stock     Int
-  img       String
-  price     Float
-  orders   OrderItem[]
-  createdAt DateTime  @default(now())
-  updatedAt DateTime @updatedAt
+  isDeleted   String            @default("active") 
+  orderItems  OrderItem[]  
+  variants  ProductVariant[]
+  createdAt DateTime          @default(now())
+  updatedAt DateTime          @updatedAt
+}
+
+model ProductVariant {
+  id          String          @id @default(uuid())
+  product     Product         @relation(fields: [productId], references: [id], onDelete: Cascade)
+  productId   String
+  img         String
+  colour      String
+  colourcode  String
+  size        String
+  stock       Int             @default(0)
+  price       Float
+  availabilityStatus VariantAvailability @default(ACTIVE)
+  orderItems  OrderItem[]     @relation("VariantOrderItems")
+  createdAt   DateTime        @default(now())
+  updatedAt   DateTime        @updatedAt
+
+  @@unique([productId, colour, size])
 }
 
 model Order {
-  id        String   @id @default(uuid())
-  user      User     @relation(fields: [userId], references: [id])
-  userId    String
-  total     Float
-  items     OrderItem[] 
-  
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-         
+  id         String       @id @default(uuid())
+  user       User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId     String
+  total      Float
+  items      OrderItem[]
+  createdAt  DateTime     @default(now())
+  updatedAt  DateTime     @updatedAt
 }
 
 model OrderItem {
-  id        String   @id @default(uuid())
-  order     Order    @relation(fields: [orderId], references: [id])
-  orderId   String
-  product   Product  @relation(fields: [productId], references: [id])
-  productId String
-  quantity  Int
-  price     Float 
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt              
+  id          String           @id @default(uuid())
+  order       Order            @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  orderId     String
+  product     Product          @relation(fields: [productId], references: [id], onDelete: Cascade)
+  productId   String
+  variant     ProductVariant @relation("VariantOrderItems", fields: [variantId], references: [id])
+  variantId   String
+  quantity    Int
+  price       Float
+  createdAt   DateTime         @default(now())
+  updatedAt   DateTime         @updatedAt
 }
+
+

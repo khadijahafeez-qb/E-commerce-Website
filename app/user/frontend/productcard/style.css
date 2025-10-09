@@ -22,3 +22,6 @@
 .out-of-stock{
   @apply font-normal text-[14px] leading-6 !text-red-500 !border-red-500 p-0 pt-[6px] pb-[6px] pl-[12px] pr-[12px] h-[36px] w-[112px]
 }
+.thumbnail-row{
+  @apply flex gap-8 mt-2 justify-center 
+}

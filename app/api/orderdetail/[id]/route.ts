@@ -28,6 +28,7 @@ export async function GET(req: NextRequest, { params }: { params: { id: string }
       where: { orderId: id },
       include: {
         product: true,
+        variant:true,
       },
     });
 
@@ -43,7 +44,7 @@ export async function GET(req: NextRequest, { params }: { params: { id: string }
       Title: item.product.title,
       Price: item.price,
       Quantity: item.quantity,
-      image: item.product.img,
+      image: item.variant.img,
     }));
 
     return NextResponse.json({ orderInfo, products });
