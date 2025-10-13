@@ -1,34 +1,45 @@
 import { NextResponse } from 'next/server';
 import { PrismaClient } from '@prisma/client';
+import { productSchema, ProductInput } from '@/lib/validation/product';
 
 const prisma = new PrismaClient();
 
 export async function POST(req: Request) {
   try {
     const body = await req.json();
-    const { title } = body;
 
-    if (!title || title.trim() === '') {
-      return NextResponse.json(
-        { success: false, error: 'Title is required' },
-        { status: 400 }
-      );
-    }
+    // Validate with Zod
+    const parsedData: ProductInput = productSchema.parse(body);
 
-    const newProduct = await prisma.product.create({
-      data: { title },
+    // Ensure every variant has an image (string)
+    parsedData.variants.forEach((v, i) => {
+      if (!v.img) throw new Error(`Variant ${i + 1} is missing an image`);
     });
 
-    return NextResponse.json({ success: true, product: newProduct });
-  } catch (err: unknown) {
-    console.error('Error adding product:', err);
+    // Create product with variants
+    const product = await prisma.product.create({
+      data: {
+        title: parsedData.title,
+        isDeleted: parsedData.isDeleted,
+        variants: {
+          create: parsedData.variants.map((v) => ({
+            img: v.img!, // now guaranteed to be string
+            colour: v.colour,
+            colourcode: v.colourcode,
+            size: v.size,
+            stock: v.stock,
+            price: v.price,
+            availabilityStatus: v.availabilityStatus!, // include if you track it
+          })),
+        },
+      },
+      include: { variants: true },
+    });
 
-    const message =
-      err instanceof Error ? err.message : 'Failed to add product';
-
-    return NextResponse.json(
-      { success: false, error: message },
-      { status: 500 }
-    );
+    return NextResponse.json({ success: true, product });
+  } catch (error) {
+    console.error('Error creating product:', error);
+    const message = error instanceof Error ? error.message : 'Unknown error';
+    return NextResponse.json({ success: false, error: message }, { status: 400 });
   }
 }

@@ -5,6 +5,7 @@ import { Modal, Input, InputNumber, Button, message, Image } from 'antd';
 import { EditOutlined } from '@ant-design/icons';
 import { Variant } from '@/app/admin/frontend/product/page';
 
+
 interface ProductModalProps {
   open: boolean;
   onCancel: () => void;

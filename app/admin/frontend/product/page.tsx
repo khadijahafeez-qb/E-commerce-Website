@@ -23,6 +23,7 @@ export interface Variant {
 
 export interface Product {
   id: string;
+  isDeleted:'active'|'deleted';
   title: string;
   img: string;
   variants: Variant[]; // ⬅️ Add this
@@ -303,8 +304,7 @@ const ProductPage: React.FC = () => {
 <AddSingleProductModal
   open={isEditOpen}
   onCancel={() => setIsEditOpen(false)}
-  onSuccess={() => fetchProducts(currentPage)} // refresh table after add
-  product={selectedProduct}
+  onSuccess={() => fetchProducts(currentPage)}
 />
       <AddMultipleProductsModal open={addopen} onCancel={() => setaddOpen(false)} />
 
