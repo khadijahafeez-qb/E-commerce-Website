@@ -1,30 +1,30 @@
-import { NextRequest, NextResponse } from 'next/server';
+import { NextResponse } from 'next/server';
 import { PrismaClient } from '@prisma/client';
 
 const prisma = new PrismaClient();
 
-interface Params {
-  params: {
-    id: string;
-  };
-}
-
-export async function DELETE(req: NextRequest,{ params }: Params): Promise<NextResponse> {
+export async function DELETE(req: Request,context: { params: Promise<{ id: string }> } ) {
   try {
-    const { id } = params;
-
-  
-    await prisma.productVariant.delete({
-      where: { id },
+    const { id } = await context.params;
+    // ✅ Soft delete the product
+    const product = await prisma.product.update({
+      where: { id},
+      data: { isDeleted: 'deleted' },
     });
 
-    return NextResponse.json({ success: true});
-  } catch (error: unknown) {
-    console.error(error);
-    return NextResponse.json(
-      { success: false, error: (error as Error).message || 'Failed to delete product' },
-      { status: 500 }
-    );
+    // ✅ Mark all its variants as INACTIVE
+    await prisma.productVariant.updateMany({
+      where: { productId: id },
+      data: { availabilityStatus: 'INACTIVE' },
+    });
+
+    return NextResponse.json({
+      success: true,
+      message: 'Product and its variants marked inactive',
+      product,
+    });
+  } catch (err: unknown) {
+    const message = err instanceof Error ? err.message : 'Unknown error';
+    return NextResponse.json({ success: false, error: message }, { status: 500 });
   }
 }
-

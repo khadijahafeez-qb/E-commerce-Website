@@ -13,32 +13,41 @@ export async function GET(req: Request) {
     const search = searchParams.get('search') || '';
     const sort = searchParams.get('sort') || '';
     const skip = (page - 1) * limit;
-    console.log('page limit search sort skip',{page,limit,search,sort,skip});
-    const whereProduct: Prisma.ProductWhereInput = search
-  ? { title: { contains: search, mode: 'insensitive' as Prisma.QueryMode } }
-  : {};
-        console.log('helo 1');
+
+
+     const whereProduct: Prisma.ProductWhereInput = {
+      isDeleted: 'active',
+      ...(search
+        ? { title: { contains: search, mode: 'insensitive' as Prisma.QueryMode } }
+        : {}),
+    };
+   
     // Group variants to get min price
     const priceGroups = await prisma.productVariant.groupBy({
       by: ['productId'],
       _min: { price: true },
+       where: { availabilityStatus: 'ACTIVE' },
     });
-      console.log('helo 2');
+
 
     const priceMap = Object.fromEntries(
       priceGroups.map(p => [p.productId, p._min.price ?? 0])
     );
-      console.log('helo 3');
+
     // Fetch products with variants
     const products = await prisma.product.findMany({
       where: whereProduct,
       skip,
       take: limit,
       orderBy: { createdAt: 'desc' },
-      include: { variants: true },
+            include: {
+        variants: {
+          where: { availabilityStatus: 'ACTIVE' },
+        },
+      },
     });
     
-  console.log('helo 4');
+
     const enrichedProducts = products.map(p => ({
       ...p,
       price: priceMap[p.id] ?? 0,
@@ -49,7 +58,7 @@ export async function GET(req: Request) {
     if (sort === 'price-desc') enrichedProducts.sort((a, b) => b.price - a.price);
 
     const total = await prisma.product.count({ where: whereProduct });
-    console.log('fetched products',enrichedProducts);
+  
     
     return NextResponse.json({
       products: enrichedProducts,

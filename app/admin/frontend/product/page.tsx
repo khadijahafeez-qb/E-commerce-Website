@@ -9,6 +9,7 @@ import { Image } from 'antd';
 import ProductModal from '@/app/components/product-model';
 import DeleteConfirmModal from '@/app/components/deleteconfirmmodal';
 import AddMultipleProductsModal from '@/app/components/add-multiple-product-model';
+import AddSingleProductModal from '@/app/components/add-single-product-model';
 export interface Variant {
   id: string;
   colour: string;
@@ -38,26 +39,38 @@ const ProductPage: React.FC = () => {
   const pageSize = 12;
   const [isVariantModalOpen, setIsVariantModalOpen] = useState(false);
   const [selectedVariant, setSelectedVariant] = useState<Variant | null>(null);
+  const [isVariantDeleteModalOpen, setIsVariantDeleteModalOpen] = useState(false);
+  const [variantToDelete, setVariantToDelete] = useState<{ id: string; productId: string } | null>(null);
 
 
-  const handleDeleteVariant = async (variantId: string, productId: string) => {
+
+  const handleInactivateVariant = async () => {
+    if (!variantToDelete) return;
+
     try {
-      const res = await fetch(`/api/variant/delete/${variantId}`, {
-        method: 'DELETE',
+      const res = await fetch(`/api/product/delete-product-variant/${variantToDelete.id}`, {
+        method: 'PUT',
       });
 
       const result = await res.json();
-      if (!result.success) throw new Error(result.error || 'Failed to delete variant');
+      if (!result.success) throw new Error(result.error || 'Failed to inactivate variant');
 
+      // Update local state so variant disappears or gets flagged
       setData((prev) =>
         prev.map((p) =>
-          p.id === productId
-            ? { ...p, variants: p.variants.filter((v) => v.id !== variantId) }
+          p.id === variantToDelete.productId
+            ? {
+              ...p,
+              variants: p.variants.filter((v) => v.id !== variantToDelete.id),
+            }
             : p
         )
       );
+
+      setIsVariantDeleteModalOpen(false);
+      setVariantToDelete(null);
     } catch (err) {
-      console.error('Delete variant failed:', err);
+      console.error('Inactivate variant failed:', err);
     }
   };
 
@@ -216,7 +229,10 @@ const ProductPage: React.FC = () => {
                           />
                           <DeleteOutlined
                             className="!text-red-500 !text-[16px]"
-                            onClick={() => handleDeleteVariant(variant.id, product.id)}
+                            onClick={() => {
+                              setVariantToDelete({ id: variant.id, productId: product.id });
+                              setIsVariantDeleteModalOpen(true);
+                            }}
                           />
                         </div>
                       ),
@@ -262,12 +278,27 @@ const ProductPage: React.FC = () => {
         variant={selectedVariant}
         productId={selectedProduct?.id || ''}
       />
-      <DeleteConfirmModal open={isDeleteOpen} onCancel={() => setIsDeleteOpen(false)}
-        onConfirm={() => {
-          if (selectedProduct?.id) {
-            handleDeleteProduct(selectedProduct.id);
-          }
-        }} />
+
+        <DeleteConfirmModal
+  open={isVariantDeleteModalOpen}
+  onCancel={() => setIsVariantDeleteModalOpen(false)}
+  onConfirm={handleInactivateVariant}
+/>
+
+{/* ✅ Delete Product Modal */}
+<DeleteConfirmModal
+  open={isDeleteOpen}
+  onCancel={() => setIsDeleteOpen(false)}
+  onConfirm={() => {
+    if (selectedProduct) handleDeleteProduct(selectedProduct.id);
+  }}
+/>
+<AddSingleProductModal
+  open={isEditOpen}
+  onCancel={() => setIsEditOpen(false)}
+  onSuccess={() => fetchProducts(currentPage)} // refresh table after add
+  product={selectedProduct}
+/>
       <AddMultipleProductsModal open={addopen} onCancel={() => setaddOpen(false)} />
 
     </>
