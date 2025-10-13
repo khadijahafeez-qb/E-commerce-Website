@@ -1,27 +1,36 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
-import { Modal, Input, InputNumber, Button, Upload, message, Image } from 'antd';
-import { UploadOutlined, EditOutlined } from '@ant-design/icons';
+import React, { useState, useEffect,useRef } from 'react';
+import { Modal, Input, InputNumber, Button, message, Image } from 'antd';
+import { EditOutlined } from '@ant-design/icons';
 import { Variant } from '@/app/admin/frontend/product/page';
 
-interface VariantModalProps {
+interface ProductModalProps {
   open: boolean;
   onCancel: () => void;
   variant?: Variant | null;
   productId: string;
+  mode: 'add' | 'edit';
 }
 
-const VariantModal: React.FC<VariantModalProps> = ({ open, onCancel, variant, productId }) => {
+const ProductModal: React.FC<ProductModalProps> = ({
+  open,
+  onCancel,
+  variant,
+  productId,
+  mode,
+}) => {
+    const fileInputRef = useRef<HTMLInputElement | null>(null);
   const [colour, setColour] = useState('');
+  const [colourcode, setColourCode] = useState('');
   const [size, setSize] = useState('');
   const [price, setPrice] = useState<number | null>(null);
   const [stock, setStock] = useState<number | null>(null);
   const [img, setImg] = useState('');
   const [file, setFile] = useState<File | null>(null);
   const [isUploading, setIsUploading] = useState(false);
-  const [colourcode, setColourCode] = useState('');
 
+  // Prefill when editing
   useEffect(() => {
     if (open && variant) {
       setColour(variant.colour || '');
@@ -43,63 +52,75 @@ const VariantModal: React.FC<VariantModalProps> = ({ open, onCancel, variant, pr
   }, [open, variant]);
 
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const selected = e.target.files?.[0];
+const selected = e.target.files?.[0];
     if (selected) {
       setFile(selected);
-      setImg(URL.createObjectURL(selected));
+      const blobURL = URL.createObjectURL(selected);
+      setImg(blobURL);
     }
+    // allow same file re-selection
+    e.target.value = '';
+  };
+    const openFilePicker = () => {
+    fileInputRef.current?.click();
   };
 
   const handleSave = async () => {
-    if (!variant?.id) return message.error('Variant ID missing');
-    setIsUploading(true);
-
-    let imagePath = img;
-
-    // Step 1: Upload image if new file is selected
-    if (file) {
-      const formData = new FormData();
-      formData.append('file', file);
-
-      const uploadRes = await fetch('/api/upload', {
-        method: 'POST',
-        body: formData,
-      });
-
-      const uploadData = await uploadRes.json();
-      if (!uploadRes.ok) {
-        setIsUploading(false);
-        return message.error(uploadData.error || 'Image upload failed');
-      }
-
-      imagePath = uploadData.path; // e.g., /uploads/myfile.jpg
+    if (mode === 'edit' && !variant?.id) {
+      return message.error('Variant ID missing');
     }
 
-    // Step 2: Update variant
-    const payload = {
-      colour,
-      size,
-      price,
-      stock,
-      img: imagePath,
-      productId,
-      colourcode
-    };
+    setIsUploading(true);
+    let imagePath = img;
 
     try {
-      const res = await fetch(`/api/product/update-product/${variant.id}`, {
-        method: 'PUT',
+      // Upload image if selected
+      if (file) {
+        const formData = new FormData();
+        formData.append('file', file);
+
+        const uploadRes = await fetch('/api/upload', {
+          method: 'POST',
+          body: formData,
+        });
+
+        const uploadData = await uploadRes.json();
+        if (!uploadRes.ok) throw new Error(uploadData.error || 'Upload failed');
+
+        imagePath = uploadData.path;
+      }
+
+      // Prepare payload
+      const payload = {
+        colour,
+        colourcode,
+        size,
+        price,
+        stock,
+        img: imagePath,
+        productId,
+      };
+
+      const url =
+        mode === 'edit'
+          ? `/api/product/update-product/${variant?.id}`
+          : `/api/product/add-variant/${productId}`;
+      const method = mode === 'edit' ? 'PUT' : 'POST';
+
+      const res = await fetch(url, {
+        method,
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(payload),
       });
 
       const data = await res.json();
-      if (!res.ok) throw new Error(data.error || 'Failed to update variant');
-      message.success('Variant updated successfully');
-      onCancel();
+      if (!res.ok) throw new Error(data.error || 'Failed to save variant');
+
+      message.success(mode === 'edit' ? 'Variant updated!' : 'Variant added!');
+      onCancel(); // close modal
     } catch (err) {
-      console.error('Error updating variant:', err);
-      message.error('Failed to update variant');
+      console.error('Error saving variant:', err);
+      message.error('Failed to save variant');
     } finally {
       setIsUploading(false);
     }
@@ -110,84 +131,88 @@ const VariantModal: React.FC<VariantModalProps> = ({ open, onCancel, variant, pr
       open={open}
       onCancel={onCancel}
       footer={null}
-      title={<span className='text-lg font-semibold'>Edit Variant</span>}
+      title={
+        <span className="text-lg font-semibold">
+          {mode === 'edit' ? 'Edit Variant' : 'Add Variant'}
+        </span>
+      }
       width={480}
     >
-      <div className='flex flex-col gap-4 mt-3'>
-        {/* 🖼 Image Display */}
-        <div className='relative w-full h-48 rounded-lg overflow-hidden border'>
+      <div className="flex flex-col gap-4 mt-3">
+        {/* 🖼 Image */}
+        <div className="relative w-full h-48 rounded-lg overflow-hidden border">
           {img ? (
             <Image
               src={img}
-              alt='Variant'
-              width='100%'
+              alt="Variant"
+              width="100%"
               height={190}
               style={{ objectFit: 'cover', borderRadius: '8px' }}
               preview={false}
               className="!w-full !h-full !object-contain rounded-md"
             />
           ) : (
-            <div className='flex items-center justify-center h-full text-gray-400'>
+            <div className="flex items-center justify-center h-full text-gray-400">
               No image selected
             </div>
           )}
 
-          {/* ✏️ Edit icon overlay */}
-          <label
-            htmlFor='fileUpload'
-            className='absolute top-2 right-2 bg-white/80 hover:bg-white p-2 rounded-full shadow cursor-pointer'
+           <div
+            onClick={openFilePicker}
+            className="absolute top-2 right-2 bg-white/80 hover:bg-white p-2 rounded-full shadow cursor-pointer"
           >
-            <EditOutlined className='text-blue-500 text-lg' />
-          </label>
+            <EditOutlined className="text-blue-500 text-lg" />
+          </div>
           <input
-            id='fileUpload'
-            type='file'
-            accept='image/*'
-            className='hidden'
+            ref={fileInputRef}
+            type="file"
+            accept="image/*"
+            className="hidden"
             onChange={handleImageChange}
           />
         </div>
 
-        {/* 📝 Editable fields */}
+        {/* 📝 Fields */}
         <div>
-          <label className='block text-sm mb-1'>Colour</label>
+          <label className="block text-sm mb-1">Colour</label>
           <Input value={colour} onChange={(e) => setColour(e.target.value)} />
         </div>
-  
-       <div>
-          <label className='block text-sm mb-1'>Colour Code</label>
+
+        <div>
+          <label className="block text-sm mb-1">Colour Code</label>
           <Input
             value={colourcode}
             onChange={(e) => setColourCode(e.target.value)}
-            placeholder='#000000'
+            placeholder="#000000"
           />
         </div>
+
         <div>
-          <label className='block text-sm mb-1'>Size</label>
+          <label className="block text-sm mb-1">Size</label>
           <Input value={size} onChange={(e) => setSize(e.target.value)} />
         </div>
 
         <div>
-          <label className='block text-sm mb-1'>Price</label>
+          <label className="block text-sm mb-1">Price</label>
           <InputNumber
             value={price ?? 0}
             onChange={(v) => setPrice(v ?? 0)}
-            className='w-full'
+            className="w-full"
           />
         </div>
 
         <div>
-          <label className='block text-sm mb-1'>Stock</label>
+          <label className="block text-sm mb-1">Stock</label>
           <InputNumber
             value={stock ?? 0}
             onChange={(v) => setStock(v ?? 0)}
-            className='w-full'
+            className="w-full"
           />
         </div>
 
-        <div className='mt-4 flex justify-end'>
-          <Button type='primary' loading={isUploading} onClick={handleSave}>
-            Save Changes
+        <div className="mt-4 flex justify-end">
+          <Button type="primary" loading={isUploading} onClick={handleSave}>
+            {mode === 'edit' ? 'Save Changes' : 'Add Variant'}
           </Button>
         </div>
       </div>
@@ -195,4 +220,4 @@ const VariantModal: React.FC<VariantModalProps> = ({ open, onCancel, variant, pr
   );
 };
 
-export default VariantModal;
+export default ProductModal;

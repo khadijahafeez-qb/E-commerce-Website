@@ -10,6 +10,7 @@ import ProductModal from '@/app/components/product-model';
 import DeleteConfirmModal from '@/app/components/deleteconfirmmodal';
 import AddMultipleProductsModal from '@/app/components/add-multiple-product-model';
 import AddSingleProductModal from '@/app/components/add-single-product-model';
+
 export interface Variant {
   id: string;
   colour: string;
@@ -249,6 +250,7 @@ const ProductPage: React.FC = () => {
                     size="small"
                     onClick={() => {
                       setSelectedProduct(product);
+                      setIsVariantModalOpen(true);
                       // open modal for adding variant
                     }}
                   >
@@ -269,15 +271,17 @@ const ProductPage: React.FC = () => {
         }}
         bordered
       />
-      <ProductModal
-        open={isVariantModalOpen}
-        onCancel={() => {
-          setIsVariantModalOpen(false);
-          setSelectedVariant(null);
-        }}
-        variant={selectedVariant}
-        productId={selectedProduct?.id || ''}
-      />
+<ProductModal
+  open={isVariantModalOpen}
+  onCancel={() => {
+    setIsVariantModalOpen(false);
+    setSelectedVariant(null);
+  }}
+  variant={selectedVariant}
+  productId={selectedProduct?.id || ''}
+  mode={selectedVariant ? 'edit' : 'add'} // 👈 key change
+/>
+
 
         <DeleteConfirmModal
   open={isVariantDeleteModalOpen}
@@ -293,6 +297,9 @@ const ProductPage: React.FC = () => {
     if (selectedProduct) handleDeleteProduct(selectedProduct.id);
   }}
 />
+
+
+
 <AddSingleProductModal
   open={isEditOpen}
   onCancel={() => setIsEditOpen(false)}
