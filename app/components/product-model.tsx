@@ -1,10 +1,14 @@
+
 'use client';
 
-import React, { useState, useEffect,useRef } from 'react';
-import { Modal, Input, InputNumber, Button, message, Image } from 'antd';
+import React, { useEffect, useRef, useState } from 'react';
+import { Modal, Input, InputNumber, Button, Image } from 'antd';
 import { EditOutlined } from '@ant-design/icons';
+import { useForm, Controller } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { variantSchema } from '@/lib/validation/product';
 import { Variant } from '@/app/admin/frontend/product/page';
-
+import z from 'zod';
 
 interface ProductModalProps {
   open: boolean;
@@ -14,6 +18,8 @@ interface ProductModalProps {
   mode: 'add' | 'edit';
 }
 
+type FormData = z.input<typeof variantSchema>;
+
 const ProductModal: React.FC<ProductModalProps> = ({
   open,
   onCancel,
@@ -21,86 +27,101 @@ const ProductModal: React.FC<ProductModalProps> = ({
   productId,
   mode,
 }) => {
-    const fileInputRef = useRef<HTMLInputElement | null>(null);
-  const [colour, setColour] = useState('');
-  const [colourcode, setColourCode] = useState('');
-  const [size, setSize] = useState('');
-  const [price, setPrice] = useState<number | null>(null);
-  const [stock, setStock] = useState<number | null>(null);
-  const [img, setImg] = useState('');
+  const fileInputRef = useRef<HTMLInputElement | null>(null);
   const [file, setFile] = useState<File | null>(null);
+  const [img, setImg] = useState('');
   const [isUploading, setIsUploading] = useState(false);
 
+  const {
+    control,
+    handleSubmit,
+    setValue,
+    formState: { errors },
+    trigger,
+    reset
+  } = useForm<FormData>({
+    resolver: zodResolver(variantSchema),
+    mode: 'onBlur', // validation triggers on blur
+    defaultValues: {
+      colour: '',
+      colourcode: '',
+      size: '',
+      price: 0,
+      stock: 0,
+      img: '',
+      availabilityStatus: 'ACTIVE',
+    },
+  });
+
   // Prefill when editing
-  useEffect(() => {
-    if (open && variant) {
-      setColour(variant.colour || '');
-      setColourCode(variant.colourcode || '');
-      setSize(variant.size || '');
-      setPrice(variant.price ?? null);
-      setStock(variant.stock ?? null);
+useEffect(() => {
+  if (open) {
+    if (variant) {
+      // Edit mode: prefill values
+      reset({
+        colour: variant.colour || '',
+        colourcode: variant.colourcode || '',
+        size: variant.size || '',
+        price: variant.price ?? 0,
+        stock: variant.stock ?? 0,
+        img: variant.img || '',
+        availabilityStatus: 'ACTIVE',
+      });
       setImg(variant.img || '');
       setFile(null);
     } else {
-      setColour('');
-      setColourCode('');
-      setSize('');
-      setPrice(null);
-      setStock(null);
+      // Add mode: clear all
+      reset({
+        colour: '',
+        colourcode: '',
+        size: '',
+        price: 0,
+        stock: 0,
+        img: '',
+        availabilityStatus: 'ACTIVE',
+      });
       setImg('');
       setFile(null);
     }
-  }, [open, variant]);
+  }
+}, [open, variant, reset]);
 
-  const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-const selected = e.target.files?.[0];
-    if (selected) {
-      setFile(selected);
-      const blobURL = URL.createObjectURL(selected);
-      setImg(blobURL);
-    }
-    // allow same file re-selection
-    e.target.value = '';
-  };
-    const openFilePicker = () => {
-    fileInputRef.current?.click();
-  };
+  const openFilePicker = () => fileInputRef.current?.click();
 
-  const handleSave = async () => {
-    if (mode === 'edit' && !variant?.id) {
-      return message.error('Variant ID missing');
-    }
+
+const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const selected = e.target.files?.[0];
+  if (selected) {
+    setFile(selected);
+    const blobURL = URL.createObjectURL(selected);
+    setImg(blobURL);
+    setValue('img', blobURL, { shouldValidate: true }); // ✅ This is good
+  } else {
+    setImg('');
+    setValue('img', '', { shouldValidate: true }); // ✅ Triggers validation if no image
+  }
+
+  e.target.value = '';
+};
+
+  const onSubmit = async (data: FormData) => {
+
+    if (mode === 'edit' && !variant?.id) return;
 
     setIsUploading(true);
-    let imagePath = img;
-
     try {
-      // Upload image if selected
+      let imagePath = data.img;
+
       if (file) {
         const formData = new FormData();
         formData.append('file', file);
-
-        const uploadRes = await fetch('/api/upload', {
-          method: 'POST',
-          body: formData,
-        });
-
+        const uploadRes = await fetch('/api/upload', { method: 'POST', body: formData });
         const uploadData = await uploadRes.json();
         if (!uploadRes.ok) throw new Error(uploadData.error || 'Upload failed');
-
         imagePath = uploadData.path;
       }
 
-      // Prepare payload
-      const payload = {
-        colour,
-        colourcode,
-        size,
-        price,
-        stock,
-        img: imagePath,
-        productId,
-      };
+      const payload = { ...data, img: imagePath, productId };
 
       const url =
         mode === 'edit'
@@ -114,14 +135,12 @@ const selected = e.target.files?.[0];
         body: JSON.stringify(payload),
       });
 
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.error || 'Failed to save variant');
+      const resData = await res.json();
+      if (!res.ok) throw new Error(resData.error || 'Failed to save variant');
 
-      message.success(mode === 'edit' ? 'Variant updated!' : 'Variant added!');
-      onCancel(); // close modal
+      onCancel();
     } catch (err) {
-      console.error('Error saving variant:', err);
-      message.error('Failed to save variant');
+      console.error(err);
     } finally {
       setIsUploading(false);
     }
@@ -132,16 +151,13 @@ const selected = e.target.files?.[0];
       open={open}
       onCancel={onCancel}
       footer={null}
-      title={
-        <span className="text-lg font-semibold">
-          {mode === 'edit' ? 'Edit Variant' : 'Add Variant'}
-        </span>
-      }
+      title={mode === 'edit' ? 'Edit Variant' : 'Add Variant'}
       width={480}
     >
-      <div className="flex flex-col gap-4 mt-3">
-        {/* 🖼 Image */}
-        <div className="relative w-full h-48 rounded-lg overflow-hidden border">
+      <form className="flex flex-col gap-4 mt-3" onSubmit={handleSubmit(onSubmit)}>
+        {/* Image */}
+        <div className={`relative w-full h-48 rounded-lg overflow-hidden border ${errors.img ? 'border-red-500' : 'border-gray-300'}`}>
+
           {img ? (
             <Image
               src={img}
@@ -158,8 +174,8 @@ const selected = e.target.files?.[0];
             </div>
           )}
 
-           <div
-            onClick={openFilePicker}
+          <div
+            onClick={openFilePicker} 
             className="absolute top-2 right-2 bg-white/80 hover:bg-white p-2 rounded-full shadow cursor-pointer"
           >
             <EditOutlined className="text-blue-500 text-lg" />
@@ -171,52 +187,80 @@ const selected = e.target.files?.[0];
             className="hidden"
             onChange={handleImageChange}
           />
+          {errors.img && <p className="text-red-500 text-sm mt-1">{errors.img.message}</p>}
         </div>
 
-        {/* 📝 Fields */}
+        {/* Colour */}
         <div>
           <label className="block text-sm mb-1">Colour</label>
-          <Input value={colour} onChange={(e) => setColour(e.target.value)} />
+          <Controller
+            name="colour"
+            control={control}
+            render={({ field }) => (
+              <Input {...field} onBlur={() => trigger('colour')} />
+            )}
+          />
+          {errors.colour && <p className="text-red-500 text-sm mt-1">{errors.colour.message}</p>}
         </div>
 
+        {/* Colour Code */}
         <div>
           <label className="block text-sm mb-1">Colour Code</label>
-          <Input
-            value={colourcode}
-            onChange={(e) => setColourCode(e.target.value)}
-            placeholder="#000000"
+          <Controller
+            name="colourcode"
+            control={control}
+            render={({ field }) => (
+              <Input {...field} onBlur={() => trigger('colourcode')} placeholder="#000000" />
+            )}
           />
+          {errors.colourcode && (
+            <p className="text-red-500 text-sm mt-1">{errors.colourcode.message}</p>
+          )}
         </div>
 
+        {/* Size */}
         <div>
           <label className="block text-sm mb-1">Size</label>
-          <Input value={size} onChange={(e) => setSize(e.target.value)} />
+          <Controller
+            name="size"
+            control={control}
+            render={({ field }) => <Input {...field} onBlur={() => trigger('size')} />}
+          />
+          {errors.size && <p className="text-red-500 text-sm mt-1">{errors.size.message}</p>}
         </div>
 
+        {/* Price */}
         <div>
           <label className="block text-sm mb-1">Price</label>
-          <InputNumber
-            value={price ?? 0}
-            onChange={(v) => setPrice(v ?? 0)}
-            className="w-full"
+          <Controller
+            name="price"
+            control={control}
+            render={({ field }) => (
+              <InputNumber {...field} className="w-full" onBlur={() => trigger('price')} />
+            )}
           />
+          {errors.price && <p className="text-red-500 text-sm mt-1">{errors.price.message}</p>}
         </div>
 
+        {/* Stock */}
         <div>
           <label className="block text-sm mb-1">Stock</label>
-          <InputNumber
-            value={stock ?? 0}
-            onChange={(v) => setStock(v ?? 0)}
-            className="w-full"
+          <Controller
+            name="stock"
+            control={control}
+            render={({ field }) => (
+              <InputNumber {...field} className="w-full" onBlur={() => trigger('stock')} />
+            )}
           />
+          {errors.stock && <p className="text-red-500 text-sm mt-1">{errors.stock.message}</p>}
         </div>
 
         <div className="mt-4 flex justify-end">
-          <Button type="primary" loading={isUploading} onClick={handleSave}>
+          <Button type="primary" htmlType="submit" loading={isUploading}>
             {mode === 'edit' ? 'Save Changes' : 'Add Variant'}
           </Button>
         </div>
-      </div>
+      </form>
     </Modal>
   );
 };

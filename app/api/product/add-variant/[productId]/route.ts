@@ -1,6 +1,8 @@
 import { NextResponse } from 'next/server';
 import { PrismaClient } from '@prisma/client';
 
+import { variantSchema } from '@/lib/validation/product';
+
 const prisma = new PrismaClient();
 
 export async function POST(
@@ -10,24 +12,17 @@ export async function POST(
   try {
     const { productId } = await context.params;
     const body = await req.json();
-    const { colour, colourcode, size, stock, price, img } = body;
-
-    if (!colour || !size || !price || !img) {
-      return NextResponse.json(
-        { success: false, error: 'Missing required fields' },
-        { status: 400 }
-      );
-    }
+    const parsedVariant = variantSchema.parse(body);
 
     const variant = await prisma.productVariant.create({
       data: {
         productId,
-        colour,
-        colourcode,
-        size,
-        stock: Number(stock) || 0,
-        price: Number(price),
-        img,
+        colour:parsedVariant.colour,
+        colourcode:parsedVariant.colourcode,
+        size:parsedVariant.size,
+        stock: parsedVariant.stock,
+        price: parsedVariant.price,
+        img:parsedVariant.img,
       },
     });
 
