@@ -8,6 +8,8 @@ import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { variantSchema } from '@/lib/validation/product';
 import { Variant } from '@/app/admin/frontend/product/page';
+import { addVariantThunk ,updateVariantThunk} from '@/lib/features/cart/product-slice';
+import { useAppDispatch} from '@/lib/hook';
 import z from 'zod';
 
 interface ProductModalProps {
@@ -27,6 +29,8 @@ const ProductModal: React.FC<ProductModalProps> = ({
   productId,
   mode,
 }) => {
+  const dispatch = useAppDispatch();
+
   const fileInputRef = useRef<HTMLInputElement | null>(null);
   const [file, setFile] = useState<File | null>(null);
   const [img, setImg] = useState('');
@@ -123,27 +127,18 @@ const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
 
       const payload = { ...data, img: imagePath, productId };
 
-      const url =
-        mode === 'edit'
-          ? `/api/product/update-product/${variant?.id}`
-          : `/api/product/add-variant/${productId}`;
-      const method = mode === 'edit' ? 'PUT' : 'POST';
-
-      const res = await fetch(url, {
-        method,
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(payload),
-      });
-
-      const resData = await res.json();
-      if (!res.ok) throw new Error(resData.error || 'Failed to save variant');
-
-      onCancel();
-    } catch (err) {
-      console.error(err);
-    } finally {
-      setIsUploading(false);
+    if (mode === 'edit' && variant?.id) {
+      await dispatch(updateVariantThunk({ id: variant.id, data: payload })).unwrap();
+    } else {
+      await dispatch(addVariantThunk({ productId, data: payload })).unwrap();
     }
+
+    onCancel(); // close modal on success
+  } catch (err) {
+    console.error('Failed to save variant:', err);
+  } finally {
+    setIsUploading(false);
+  }
   };
 
   return (

@@ -10,6 +10,8 @@ import ProductModal from '@/app/components/product-model';
 import DeleteConfirmModal from '@/app/components/deleteconfirmmodal';
 import AddMultipleProductsModal from '@/app/components/add-multiple-product-model';
 import AddSingleProductModal from '@/app/components/add-single-product-model';
+import { deleteProductThunk,deactivateVariantThunk } from '@/lib/features/cart/product-slice';
+import { useAppDispatch } from '@/lib/hook';
 
 export interface Variant {
   id: string;
@@ -43,38 +45,32 @@ const ProductPage: React.FC = () => {
   const [selectedVariant, setSelectedVariant] = useState<Variant | null>(null);
   const [isVariantDeleteModalOpen, setIsVariantDeleteModalOpen] = useState(false);
   const [variantToDelete, setVariantToDelete] = useState<{ id: string; productId: string } | null>(null);
+const dispatch=useAppDispatch();
 
 
+const handleInactivateVariant = async () => {
+  if (!variantToDelete) return;
+  try {
+    const resultAction = await dispatch(deactivateVariantThunk(variantToDelete.id));
 
-  const handleInactivateVariant = async () => {
-    if (!variantToDelete) return;
-
-    try {
-      const res = await fetch(`/api/product/delete-product-variant/${variantToDelete.id}`, {
-        method: 'PUT',
-      });
-
-      const result = await res.json();
-      if (!result.success) throw new Error(result.error || 'Failed to inactivate variant');
-
-      // Update local state so variant disappears or gets flagged
+    if (deactivateVariantThunk.fulfilled.match(resultAction)) {
       setData((prev) =>
         prev.map((p) =>
           p.id === variantToDelete.productId
-            ? {
-              ...p,
-              variants: p.variants.filter((v) => v.id !== variantToDelete.id),
-            }
+            ? { ...p, variants: p.variants.filter((v) => v.id !== variantToDelete.id) }
             : p
         )
       );
-
       setIsVariantDeleteModalOpen(false);
       setVariantToDelete(null);
-    } catch (err) {
-      console.error('Inactivate variant failed:', err);
+    } else {
+      console.error('Failed to deactivate variant:', resultAction.payload);
     }
-  };
+  } catch (err) {
+    console.error('Inactivate variant failed:', err);
+  }
+};
+
 
 
   const fetchProducts = async (page: number) => {
@@ -95,25 +91,22 @@ const ProductPage: React.FC = () => {
   useEffect(() => {
     fetchProducts(currentPage);
   }, [currentPage]);
-  const handleDeleteProduct = async (id: string) => {
-    try {
-      const res = await fetch(`/api/product/delete-product/${id}`, {
-        method: 'DELETE',
-      });
+const handleDeleteProduct = async (id: string) => {
+  try {
+    const resultAction = await dispatch(deleteProductThunk(id));
 
-      const data: { success: boolean; error?: string } = await res.json();
-
-      if (!data.success) {
-        throw new Error(data.error ?? 'Failed to delete product');
-      }
-
-      setData((prev) => prev.filter((p) => p.id !== id));
+    if (deleteProductThunk.fulfilled.match(resultAction)) {
+      setData((prev) => prev.filter((p) => p.id !== id)); // update UI
       setIsDeleteOpen(false);
       setSelectedProduct(null);
-    } catch (err) {
-      console.error('Delete failed:', err);
+    } else {
+      console.error('Delete failed:', resultAction.payload);
     }
-  };
+  } catch (err) {
+    console.error('Delete failed:', err);
+  }
+};
+
 
 
   const columns = [

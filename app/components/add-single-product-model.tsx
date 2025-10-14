@@ -1,11 +1,13 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { Modal, Input, Button, Row, Col, InputNumber, Form, message} from 'antd';
+import { Modal, Input, Button, Row, Col, InputNumber, Form, message } from 'antd';
 import { PlusOutlined, MinusCircleOutlined, UploadOutlined } from '@ant-design/icons';
 import { useForm, useFieldArray, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { productSchema, ProductInput } from '@/lib/validation/product';
+import { addProductThunk } from '@/lib/features/cart/product-slice';
+import { useAppDispatch } from '@/lib/hook';
 
 interface AddSingleProductModalProps {
   open: boolean;
@@ -25,6 +27,7 @@ const AddSingleProductModal: React.FC<AddSingleProductModalProps> = ({
   onCancel,
   onSuccess,
 }) => {
+  const dispatch = useAppDispatch();
   const [loading, setLoading] = useState(false);
   const [files, setFiles] = useState<FileState[]>([]);
 
@@ -72,10 +75,10 @@ const AddSingleProductModal: React.FC<AddSingleProductModalProps> = ({
     // Set uploading state
     setFiles(prev => {
       const updated = [...prev];
-      updated[index] = { 
-        file, 
+      updated[index] = {
+        file,
         preview: URL.createObjectURL(file),
-        isUploading: true 
+        isUploading: true
       };
       return updated;
     });
@@ -113,14 +116,14 @@ const AddSingleProductModal: React.FC<AddSingleProductModalProps> = ({
     } catch (error) {
       setFiles(prev => {
         const updated = [...prev];
-        updated[index] = { 
-          file: null, 
-          preview: '', 
-          isUploading: false 
+        updated[index] = {
+          file: null,
+          preview: '',
+          isUploading: false
         };
         return updated;
       });
-      
+
       message.error(`Failed to upload image: ${error instanceof Error ? error.message : 'Unknown error'}`);
     }
   };
@@ -145,22 +148,21 @@ const AddSingleProductModal: React.FC<AddSingleProductModalProps> = ({
         throw new Error('Please wait for images to finish uploading');
       }
 
-      // Create product with all variants
-      const res = await fetch('/api/product/add-product', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(data),
-      });
+      // Dispatch to Redux
+      const resultAction = await dispatch(addProductThunk(data));
+      if (addProductThunk.fulfilled.match(resultAction)) {
+        message.success('Product created successfully!');
+        onCancel();
+        onSuccess?.();
+      } else {
+        // ✅ Ensure we pass a string to Error
+        const errorMessage =
+          typeof resultAction.payload === 'string'
+            ? resultAction.payload
+            : 'Failed to create product';
 
-      const result = await res.json();
-      
-      if (!result.success) {
-        throw new Error(result.error || 'Failed to create product');
+        throw new Error(errorMessage);
       }
-
-      message.success('Product created successfully with all variants!');
-      onCancel();
-      onSuccess?.();
     } catch (error) {
       message.error(error instanceof Error ? error.message : 'Failed to create product');
     } finally {
@@ -169,10 +171,10 @@ const AddSingleProductModal: React.FC<AddSingleProductModalProps> = ({
   };
 
   return (
-    <Modal 
-      title="Add Product with Variants" 
-      open={open} 
-      onCancel={onCancel} 
+    <Modal
+      title="Add Product with Variants"
+      open={open}
+      onCancel={onCancel}
       footer={null}
       width={800}
       destroyOnClose
@@ -188,9 +190,9 @@ const AddSingleProductModal: React.FC<AddSingleProductModalProps> = ({
             name="title"
             control={control}
             render={({ field }) => (
-              <Input 
-                {...field} 
-                placeholder="Enter product title" 
+              <Input
+                {...field}
+                placeholder="Enter product title"
                 size="large"
               />
             )}
@@ -262,7 +264,7 @@ const AddSingleProductModal: React.FC<AddSingleProductModalProps> = ({
                     >
                       {files[index]?.isUploading ? 'Uploading...' : 'Choose Image'}
                     </Button>
-                    
+
                     {files[index]?.preview && (
                       <div style={{ marginTop: 8, textAlign: 'center' }}>
                         <img
@@ -347,9 +349,9 @@ const AddSingleProductModal: React.FC<AddSingleProductModalProps> = ({
                     name={`variants.${index}.stock`}
                     control={control}
                     render={({ field }) => (
-                      <InputNumber 
-                        {...field} 
-                        min={0} 
+                      <InputNumber
+                        {...field}
+                        min={0}
                         style={{ width: '100%' }}
                         placeholder="0"
                       />
@@ -367,9 +369,9 @@ const AddSingleProductModal: React.FC<AddSingleProductModalProps> = ({
                     name={`variants.${index}.price`}
                     control={control}
                     render={({ field }) => (
-                      <InputNumber 
-                        {...field} 
-                        min={0} 
+                      <InputNumber
+                        {...field}
+                        min={0}
                         step={0.01}
                         style={{ width: '100%' }}
                         placeholder="0.00"
@@ -386,14 +388,14 @@ const AddSingleProductModal: React.FC<AddSingleProductModalProps> = ({
         <Button
           type="dashed"
           onClick={() => {
-            append({ 
-              img: '', 
-              colour: '', 
-              colourcode: '', 
-              size: '', 
-              stock: 0, 
-              price: 0, 
-              availabilityStatus: 'ACTIVE' 
+            append({
+              img: '',
+              colour: '',
+              colourcode: '',
+              size: '',
+              stock: 0,
+              price: 0,
+              availabilityStatus: 'ACTIVE'
             });
             setFiles(prev => [...prev, { file: null, preview: '', isUploading: false }]);
           }}
@@ -409,9 +411,9 @@ const AddSingleProductModal: React.FC<AddSingleProductModalProps> = ({
           <Button onClick={onCancel}>
             Cancel
           </Button>
-          <Button 
-            type="primary" 
-            htmlType="submit" 
+          <Button
+            type="primary"
+            htmlType="submit"
             loading={loading}
             size="large"
           >
