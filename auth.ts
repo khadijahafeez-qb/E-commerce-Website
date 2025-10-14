@@ -92,12 +92,8 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         session.expires = token.expire as unknown as string & Date;
       }
       return session;
-    },
-  },
-
-  pages: {
-    signIn: '/auth/login',
-  },
+    }
+  }
 });
 
 
