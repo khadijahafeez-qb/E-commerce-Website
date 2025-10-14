@@ -4,7 +4,7 @@ import dayjs from 'dayjs';
 
 export default async function middleware( req: NextRequest ) {
   console.log('In Middleware', process.env.NEXTAUTH_SECRET);
-  const token = await getToken({ req, secret: process.env.NEXTAUTH_SECRET });
+  const token = await getToken({ req });
   console.log('token: ', token);
 
   const url = new URL(req.url);
