@@ -1,15 +1,15 @@
-import { NextResponse } from 'next/server';
+import { NextResponse,NextRequest} from 'next/server';
 import { getToken } from 'next-auth/jwt';
 import dayjs from 'dayjs';
 
-export default async function middleware( req: Request ) {
+export default async function middleware( req: NextRequest ) {
   console.log('In Middleware', process.env.NEXTAUTH_SECRET);
   const token = await getToken({ req, secret: process.env.NEXTAUTH_SECRET });
   console.log('token: ', token);
 
   const url = new URL(req.url);
   const path = url.pathname;
-
+ 
   console.log('path: ', path);
   const publicPaths = ['/',
      '/auth/login',
@@ -27,6 +27,7 @@ export default async function middleware( req: Request ) {
   }
 
   if (dayjs(token.expire).isBefore(new Date())) {
+    console.log('token expired, redirecting to login');
     const res = NextResponse.redirect(new URL('/auth/login', req.url));
     res.cookies.set('authjs.session-token', '', {
       path: '/',
@@ -52,6 +53,7 @@ export default async function middleware( req: Request ) {
 
   if (path.startsWith('/user')) {
     if (token.role !== 'USER') {
+      console.log('not user, redirecting to login');
       return NextResponse.redirect(new URL('/auth/login', req.url));
     }
   }

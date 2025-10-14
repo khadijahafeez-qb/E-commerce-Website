@@ -45,10 +45,7 @@ export default function LoginPage() {
         });
         const session = await getSession();
         const role = session?.user.role;
-        console.log({
-          session,
-          role
-        });
+        console.log('session:', session);
         setTimeout(() => {
           if (role === 'ADMIN') {
             window.location.href = '/admin/frontend/product';
