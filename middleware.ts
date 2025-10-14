@@ -3,7 +3,10 @@ import { getToken } from 'next-auth/jwt';
 import dayjs from 'dayjs';
 
 export default async function middleware( req: Request ) {
+  console.log('In Middleware', process.env.NEXTAUTH_SECRET);
   const token = await getToken({ req, secret: process.env.NEXTAUTH_SECRET });
+  console.log('token: ', token);
+
   const url = new URL(req.url);
   const path = url.pathname;
 
@@ -19,6 +22,7 @@ export default async function middleware( req: Request ) {
   }
 
   if (!token) {
+    console.log('no token found, redirecting to login');
     return NextResponse.redirect(new URL('/auth/login', req.url));
   }
 
