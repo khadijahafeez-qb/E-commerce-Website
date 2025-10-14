@@ -1,14 +1,11 @@
-import { NextResponse } from 'next/server';
+import { NextResponse,NextRequest} from 'next/server';
 import { PrismaClient } from '@prisma/client';
 
 const prisma = new PrismaClient();
 
-export async function PUT(
-  req: Request,
-  { params }: { params: { id: string } }
-) {
+export async function PUT(req: NextRequest,context: { params: Promise<{ id: string }> }) {
   try {
-    const { id } = params;
+        const { id } = await context.params;
     const body = await req.json();
     const { colour, colourcode, size, price, stock, img, productId } = body;
 
