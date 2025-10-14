@@ -10,17 +10,18 @@ import { getSession } from 'next-auth/react';
 
 import AuthForm, { type Field } from '../authform';
 import { LoginData, loginSchema } from '@/lib/validation/auth';
-import { useRouter } from 'next/router';
+import { useRouter } from 'next/navigation';
 
 export default function LoginPage() {
   const [rememberMe, setRememberMe] = useState(false);
   const [api, contextHolder] = notification.useNotification();
+  const router = useRouter();
+
   const { register, handleSubmit, formState: { errors, isSubmitting } } = useForm<LoginData>({
     resolver: zodResolver(loginSchema),
     mode: 'onBlur',
     reValidateMode: 'onBlur'
   });
-  const router = useRouter();
 
   async function onSubmit(data: LoginData) {
     try {
