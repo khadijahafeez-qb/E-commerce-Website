@@ -10,6 +10,7 @@ import { getSession } from 'next-auth/react';
 
 import AuthForm, { type Field } from '../authform';
 import { LoginData, loginSchema } from '@/lib/validation/auth';
+import { useRouter } from 'next/router';
 
 export default function LoginPage() {
   const [rememberMe, setRememberMe] = useState(false);
@@ -19,8 +20,11 @@ export default function LoginPage() {
     mode: 'onBlur',
     reValidateMode: 'onBlur'
   });
+  const router = useRouter();
+
   async function onSubmit(data: LoginData) {
     try {
+
       const res = await signIn('credentials', {
         redirect: false,
         email: data.email,
@@ -48,9 +52,9 @@ export default function LoginPage() {
         console.log('session:', session);
         setTimeout(() => {
           if (role === 'ADMIN') {
-            window.location.href = '/admin/frontend/product';
+            router.push('/admin/frontend/product');
           } else {
-            window.location.href = '/user/frontend/productlist';
+            router.push('/user/frontend/productlist');
           }
         }, 1500);
 
