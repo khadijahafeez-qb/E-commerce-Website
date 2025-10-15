@@ -14,6 +14,7 @@
     "@hookform/resolvers": "^5.2.2",
     "@prisma/client": "^6.16.0",
     "@reduxjs/toolkit": "^2.9.0",
+    "@stripe/stripe-js": "^8.0.0",
     "antd": "^5.27.4",
     "axios": "^1.12.2",
     "bcryptjs": "^3.0.2",
@@ -30,6 +31,7 @@
     "react-infinite-scroll-component": "^6.1.0",
     "react-redux": "^9.2.0",
     "redux-persist": "^6.0.0",
+    "stripe": "^19.1.0",
     "use-debounce": "^10.0.6",
     "zod": "^4.1.12"
   },

@@ -1,6 +1,8 @@
 'use client';
 
 import React, { useState } from 'react';
+import { loadStripe } from '@stripe/stripe-js';
+import type { Stripe } from '@stripe/stripe-js';
 import Link from 'next/link';
 import './page.css';
 
@@ -24,6 +26,13 @@ interface cartList {
   image: string;
   stock: number;
 }
+type StripeWithRedirect = Stripe & {
+  redirectToCheckout(options: { sessionId: string }): Promise<{ error?: Error }>;
+};
+
+
+const stripePromise = loadStripe(process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY!) as Promise<Stripe | null>;
+
 
 const ShoppingCartPage: React.FC = () => {
   const dispatch = useAppDispatch();
@@ -34,19 +43,36 @@ const ShoppingCartPage: React.FC = () => {
   const [isBulkDelete, setIsBulkDelete] = useState(false);
   const cartItems = useAppSelector(selectCartItems);
 
-  const addplaceholder = async () => {
-    const res = await fetch('/api/placeorder', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ cartItems, total })
-    });
-    if (res.ok) {
-      api.success({
-        message: 'Order placed ',
-        description: 'Order has been placed',
-        placement: 'topRight',
+  const placeOrder = async () => {
+    try {
+      const res = await fetch('/api/placeorder', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ cartItems, total })
       });
+
+      const data = await res.json();
+
+      if (!res.ok) {
+        return api.error({
+          message: 'Order failed',
+          description: data.error || 'Something went wrong',
+        });
+      }
       dispatch(clearCart());
+    if (data.url) {
+  window.location.href = data.url;
+} else {
+  api.error({ message: 'Payment failed', description: 'No Stripe URL returned' });
+}
+
+
+    } catch (err) {
+      console.error(err);
+      api.error({
+        message: 'Payment failed',
+        description: 'Something went wrong',
+      });
     }
   };
   const data: cartList[] = (cartItems || []).map((item) => ({
@@ -252,7 +278,7 @@ const ShoppingCartPage: React.FC = () => {
           </div>
         </div>
         <div className='flex justify-end mt-6'>
-          <Button onClick={addplaceholder} type='primary' className='placeorder-button'>
+          <Button onClick={placeOrder} type='primary' className='placeorder-button'>
             Place Order
           </Button>
         </div>

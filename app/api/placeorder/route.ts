@@ -1,105 +1,95 @@
+
 import { auth } from '@/auth';
 import { PrismaClient } from '@prisma/client';
+import Stripe from 'stripe';
 
 export interface OrderItem {
   productId: string;
   id: string,
   count: number;
   price: number;
+  title:string;
 }
-
 const prisma = new PrismaClient();
 export async function POST(req: Request) {
-
   try {
     const session = await auth();
     if (!session?.user?.email) {
-      return new Response(
-        JSON.stringify({ error: 'Not authenticated' })
-      );
+      return new Response(JSON.stringify({ error: 'Not authenticated' }), { status: 401 });
     }
-    const user = await prisma.user.findUnique({
-      where: { email: session.user.email },
-    });
-    if (!user) {
-      return new Response(
-        JSON.stringify({ error: 'User not found' })
-      );
-    }
-    const body = await req.json();
-
-    const { cartItems, total } = body;
-
+    const user = await prisma.user.findUnique({ where: { email: session.user.email } });
+    if (!user) return new Response(JSON.stringify({ error: 'User not found' }), { status: 404 });
+     console.log('userfound',user);
+    const { cartItems, total } = await req.json();
     if (!cartItems || cartItems.length === 0) {
-      return new Response(
-        JSON.stringify({ error: 'Cart is empty, cannot place order' }),
-        { status: 400 }
-      );
+      return new Response(JSON.stringify({ error: 'Cart is empty' }), { status: 400 });
     }
-    console.log('cart items', cartItems);
-    for (const item of cartItems) {
-      const variant = await prisma.productVariant.findUnique({
-        where: { id: item.id },
-        select: {
-          stock: true,
-          colour: true,
-          size: true,
-          product: { select: { title: true } }
-        },
+const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
+  apiVersion: '2025-09-30.clover',
+});
+    // Step 2a: Create Stripe Customer if missing
+    let stripeCustomerId = user.stripeCustomerId;
+    if (!stripeCustomerId) {
+      const customer = await stripe.customers.create({
+        email: user.email,
+        name: user.fullname,
       });
-
-      if (!variant) {
-        return new Response(
-          JSON.stringify({ error: `variant ${item.title} not found` }),
-          { status: 400 }
-        );
-      }
-
-      if (item.count > variant.stock) {
-        return new Response(
-          JSON.stringify({
-            error: `Not enough stock for ${variant.product.title}. Available: (${variant.colour} - ${variant.size}). Available: ${variant.stock}`,
-          }),
-          { status: 400 }
-        );
-      }
+      stripeCustomerId = customer.id;
+      await prisma.user.update({
+        where: { id: user.id },
+        data: { stripeCustomerId },
+      });
     }
-
-    await prisma.$transaction(async (tx) => {
-      for (const item of cartItems) {
-        await tx.productVariant.update({
-          where: { id: item.id },
-          data: { stock: { decrement: item.count } },
-        });
-      }
-      const newOrder = await tx.order.create({
-        data: {
-          userId: user.id,
-          total,
-          items: {
-            create: cartItems.map((item: OrderItem) => ({
-              product: { connect: { id: item.productId } },
-              variant: { connect: { id: item.id } },
-              quantity: item.count,
-              price: item.price,
-            })),
-          },
+    // Create Checkout Session
+const subtotal = cartItems.reduce((acc:number, item:OrderItem) => acc + item.price * item.count, 0);
+const tax = Math.round(subtotal * 0.10 * 100); // in cents
+const stripe_session = await stripe.checkout.sessions.create({
+  payment_method_types: ['card'],
+  mode: 'payment',
+  customer: stripeCustomerId,
+  line_items: [
+    ...cartItems.map((item: OrderItem) => ({
+      price_data: {
+        currency: 'usd',
+        product_data: { name: item.title },
+        unit_amount: Math.round(item.price * 100),
+      },
+      quantity: item.count,
+    })),
+    {
+      price_data: {
+        currency: 'usd',
+        product_data: { name: 'Tax (10%)' },
+        unit_amount: tax,
+      },
+      quantity: 1,
+    },
+  ],
+  success_url: `${req.headers.get('origin')}/user/frontend/success?session_id={CHECKOUT_SESSION_ID}`,
+  cancel_url: `${req.headers.get('origin')}/cart`,
+});
+// Create order in DB as pending
+    const newOrder = await prisma.order.create({
+      data: {
+        userId: user.id,
+        total,
+        stripeSessionId: stripe_session.id,
+        status: 'PENDING',
+        items: {
+          create: cartItems.map((item:OrderItem) => ({
+            product: { connect: { id: item.productId } },
+            variant: { connect: { id: item.id } },
+            quantity: item.count,
+            price: item.price,
+          })),
         },
-        include: {
-          items: {
-            include: {
-              variant: true,
-              product: true,
-            },
-          },
-        },
-      });
-      return newOrder;
+      },
     });
-    return new Response(JSON.stringify({ message: 'Order placed successfully' }));
-  } catch (error) {
-    console.log('Place order error', error);
+return new Response(JSON.stringify({ url: stripe_session.url, orderId: newOrder.id }));
+  } catch (err) {
+    console.error(err);
+    return new Response(JSON.stringify({ error: 'Something went wrong' }), { status: 500 });
   }
-
 }
+
 
