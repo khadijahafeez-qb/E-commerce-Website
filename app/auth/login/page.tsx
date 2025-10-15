@@ -4,7 +4,7 @@ import { signIn } from 'next-auth/react';
 import { useState } from 'react';
 import { useForm } from 'react-hook-form';
 
-import { notification } from 'antd';
+import { notification, Button, Image } from 'antd';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { getSession } from 'next-auth/react';
 
@@ -87,6 +87,19 @@ export default function LoginPage() {
         footer={
           <>
             <div className='flex flex-col items-center gap-2 mt-4'>
+              <Button
+                type="default"
+                className="flex items-center justify-center gap-2 w-full border border-gray-300 rounded-md hover:bg-gray-50 transition"
+                onClick={() => signIn('google', { callbackUrl: '/' })}
+              >
+                <Image
+                  src="https://media.wired.com/photos/5926ffe47034dc5f91bed4e8/master/pass/google-logo.jpg"
+                  alt="Google Logo"
+                  width={40}
+                  height={20}
+                />
+                <span className="text-gray-700 font-medium">Sign in with Google</span>
+              </Button>
               <div className='flex gap-2 mb-6'>
                 <p className='font-inter font-normal leading-[21px] text-[#5A5F7D]'>
                   Forgot Password?

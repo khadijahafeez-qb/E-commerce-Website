@@ -1,5 +1,6 @@
 
 import CredentialsProvider from 'next-auth/providers/credentials';
+import GoogleProvider from 'next-auth/providers/google';
 import NextAuth, { type User } from 'next-auth';
 import { prisma } from '@/lib/prisma';
 import bcrypt from 'bcryptjs';
@@ -59,6 +60,10 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         };
       },
     }),
+      GoogleProvider({
+    clientId: process.env.GOOGLE_CLIENT_ID!,
+    clientSecret: process.env.GOOGLE_CLIENT_SECRET!,
+  }),
   ],
 
   pages: {
@@ -71,6 +76,32 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
   },
 
   callbacks: {
+    async signIn({ user, account}) {
+      if (account?.provider === 'google') {
+        let dbUser = await prisma.user.findUnique({
+          where: { email: user.email! }
+        });
+
+        if (!dbUser) {
+          dbUser = await prisma.user.create({
+            data: {
+              email: user.email!,
+              fullname: user.name || 'No Name',
+              password: '', 
+              role: 'USER',
+            },
+          });
+        }
+
+       
+        user.id = String(dbUser.id);
+        user.role = dbUser.role;
+        user.rememberMe = true;
+      }
+
+      return true;
+    },
+
     async jwt({ token, user }) {
 
       if (user) {
@@ -86,13 +117,13 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
       }
       return token;
     },
-      async session({ session, token }) {
-       session.user.role = token.role as 'USER' | 'ADMIN';
-      if (token.exp) {
-        session.expires = token.expire as unknown as string & Date;
-      }
-      return session;
+    async session({ session, token }) {
+      session.user.role = token.role as 'USER' | 'ADMIN';
+    if (token.exp) {
+      session.expires = token.expire as unknown as string & Date;
     }
+    return session;
+  }
   }
 });
 
