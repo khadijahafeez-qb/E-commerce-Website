@@ -55,6 +55,7 @@ model Order {
   userId    String
   total     Float
   stripeSessionId    String?     @unique
+  stripePaymentIntentId String?     @unique
   status    OrderStatus @default(PENDING)
   createdAt DateTime    @default(now())
   updatedAt DateTime    @updatedAt

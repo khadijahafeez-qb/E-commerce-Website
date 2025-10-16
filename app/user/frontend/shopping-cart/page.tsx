@@ -1,8 +1,6 @@
 'use client';
 
 import React, { useState } from 'react';
-import { loadStripe } from '@stripe/stripe-js';
-import type { Stripe } from '@stripe/stripe-js';
 import Link from 'next/link';
 import './page.css';
 

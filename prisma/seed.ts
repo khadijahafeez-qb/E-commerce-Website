@@ -1,11 +1,13 @@
-import { PrismaClient, VariantAvailability, Role } from '@prisma/client';
+import { PrismaClient, Role, VariantAvailability } from '@prisma/client';
 import bcrypt from 'bcryptjs';
 
 const prisma = new PrismaClient();
 const delay = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
 
 async function main() {
-  // ✅ 1. Create Admin User with hashed password
+  console.log('🌱 Starting database seeding...');
+
+  // ✅ 1. Create Admin User
   const adminEmail = 'admin@example.com';
   const adminPassword = 'Alphabeta@123';
 
@@ -15,7 +17,6 @@ async function main() {
 
   if (!existingAdmin) {
     const hashedPassword = await bcrypt.hash(adminPassword, 10);
-
     await prisma.user.create({
       data: {
         fullname: 'Admin User',
@@ -25,12 +26,12 @@ async function main() {
         role: Role.ADMIN,
       },
     });
-    console.log(`✅ Admin user created: ${adminEmail} (password: ${adminPassword})`);
+    console.log(`✅ Admin created: ${adminEmail} (password: ${adminPassword})`);
   } else {
     console.log(`ℹ️ Admin already exists: ${adminEmail}`);
   }
 
-  // ✅ 2. Seed Products with 4 Variants Each (rotated color order)
+  // ✅ 2. Seed Products (each with 4 Variants)
   const colors = ['Black', 'White', 'Green', 'Grey'];
   const colorCodes = ['#000000', '#FFFFFF', '#008000', '#808080'];
   const sizes = ['S', 'M', 'L', 'XL'];
@@ -46,13 +47,13 @@ async function main() {
     'StormGuard Rain Jacket',
     'Arctic Parka',
     'Hybrid Fleece Zip-Up',
-    'Hoodie',
+    'Classic Hoodie',
   ];
 
   for (let i = 0; i < 60; i++) {
-    const typeName = JacketNames[i % JacketNames.length];
+    const baseName = JacketNames[i % JacketNames.length];
 
-    // 🔁 Rotate colors for each product so the first variant is different every time
+    // Rotate colors so each product starts with a different color
     const offset = i % colors.length;
     const rotatedColors = [...colors.slice(offset), ...colors.slice(0, offset)];
     const rotatedCodes = [...colorCodes.slice(offset), ...colorCodes.slice(0, offset)];
@@ -69,24 +70,27 @@ async function main() {
 
     const product = await prisma.product.create({
       data: {
-        title: `${typeName} ${i + 1}`,
+        title: `${baseName} ${i + 1}`,
         isDeleted: 'active',
         variants: { create: variantsData },
       },
       include: { variants: true },
     });
 
-    console.log(`🧥 Inserted product: ${product.title} (${product.variants.length} variants)`);
-    await delay(100);
+    console.log(`🧥 Inserted: ${product.title} (${product.variants.length} variants)`);
+    await delay(50); // small delay to avoid connection overload
   }
 
   console.log('✅ All products seeded successfully.');
 }
 
 main()
-  .then(() => prisma.$disconnect())
-  .catch((e) => {
-    console.error(e);
-    prisma.$disconnect();
+  .then(async () => {
+    console.log('🌿 Seeding complete.');
+    await prisma.$disconnect();
+  })
+  .catch(async (e) => {
+    console.error('❌ Seeding failed:', e);
+    await prisma.$disconnect();
     process.exit(1);
   });
