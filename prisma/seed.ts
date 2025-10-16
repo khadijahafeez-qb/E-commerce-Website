@@ -7,7 +7,7 @@ const delay = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
 async function main() {
   // ✅ 1. Create Admin User with hashed password
   const adminEmail = 'admin@example.com';
-  const adminPassword = 'admin123';
+  const adminPassword = 'Alphabeta@123';
 
   const existingAdmin = await prisma.user.findUnique({
     where: { email: adminEmail },
@@ -30,7 +30,7 @@ async function main() {
     console.log(`ℹ️ Admin already exists: ${adminEmail}`);
   }
 
-  // ✅ 2. Seed Products with 4 Variants Each
+  // ✅ 2. Seed Products with 4 Variants Each (rotated color order)
   const colors = ['Black', 'White', 'Green', 'Grey'];
   const colorCodes = ['#000000', '#FFFFFF', '#008000', '#808080'];
   const sizes = ['S', 'M', 'L', 'XL'];
@@ -52,10 +52,15 @@ async function main() {
   for (let i = 0; i < 60; i++) {
     const typeName = JacketNames[i % JacketNames.length];
 
-    const variantsData = colors.map((color, idx) => ({
+    // 🔁 Rotate colors for each product so the first variant is different every time
+    const offset = i % colors.length;
+    const rotatedColors = [...colors.slice(offset), ...colors.slice(0, offset)];
+    const rotatedCodes = [...colorCodes.slice(offset), ...colorCodes.slice(0, offset)];
+
+    const variantsData = rotatedColors.map((color, idx) => ({
       colour: color,
-      colourcode: colorCodes[idx],
-      size: sizes[idx],
+      colourcode: rotatedCodes[idx],
+      size: sizes[idx % sizes.length],
       price: 100 + i * 5 + idx * 10,
       stock: 20 + i,
       img: colorImages[color],

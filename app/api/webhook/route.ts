@@ -1,4 +1,5 @@
 import { PrismaClient } from '@prisma/client';
+import { sendMail } from '@/lib/nodemailer';
 import Stripe from 'stripe';
 
 const prisma = new PrismaClient();
@@ -17,20 +18,36 @@ export async function POST(req: Request) {
     return new Response(`Webhook Error: ${message}`, { status: 400 });
   }
 
-  // Payment completed
-
   if (event.type === 'checkout.session.completed') {
     const session = event.data.object as Stripe.Checkout.Session;
 
-    if (session.payment_status === 'paid') {
-      // Update order using stripeSessionId
+    // Retrieve email
+    let email = session.customer_email as string | undefined;
+    if (!email && session.customer) {
+      const customer = await stripe.customers.retrieve(session.customer as string);
+      email = (customer as Stripe.Customer).email ?? undefined;
+    }
+
+    if (session.payment_status === 'paid' && email) {
+      // Mark order as paid
       await prisma.order.updateMany({
         where: { stripeSessionId: session.id },
         data: { status: 'PAID' },
       });
+
+      // Send confirmation email
+      try {
+        await sendMail(
+          email,
+          'Your Order is Confirmed!',
+          `<p>Thank you for your purchase!</p>`
+        );
+        console.log('Confirmation email sent to', email);
+      } catch (err) {
+        console.error('Error sending email:', err);
+      }
     }
   }
-
 
   return new Response(JSON.stringify({ received: true }));
 }

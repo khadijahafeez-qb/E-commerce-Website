@@ -26,13 +26,6 @@ interface cartList {
   image: string;
   stock: number;
 }
-type StripeWithRedirect = Stripe & {
-  redirectToCheckout(options: { sessionId: string }): Promise<{ error?: Error }>;
-};
-
-
-const stripePromise = loadStripe(process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY!) as Promise<Stripe | null>;
-
 
 const ShoppingCartPage: React.FC = () => {
   const dispatch = useAppDispatch();
@@ -60,11 +53,11 @@ const ShoppingCartPage: React.FC = () => {
         });
       }
       dispatch(clearCart());
-    if (data.url) {
-  window.location.href = data.url;
-} else {
-  api.error({ message: 'Payment failed', description: 'No Stripe URL returned' });
-}
+      if (data.url) {
+        window.location.href = data.url;
+      } else {
+        api.error({ message: 'Payment failed', description: 'No Stripe URL returned' });
+      }
 
 
     } catch (err) {
