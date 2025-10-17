@@ -3,8 +3,8 @@
 import React, { useState, useEffect } from 'react';
 import { Card, Button, Image, notification } from 'antd';
 import './style.css';
-import { useAppDispatch, useAppSelector } from '@/lib/hook';
-import { addToCart, selectCartItems } from '@/lib/features/cart/cartSlice';
+import { addToCart, getUserCart } from '@/utils/cart-storage';
+import { useSession } from 'next-auth/react';
 
 export interface ProductVariant {
   id: string;
@@ -33,12 +33,18 @@ const ProductCard: React.FC<ProductCardProps> = ({ id, title, variants }) => {
   );
   const [count, setCount] = useState(1);
 
-  const dispatch = useAppDispatch();
-  const cartItems = useAppSelector(selectCartItems);
-  const [api, contextHolder] = notification.useNotification();
-  
+  const { data: session } = useSession();
+  const userEmail = session?.user?.email || 'guest';
 
-  // Update selected size when color changes
+  const [api, contextHolder] = notification.useNotification();
+
+  // optional: you can show what's currently in localStorage
+  useEffect(() => {
+    if (userEmail) {
+      getUserCart(userEmail);
+    }
+  }, [userEmail]);
+
   useEffect(() => {
     if (!selectedColor) return;
     const firstSizeForColor = variants.find(
@@ -46,7 +52,7 @@ const ProductCard: React.FC<ProductCardProps> = ({ id, title, variants }) => {
     )?.size;
     setSelectedSize(firstSizeForColor || '');
     setCount(1);
-  }, [selectedColor]);
+  }, [selectedColor, variants]);
 
   const currentVariant = variants.find(
     v => v.colour === selectedColor?.colour && v.size === selectedSize
@@ -55,8 +61,10 @@ const ProductCard: React.FC<ProductCardProps> = ({ id, title, variants }) => {
   const handleAddToCart = () => {
     if (!currentVariant) return;
 
-    const existing = cartItems.find(item => item.id === currentVariant.id);
+    const existingCart = getUserCart(userEmail);
+    const existing = existingCart.find(item => item.id === currentVariant.id);
     const currentCount = existing ? existing.count : 0;
+
     if (currentCount + count > currentVariant.stock) {
       api.error({
         message: 'Cannot Add to Cart',
@@ -66,8 +74,9 @@ const ProductCard: React.FC<ProductCardProps> = ({ id, title, variants }) => {
       return;
     }
 
-    dispatch(addToCart({
-      productId:id,
+    // ✅ Add directly to localStorage (no Redux, no state)
+    addToCart(userEmail, {
+      productId: id,
       id: currentVariant.id,
       title,
       img: currentVariant.img,
@@ -76,22 +85,21 @@ const ProductCard: React.FC<ProductCardProps> = ({ id, title, variants }) => {
       size: currentVariant.size,
       stock: currentVariant.stock,
       count,
-    }));
-        console.log('🛒 Cart items now:', cartItems);
+    });
 
     api.success({
       message: 'Added to Cart',
       description: `${title} (${currentVariant.colour} - ${currentVariant.size}) x${count} added`,
       placement: 'topRight',
     });
+
+    console.log('✅ Added to cart:', getUserCart(userEmail));
   };
 
-  // Get all unique colors
   const uniqueColors = Array.from(
     new Map(variants.map(v => [v.colour, v])).values()
   );
 
-  // Get sizes for selected color
   const sizesForColor = variants
     .filter(v => v.colour === selectedColor?.colour)
     .map(v => v.size);
@@ -111,12 +119,14 @@ const ProductCard: React.FC<ProductCardProps> = ({ id, title, variants }) => {
               <Image
                 key={v.id}
                 src={v.img}
-                className={`thumbnail ${selectedColor?.colour === v.colour ? 'selected' : ''}`}
+                className={`thumbnail ${
+                  selectedColor?.colour === v.colour ? 'selected' : ''
+                }`}
                 onClick={() => setSelectedColor(v)}
                 width={50}
                 height={50}
                 preview={false}
-                alt='row-images'
+                alt="row-images"
               />
             ))}
           </div>
@@ -148,13 +158,25 @@ const ProductCard: React.FC<ProductCardProps> = ({ id, title, variants }) => {
 
         <div className="quantity-cart mt-3 flex flex-wrap items-center gap-3">
           <div className="flex gap-1">
-            <Button type="text" onClick={() => setCount(prev => Math.max(prev - 1, 1))} disabled={count <= 1}>-</Button>
+            <Button
+              type="text"
+              onClick={() => setCount(prev => Math.max(prev - 1, 1))}
+              disabled={count <= 1}
+            >
+              -
+            </Button>
             <Button className="button">{count}</Button>
             <Button
               type="text"
-              onClick={() => setCount(prev => (prev < (currentVariant?.stock ?? 0) ? prev + 1 : prev))}
+              onClick={() =>
+                setCount(prev =>
+                  prev < (currentVariant?.stock ?? 0) ? prev + 1 : prev
+                )
+              }
               disabled={count >= (currentVariant?.stock ?? 0)}
-            >+</Button>
+            >
+              +
+            </Button>
           </div>
           <Button
             type="primary"
@@ -163,7 +185,7 @@ const ProductCard: React.FC<ProductCardProps> = ({ id, title, variants }) => {
           >
             Add to Cart
           </Button>
-          <span className=''>Stock: {currentVariant?.stock ?? 0}</span>
+          <span>Stock: {currentVariant?.stock ?? 0}</span>
         </div>
       </Card>
     </>

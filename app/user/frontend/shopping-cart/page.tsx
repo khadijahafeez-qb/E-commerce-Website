@@ -3,16 +3,18 @@
 import React, { useState } from 'react';
 import Link from 'next/link';
 import './page.css';
+import { useEffect } from 'react';
+import { useSession } from 'next-auth/react';
 
 import { Table, Button, Checkbox, notification, Image } from 'antd';
 import { DeleteOutlined, PlusOutlined, MinusOutlined, ArrowLeftOutlined } from '@ant-design/icons';
 import type { ColumnsType } from 'antd/es/table';
 
-import { useAppSelector, useAppDispatch } from '@/lib/hook';
-import { selectCartItems, removeFromCart, updateQty, clearCart } from '@/lib/features/cart/cartSlice';
+import { getUserCart,clearCart,updateQty,removeFromCart } from '@/utils/cart-storage';
 import MainLayout from '@/app/components/mainlayout';
 import DeleteConfirmModal from '@/app/components/deleteconfirmmodal';
 import { tableClasses } from '@/utils/tableClasses';
+import { Product } from '@/utils/cart-storage';
 
 interface cartList {
   key: string;
@@ -26,13 +28,23 @@ interface cartList {
 }
 
 const ShoppingCartPage: React.FC = () => {
-  const dispatch = useAppDispatch();
+
   const [api, contextHolder] = notification.useNotification();
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [deleteKey, setDeleteKey] = useState<string | null>(null);
   const [selectedRowKeys, setSelectedRowKeys] = useState<React.Key[]>([]);
   const [isBulkDelete, setIsBulkDelete] = useState(false);
-  const cartItems = useAppSelector(selectCartItems);
+  //const cartItems = useAppSelector(selectCartItems);
+   const [cartItems, setCartItems] = useState<Product[]>([]);
+   const { data: session } = useSession();
+const userEmail = session?.user?.email || 'guest';
+
+
+  useEffect(() => {
+    setCartItems(getUserCart(userEmail));
+  }, [userEmail]);
+
+  const refreshCart = () => setCartItems(getUserCart(userEmail));
 
   const placeOrder = async () => {
     try {
@@ -50,7 +62,7 @@ const ShoppingCartPage: React.FC = () => {
           description: data.error || 'Something went wrong',
         });
       }
-      dispatch(clearCart());
+      clearCart(userEmail);
       if (data.url) {
         window.location.href = data.url;
       } else {
@@ -94,12 +106,13 @@ const ShoppingCartPage: React.FC = () => {
     setIsModalOpen(false);
     if (isBulkDelete) {
       selectedRowKeys.forEach((k) => {
-        dispatch(removeFromCart(String(k)));
+       removeFromCart(userEmail, String(k));
       });
       setSelectedRowKeys([]);
     } else if (deleteKey) {
-      dispatch(removeFromCart(deleteKey));
+      removeFromCart(userEmail, deleteKey);
     }
+    setCartItems(getUserCart(userEmail));
   };
   const handleCheck = (key: string, checked: boolean) => {
     setSelectedRowKeys((prev) =>
@@ -115,7 +128,8 @@ const ShoppingCartPage: React.FC = () => {
     } else {
       newCount = Math.max(1, product.count - 1);
     }
-    dispatch(updateQty({ id: product.id, count: newCount }));
+    updateQty(userEmail, product.id, newCount);
+  setCartItems(getUserCart(userEmail)); // Refresh cart
   };
   const columns: ColumnsType<cartList> = [
     {
