@@ -22,7 +22,6 @@ const AddMultipleProductsModal: React.FC<AddMultipleProductsModalProps> = ({ ope
     setFileList([]);
   };
   const handleUpload = () => {
-    console.log('Uploaded files:', fileList);
     onCancel();
   };
 

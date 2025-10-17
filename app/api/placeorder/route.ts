@@ -19,7 +19,6 @@ export async function POST(req: Request) {
     }
     const user = await prisma.user.findUnique({ where: { email: session.user.email } });
     if (!user) return new Response(JSON.stringify({ error: 'User not found' }), { status: 404 });
-    console.log('userfound', user);
     const { cartItems, total } = await req.json();
     if (!cartItems || cartItems.length === 0) {
       return new Response(JSON.stringify({ error: 'Cart is empty' }), { status: 400 });

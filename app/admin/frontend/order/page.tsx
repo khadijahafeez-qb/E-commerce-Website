@@ -141,7 +141,7 @@ const Orders: React.FC = () => {
               <Button
                 type="text"
                 icon={<CheckOutlined style={{ color: 'green' }} />}
-                onClick={() => { console.log('fulfill clicked', record.key); showConfirm(record.key); }}
+                onClick={() => showConfirm(record.key) }
               />
             </Tooltip>
           )}
@@ -159,9 +159,7 @@ const Orders: React.FC = () => {
       ),
     },
   ];
-
   return (
-
     <div className="p-6">
       {/* Stats Cards */}
       <div className="flex justify-between gap-4 w-full mt-6">

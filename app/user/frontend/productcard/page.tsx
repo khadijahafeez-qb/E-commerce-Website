@@ -92,8 +92,6 @@ const ProductCard: React.FC<ProductCardProps> = ({ id, title, variants }) => {
       description: `${title} (${currentVariant.colour} - ${currentVariant.size}) x${count} added`,
       placement: 'topRight',
     });
-
-    console.log('✅ Added to cart:', getUserCart(userEmail));
   };
 
   const uniqueColors = Array.from(

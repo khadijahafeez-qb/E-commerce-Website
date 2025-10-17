@@ -50,7 +50,6 @@ export default function LoginPage() {
         });
         const session = await getSession();
         const role = session?.user.role;
-        console.log('session:', session);
         setTimeout(() => {
           if (role === 'ADMIN') {
             router.push('/admin/frontend/product');

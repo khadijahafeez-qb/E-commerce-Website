@@ -36,7 +36,6 @@ export async function POST(req: Request) {
           'Your Order is Confirmed!',
           `<p>Thank you for your purchase!</p>`
         );
-        console.log('Confirmation email sent to', email);
       } catch (err) {
         console.error('Error sending email:', err);
       }

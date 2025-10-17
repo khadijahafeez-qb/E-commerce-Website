@@ -7,7 +7,6 @@ export async function GET(req: Request) {
   try {
 
     const { searchParams } = new URL(req.url);
-    console.log('search params',searchParams);
     const page = parseInt(searchParams.get('page') || '1', 10);
     const limit = parseInt(searchParams.get('limit') || '8', 10);
     const search = searchParams.get('search') || '';

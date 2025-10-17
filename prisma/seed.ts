@@ -5,7 +5,6 @@ const prisma = new PrismaClient();
 const delay = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
 
 async function main() {
-  console.log('🌱 Starting database seeding...');
 
   // ✅ 1. Create Admin User
   const adminEmail = 'admin@example.com';
@@ -26,9 +25,9 @@ async function main() {
         role: Role.ADMIN,
       },
     });
-    console.log(`✅ Admin created: ${adminEmail} (password: ${adminPassword})`);
+  
   } else {
-    console.log(`ℹ️ Admin already exists: ${adminEmail}`);
+
   }
 
   // ✅ 2. Seed Products (each with 4 Variants)
@@ -77,16 +76,15 @@ async function main() {
       include: { variants: true },
     });
 
-    console.log(`🧥 Inserted: ${product.title} (${product.variants.length} variants)`);
+   
     await delay(50); // small delay to avoid connection overload
   }
 
-  console.log('✅ All products seeded successfully.');
+
 }
 
 main()
   .then(async () => {
-    console.log('🌿 Seeding complete.');
     await prisma.$disconnect();
   })
   .catch(async (e) => {
