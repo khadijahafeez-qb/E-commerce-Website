@@ -3,7 +3,7 @@
 import React, { useState, useEffect } from 'react';
 import { Table, Input ,Button} from 'antd';
 import { SearchOutlined,ExportOutlined } from '@ant-design/icons';
-import Link from 'next/link';
+import OrderDetailDrawer from '@/app/components/order-detail/order-detail';
 import { ordertable } from '@/app/user/frontend/orders/page';
   
 interface admin_order_table extends ordertable{
@@ -23,6 +23,8 @@ interface Order {
 
 const Orders: React.FC = () => {
   const [data, setData] = useState<admin_order_table[]>([]);
+    const [drawerVisible, setDrawerVisible] = useState(false);
+    const [selectedOrderId, setSelectedOrderId] = useState<string | null>(null);
   const [stats, setStats] = useState({ totalOrders: 0, totalUnits: 0, totalAmount: 0 });
   const [loading, setLoading] = useState(false);
   const [search, setSearch] = useState('');
@@ -69,15 +71,19 @@ const Orders: React.FC = () => {
     {
           title:'Actions',
           key: 'Actions',
-          render: (_: unknown, record: admin_order_table) => (
-            <Link href={`/user/frontend/orderdetails/${record.key}`}>
-              <Button
-                type="text"
-                icon={<ExportOutlined />}
-    
-              />
-            </Link>
-          ),
+         render: (_: unknown, record: ordertable) => (
+         
+                 <Button
+                   type='text'
+                   icon={<ExportOutlined />}
+                   onClick={() => {
+                     setSelectedOrderId(record.key);
+                     setDrawerVisible(true);
+                   }}
+         
+                 />
+         
+               ),
         },
   ];
 
@@ -138,6 +144,11 @@ const Orders: React.FC = () => {
         }}
         bordered
       />
+            <OrderDetailDrawer
+  orderId={selectedOrderId}
+  visible={drawerVisible}
+  onClose={() => setDrawerVisible(false)}
+/>
     </div>
   );
 };
