@@ -1,19 +1,21 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { Table, Input ,Button} from 'antd';
-import { SearchOutlined,ExportOutlined } from '@ant-design/icons';
+import { Table, Input, Button, Tooltip, Modal } from 'antd';
+import { SearchOutlined, ExportOutlined, CheckOutlined } from '@ant-design/icons';
 import OrderDetailDrawer from '@/app/components/order-detail/order-detail';
 import { ordertable } from '@/app/user/frontend/orders/page';
-  
-interface admin_order_table extends ordertable{
+
+interface admin_order_table extends ordertable {
   key: string;
-    User: string;
+  User: string;
+  status: string;
 
 }
 
 interface Order {
   id: string;
+  status: string;
   createdAt: string;
   user?: { fullname: string; email: string };
   userId: string;
@@ -22,9 +24,12 @@ interface Order {
 }
 
 const Orders: React.FC = () => {
+  const [confirmVisible, setConfirmVisible] = useState(false);
+  const [confirmLoading, setConfirmLoading] = useState(false);
+  const [confirmOrderId, setConfirmOrderId] = useState<string | null>(null);
   const [data, setData] = useState<admin_order_table[]>([]);
-    const [drawerVisible, setDrawerVisible] = useState(false);
-    const [selectedOrderId, setSelectedOrderId] = useState<string | null>(null);
+  const [drawerVisible, setDrawerVisible] = useState(false);
+  const [selectedOrderId, setSelectedOrderId] = useState<string | null>(null);
   const [stats, setStats] = useState({ totalOrders: 0, totalUnits: 0, totalAmount: 0 });
   const [loading, setLoading] = useState(false);
   const [search, setSearch] = useState('');
@@ -32,23 +37,43 @@ const Orders: React.FC = () => {
   const [total, setTotal] = useState(0);
   const pageSize = 10;
 
+  const handleStatusUpdate = async (orderId: string, newStatus: string) => {
+    try {
+      const res = await fetch(`/api/order/${orderId}/status`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ status: newStatus }),
+      });
+
+      if (!res.ok) throw new Error('Failed to update status');
+
+      const updated = await res.json();
+      setData((prev) =>
+        prev.map((order) =>
+          order.key === updated.id
+            ? { ...order, status: updated.status }
+            : order
+        )
+      );
+    } catch (err) {
+      console.error('Error updating status:', err);
+    }
+  };
   const fetchOrders = async (page: number) => {
     setLoading(true);
     try {
       const res = await fetch(`/api/order?page=${page}&limit=${pageSize}&search=${encodeURIComponent(search)}`);
       const result = await res.json();
-
       setStats(result.stats || { totalOrders: 0, totalUnits: 0, totalAmount: 0 });
-
       const mapped: admin_order_table[] = result.orders.map((order: Order) => ({
         key: order.id,
         Date: new Date(order.createdAt).toLocaleDateString(),
         User: order.user?.fullname,
         Order: order.id,
         Products: order._count.items,
+        status: order.status,
         Amount: `$${order.total.toFixed(2)}`,
       }));
-
       setData(mapped);
       setTotal(result.total);
     } catch (error) {
@@ -57,11 +82,30 @@ const Orders: React.FC = () => {
       setLoading(false);
     }
   };
-
   useEffect(() => {
     fetchOrders(currentPage);
-  }, [currentPage,search]);
-
+  }, [currentPage, search]);
+  const showConfirm = (orderId: string) => {
+    setConfirmOrderId(orderId);
+    setConfirmVisible(true);
+  };
+  const handleConfirmOk = async () => {
+    if (!confirmOrderId) return;
+    setConfirmLoading(true);
+    try {
+      await handleStatusUpdate(confirmOrderId, 'FULFILLED');
+    } catch (err) {
+      console.error('confirm ok error', err);
+    } finally {
+      setConfirmLoading(false);
+      setConfirmVisible(false);
+      setConfirmOrderId(null);
+    }
+  };
+  const handleConfirmCancel = () => {
+    setConfirmVisible(false);
+    setConfirmOrderId(null);
+  };
   const columns = [
     { title: 'Date', dataIndex: 'Date', key: 'Date' },
     { title: 'User', dataIndex: 'User', key: 'User' },
@@ -69,25 +113,55 @@ const Orders: React.FC = () => {
     { title: 'Products', dataIndex: 'Products', key: 'Products' },
     { title: 'Amount', dataIndex: 'Amount', key: 'Amount' },
     {
-          title:'Actions',
-          key: 'Actions',
-         render: (_: unknown, record: ordertable) => (
-         
-                 <Button
-                   type='text'
-                   icon={<ExportOutlined />}
-                   onClick={() => {
-                     setSelectedOrderId(record.key);
-                     setDrawerVisible(true);
-                   }}
-         
-                 />
-         
-               ),
-        },
+      title: 'Status',
+      dataIndex: 'status',
+      key: 'status',
+      render: (status: string) => (
+        <div className="flex items-center gap-2">
+          <span
+            className={`px-2 py-1 rounded text-sm font-medium ${status === 'FULFILLED'
+              ? 'bg-green-100 text-green-700'
+              : status === 'PAID'
+                ? 'bg-yellow-100 text-yellow-700'
+                : 'bg-gray-100 text-gray-600'
+              }`}
+          >
+            {status}
+          </span>
+        </div>
+      ),
+    },
+    {
+      title: 'Actions',
+      key: 'Actions',
+      render: (_: unknown, record: admin_order_table) => (
+        <div className="flex items-center gap-2">
+          {record.status === 'PAID' && (
+            <Tooltip title="Mark as Fulfilled">
+              <Button
+                type="text"
+                icon={<CheckOutlined style={{ color: 'green' }} />}
+                onClick={() => { console.log('fulfill clicked', record.key); showConfirm(record.key); }}
+              />
+            </Tooltip>
+          )}
+          <Tooltip title="View Details">
+            <Button
+              type="text"
+              icon={<ExportOutlined />}
+              onClick={() => {
+                setSelectedOrderId(record.key);
+                setDrawerVisible(true);
+              }}
+            />
+          </Tooltip>
+        </div>
+      ),
+    },
   ];
 
   return (
+
     <div className="p-6">
       {/* Stats Cards */}
       <div className="flex justify-between gap-4 w-full mt-6">
@@ -144,12 +218,23 @@ const Orders: React.FC = () => {
         }}
         bordered
       />
-            <OrderDetailDrawer
-  orderId={selectedOrderId}
-  visible={drawerVisible}
-  onClose={() => setDrawerVisible(false)}
-/>
+      <OrderDetailDrawer
+        orderId={selectedOrderId}
+        visible={drawerVisible}
+        onClose={() => setDrawerVisible(false)}
+      />
+      <Modal
+        title="Confirm Status Update"
+        open={confirmVisible}
+        onOk={handleConfirmOk}
+        confirmLoading={confirmLoading}
+        onCancel={handleConfirmCancel}
+        centered
+      >
+        <p>Are you sure you want to mark this order as FULFILLED?</p>
+      </Modal>
     </div>
+
   );
 };
 
