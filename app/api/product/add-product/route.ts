@@ -1,23 +1,17 @@
 import { NextResponse } from 'next/server';
 import { PrismaClient } from '@prisma/client';
-
-import { productSchema } from '@/lib/validation/product';
+import { VariantInput} from '@/lib/validation/product';
 
 const prisma = new PrismaClient();
 export async function POST(req: Request) {
   try {
     const body = await req.json();
-   const parsedData = productSchema.parse(body);
-
-    parsedData.variants.forEach((v, i) => {
-      if (!v.img) throw new Error(`Variant ${i + 1} is missing an image`);
-    });
     const product = await prisma.product.create({
       data: {
-        title: parsedData.title,
-        isDeleted: parsedData.isDeleted,
+        title: body.title,
+        isDeleted: body.isDeleted,
         variants: {
-          create: parsedData.variants.map((v) => ({
+          create: body.variants.map((v:VariantInput) => ({
             img: v.img!,
             colour: v.colour,
             colourcode: v.colourcode,

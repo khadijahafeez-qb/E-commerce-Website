@@ -4,6 +4,7 @@ import { getToken } from 'next-auth/jwt';
 import dayjs from 'dayjs';
 import { z } from 'zod';
 import { signupSchema,forgotPasswordSchema,resetPasswordApiSchema} from '@/lib/validation/auth';
+import { productSchema ,variantSchema} from './lib/validation/product';
 
 // Define which APIs need Zod validation
 const validationMap = [
@@ -22,23 +23,38 @@ const validationMap = [
     method: 'POST',
     schema: resetPasswordApiSchema,
   },
+  {
+    path: /^\/api\/product\/add-product$/, // 👈 your new route for product creation
+    method: 'POST',
+    schema: productSchema,
+  },
+  {
+    path:  /^\/api\/product\/add-variant\/.*$/, // 👈 your new route for product creation
+    method: 'POST',
+    schema: variantSchema,
+  },
 
 ];
 
-// Helper to handle validation errors
 function handleValidationError(error: unknown) {
   if (error instanceof z.ZodError) {
-    const { fieldErrors } = error.flatten();
+    const detailedErrors = error.issues.map((issue) => ({
+      path: issue.path.join('.'),
+      message: issue.message,
+    }));
+
     return NextResponse.json(
-      { error: 'Validation failed', fields: fieldErrors },
+      { error: 'Validation failed', details: detailedErrors },
       { status: 400 }
     );
   }
+
   return NextResponse.json(
     { error: 'Validation failed', details: (error as Error).message },
     { status: 400 }
   );
 }
+
 
 export async function middleware(req: NextRequest) {
   const url = new URL(req.url);
