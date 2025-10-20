@@ -4,21 +4,10 @@ import crypto from 'crypto';
 import bcrypt from 'bcryptjs';
 import { sendMail } from '@/lib/nodemailer';
 import { resetPasswordEmail } from '@/lib/templates/resetPasswordEmail';
-import { forgotPasswordSchema } from '@/lib/validation/auth';
 
 export async function POST(req: Request) {
   try {
-    const body = await req.json();
-    const parsed = forgotPasswordSchema.safeParse(body);
-    if (!parsed.success) {
-      const errors: Record<string, string> = {};
-      parsed.error.issues.forEach((issue) => {
-        const field = issue.path[0] as string;
-        errors[field] = issue.message;
-      });
-      return NextResponse.json({ errors }, { status: 400 });
-    }
-    const { email } = parsed.data;
+    const { email } = await req.json();
     const user = await prisma.user.findUnique({ where: { email } });
     if (!user) return NextResponse.json({ message: 'If this email exists, a reset link has been sent.' });
     const resetToken = crypto.randomBytes(32).toString('hex');

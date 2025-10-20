@@ -23,7 +23,11 @@ export async function POST(req: Request) {
     if (!cartItems || cartItems.length === 0) {
       return new Response(JSON.stringify({ error: 'Cart is empty' }), { status: 400 });
     }
-    const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
+    if (!process.env.STRIPE_SECRET_KEY) {
+      return new Response(JSON.stringify({ error: 'Stripe not configured' }), { status: 500 });
+    }
+
+    const stripe = new Stripe(process.env.STRIPE_SECRET_KEY, {
       apiVersion: '2025-09-30.clover',
     });
     // Step 2a: Create Stripe Customer if missing
