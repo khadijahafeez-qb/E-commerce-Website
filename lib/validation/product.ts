@@ -25,15 +25,6 @@ export const variantSchema = z.object({
     .transform((val) => val ?? '')
     .refine((val) => val.trim().length > 0, { message: 'Size is required' }),
 
-// stock: z
-//   .union([z.number(), z.undefined()])
-//   .refine((val) => val !== undefined, { message: 'Stock is required' })
-//   .refine((val) => val! > 0, { message: 'Stock must be greater than 0' }),
-
-// price: z
-//   .union([z.number(), z.undefined()])
-//   .refine((val) => val !== undefined, { message: 'Price is required' })
-//   .refine((val) => val! > 0, { message: 'Price must be greater than 0' }),
 stock: z.number()
   .refine(val => val !== undefined, { message: 'Stock is required' })
   .refine(val => Number.isInteger(val), { message: 'Stock must be an integer' })
@@ -65,6 +56,34 @@ export const productSchema = z
     return new Set(combos).size === combos.length;
   }, { message: 'Variants must have unique colour + size combinations' });
 
+  export const productIdSchema = z.object({
+  id: z.string().uuid({ message: 'Invalid product ID' }),
+});
+
+export const productQuerySchema = z
+  .object({
+    page: z
+      .string()
+      .optional()
+      .refine((val) => !val || /^\d+$/.test(val), {
+        message: 'Page must be a valid number',
+      })
+      .transform((val) => (val ? parseInt(val, 10) : 1))
+      .refine((val) => val > 0, { message: 'Page must be greater than 0' }),
+
+    limit: z
+      .string()
+      .optional()
+      .refine((val) => !val || /^\d+$/.test(val), {
+        message: 'Limit must be a valid number',
+      })
+      .transform((val) => (val ? parseInt(val, 10) : 8))
+      .refine((val) => val > 0, { message: 'Limit must be greater than 0' }),
+
+    search: z.string().optional(),
+    sort: z.enum(['', 'price-asc', 'price-desc']).optional(),
+  })
+  .strict(); // 🚫 no unknown query keys
 
 // Types
 export type ProductInput = z.input<typeof productSchema>;

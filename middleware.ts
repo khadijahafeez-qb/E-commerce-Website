@@ -2,9 +2,9 @@ import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
 import { getToken } from 'next-auth/jwt';
 import dayjs from 'dayjs';
-import { z } from 'zod';
+import { z ,type ZodTypeAny} from 'zod';
 import { signupSchema,forgotPasswordSchema,resetPasswordApiSchema} from '@/lib/validation/auth';
-import { productSchema ,variantSchema} from './lib/validation/product';
+import { productSchema ,variantSchema,productIdSchema,productQuerySchema} from './lib/validation/product';
 
 // Define which APIs need Zod validation
 const validationMap = [
@@ -33,6 +33,30 @@ const validationMap = [
     method: 'POST',
     schema: variantSchema,
   },
+  {
+  path: /^\/api\/product\/delete-product\/.*$/,
+  method: 'PUT',
+  schema: productIdSchema,
+},
+{
+  path: /^\/api\/product\/delete-product-variant\/.*$/,
+  method: 'PUT',
+  schema: productIdSchema,
+},
+{
+  path: /^\/api\/product\/update-product\/.*$/,
+  method: 'PUT',
+   schema: {
+      param: productIdSchema,
+      body: variantSchema,
+    },
+},
+{
+    path: /^\/api\/product\/get-products$/, // exact path for GET products
+    method: 'GET',
+    query: productQuerySchema, // ✅ add query validation
+  },
+
 
 ];
 
@@ -59,21 +83,42 @@ function handleValidationError(error: unknown) {
 export async function middleware(req: NextRequest) {
   const url = new URL(req.url);
   const path = url.pathname;
-
-  // ✅ Zod validation for API routes
-  if (path.startsWith('/api')) {
-    const matched = validationMap.find(
-      (rule) =>
-        rule.method === req.method &&
-        (rule.path instanceof RegExp ? rule.path.test(path) : rule.path === path)
-    );
+  const searchParams = Object.fromEntries(url.searchParams.entries());
+if (path.startsWith('/api')) {
+  const matched = validationMap.find(
+    (rule) =>
+      rule.method === req.method &&
+      (rule.path instanceof RegExp ? rule.path.test(path) : rule.path === path)
+  );
 
     if (matched) {
       try {
-        const clone = req.clone();
-        const text = await clone.text();
-        const body = text ? JSON.parse(text) : {};
-        matched.schema.parse(body); // throws if invalid
+          // ✅ Query validation
+        if ('query' in matched && matched.query) {
+          matched.query.parse(searchParams);
+        }
+        // Combined param + body validation (update-product)
+        else if ('param' in matched.schema && 'body' in matched.schema) {
+          const id = path.split('/').pop();
+          matched.schema.param.parse({ id });
+
+          const body = await req.json();
+          matched.schema.body.parse(body);
+        }
+        // Only param validation (DELETE / soft-delete PUT)
+        else if (req.method === 'DELETE' || req.method === 'PUT') {
+          const schema = matched.schema as ZodTypeAny;
+          const id = path.split('/').pop();
+          schema.parse({ id });
+        }
+        // Only body validation (POST)
+        else {
+          const schema = matched.schema as ZodTypeAny;
+          const clone = req.clone();
+          const text = await clone.text();
+          const body = text ? JSON.parse(text) : {};
+          schema.parse(body);
+        }
       } catch (err) {
         return handleValidationError(err);
       }

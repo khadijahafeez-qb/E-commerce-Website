@@ -50,7 +50,7 @@ function App() {
       const qSearch = encodeURIComponent(debouncedSearchRef.current);
       const qSort = encodeURIComponent(sortRef.current || '');
       const res = await fetch(
-        `/api/product?page=${pageNum}&limit=${PAGE_SIZE}&search=${qSearch}&sort=${qSort}`
+        `/api/product/get-products?page=${pageNum}&limit=${PAGE_SIZE}&search=${qSearch}&sort=${qSort}`
       );
       if (!res.ok) throw new Error('Failed to fetch products');
       const data: ApiResponse = await res.json();

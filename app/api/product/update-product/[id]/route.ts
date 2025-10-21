@@ -7,22 +7,7 @@ export async function PUT(req: NextRequest,context: { params: Promise<{ id: stri
   try {
         const { id } = await context.params;
     const body = await req.json();
-    const { colour, colourcode, size, price, stock, img, productId } = body;
-
-    if (!id) {
-      return NextResponse.json(
-        { success: false, error: 'Variant ID is required' },
-        { status: 400 }
-      );
-    }
-
-    // Validate input (optional but safe)
-    if (!productId) {
-      return NextResponse.json(
-        { success: false, error: 'Product ID is required' },
-        { status: 400 }
-      );
-    }
+    const { colour, colourcode, size, price, stock, img } = body;
 
     // Update variant
     const updatedVariant = await prisma.productVariant.update({
@@ -34,7 +19,6 @@ export async function PUT(req: NextRequest,context: { params: Promise<{ id: stri
         price: Number(price),
         stock: Number(stock),
         img,
-        productId,
         updatedAt: new Date(),
       },
     });
