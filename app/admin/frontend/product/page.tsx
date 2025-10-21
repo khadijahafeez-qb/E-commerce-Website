@@ -76,7 +76,7 @@ const handleInactivateVariant = async () => {
   const fetchProducts = async (page: number) => {
     setLoading(true);
     try {
-      const res = await fetch(`/api/product?page=${page}&limit=${pageSize}`);
+      const res = await fetch(`/api/product/get-products?page=${page}&limit=${pageSize}`);
       if (!res.ok) throw new Error('Failed to fetch products');
       const result = await res.json();
       setData(result.products);
