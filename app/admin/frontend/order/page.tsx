@@ -39,11 +39,11 @@ const Orders: React.FC = () => {
 
   const handleStatusUpdate = async (orderId: string, newStatus: string) => {
     try {
-      const res = await fetch(`/api/order/${orderId}/status`, {
-        method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ status: newStatus }),
-      });
+  const res = await fetch(`/api/order/${orderId}/status`, {
+  method: 'PATCH',
+  headers: { 'Content-Type': 'application/json' },
+  body: JSON.stringify({ status: newStatus }),
+});
 
       if (!res.ok) throw new Error('Failed to update status');
 
