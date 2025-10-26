@@ -25,3 +25,7 @@
 .thumbnail-row{
   @apply flex gap-8 mt-2 justify-center 
 }
+.main-image {
+  @apply w-full object-contain rounded-lg;
+  aspect-ratio: 1 / 1; 
+}
