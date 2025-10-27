@@ -2,9 +2,10 @@ import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
 import { getToken } from 'next-auth/jwt';
 import dayjs from 'dayjs';
-import { z ,type ZodTypeAny} from 'zod';
-import { signupSchema,forgotPasswordSchema,resetPasswordApiSchema} from '@/lib/validation/auth';
-import { productSchema ,variantSchema,productIdSchema,productQuerySchema} from './lib/validation/product';
+import { z, type ZodTypeAny } from 'zod';
+import { signupSchema, forgotPasswordSchema, resetPasswordApiSchema } from '@/lib/validation/auth';
+import { productSchema, variantSchema, productIdSchema, productQuerySchema } from './lib/validation/product';
+import { orderdetailParamsSchema } from './lib/validation/orderdetail';
 
 // Define which APIs need Zod validation
 const validationMap = [
@@ -29,33 +30,38 @@ const validationMap = [
     schema: productSchema,
   },
   {
-    path:  /^\/api\/product\/add-variant\/.*$/, // 👈 your new route for product creation
+    path: /^\/api\/product\/add-variant\/.*$/, // 👈 your new route for product creation
     method: 'POST',
     schema: variantSchema,
   },
   {
-  path: /^\/api\/product\/delete-product\/.*$/,
-  method: 'PUT',
-  schema: productIdSchema,
-},
-{
-  path: /^\/api\/product\/delete-product-variant\/.*$/,
-  method: 'PUT',
-  schema: productIdSchema,
-},
-{
-  path: /^\/api\/product\/update-product\/.*$/,
-  method: 'PUT',
-   schema: {
+    path: /^\/api\/product\/delete-product\/.*$/,
+    method: 'PUT',
+    schema: productIdSchema,
+  },
+  {
+    path: /^\/api\/product\/delete-product-variant\/.*$/,
+    method: 'PUT',
+    schema: productIdSchema,
+  },
+  {
+    path: /^\/api\/product\/update-product\/.*$/,
+    method: 'PUT',
+    schema: {
       param: productIdSchema,
       body: variantSchema,
     },
-},
-{
+  },
+  {
     path: /^\/api\/product\/get-products$/, // exact path for GET products
     method: 'GET',
     query: productQuerySchema, // ✅ add query validation
   },
+  {
+    path: /^\/api\/orderdetail\/.*$/,
+    method: 'GET',
+    schema: orderdetailParamsSchema,
+  }
 
 
 ];
@@ -84,19 +90,31 @@ export async function middleware(req: NextRequest) {
   const url = new URL(req.url);
   const path = url.pathname;
   const searchParams = Object.fromEntries(url.searchParams.entries());
-if (path.startsWith('/api')) {
-  const matched = validationMap.find(
-    (rule) =>
-      rule.method === req.method &&
-      (rule.path instanceof RegExp ? rule.path.test(path) : rule.path === path)
-  );
+  if (path.startsWith('/api')) {
+    const matched = validationMap.find(
+      (rule) =>
+        rule.method === req.method &&
+        (rule.path instanceof RegExp ? rule.path.test(path) : rule.path === path)
+    );
 
     if (matched) {
       try {
-          // ✅ Query validation
+        // ✅ Query validation
         if ('query' in matched && matched.query) {
           matched.query.parse(searchParams);
         }
+        // ✅ Handle GET with param (like /api/orderdetail/:id)
+        else if (req.method === 'GET' && matched.schema) {
+          const id = path.split('/').pop();
+
+          // Narrow the type to only call .parse if it's a Zod schema
+          if ('parse' in matched.schema && typeof matched.schema.parse === 'function') {
+            matched.schema.parse({ id });
+          } else if ('param' in matched.schema) {
+            matched.schema.param.parse({ id });
+          }
+        }
+
         // Combined param + body validation (update-product)
         else if ('param' in matched.schema && 'body' in matched.schema) {
           const id = path.split('/').pop();
@@ -119,6 +137,8 @@ if (path.startsWith('/api')) {
           const body = text ? JSON.parse(text) : {};
           schema.parse(body);
         }
+        // ✅ Validation PASSED → continue request
+        return NextResponse.next();
       } catch (err) {
         return handleValidationError(err);
       }
