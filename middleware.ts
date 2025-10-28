@@ -106,6 +106,7 @@ export async function middleware(req: NextRequest) {
     // ✅ List of public API paths that DON’T require token
   const publicApiPaths = [
     /^\/api\/auth\//, // login, signup, forgot-password, etc.
+     /^\/api\/webhook$/,
   ];
 
   if (path.startsWith('/api')) {

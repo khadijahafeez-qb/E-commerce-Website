@@ -10,7 +10,7 @@ import { Table, Button, Checkbox, notification, Image } from 'antd';
 import { DeleteOutlined, PlusOutlined, MinusOutlined, ArrowLeftOutlined } from '@ant-design/icons';
 import type { ColumnsType } from 'antd/es/table';
 
-import { getUserCart,clearCart,updateQty,removeFromCart } from '@/utils/cart-storage';
+import { getUserCart, clearCart, updateQty, removeFromCart } from '@/utils/cart-storage';
 import MainLayout from '@/app/components/mainlayout';
 import DeleteConfirmModal from '@/app/components/deleteconfirmmodal';
 import { tableClasses } from '@/utils/tableClasses';
@@ -34,9 +34,10 @@ const ShoppingCartPage: React.FC = () => {
   const [deleteKey, setDeleteKey] = useState<string | null>(null);
   const [selectedRowKeys, setSelectedRowKeys] = useState<React.Key[]>([]);
   const [isBulkDelete, setIsBulkDelete] = useState(false);
-   const [cartItems, setCartItems] = useState<Product[]>([]);
-   const { data: session } = useSession();
-const userEmail = session?.user?.email || 'guest';
+  const [cartItems, setCartItems] = useState<Product[]>([]);
+  const [isPlacingOrder, setIsPlacingOrder] = useState(false);
+  const { data: session } = useSession();
+  const userEmail = session?.user?.email || 'guest';
 
 
   useEffect(() => {
@@ -44,7 +45,15 @@ const userEmail = session?.user?.email || 'guest';
   }, [userEmail]);
 
   const placeOrder = async () => {
+    if (isPlacingOrder) return; // ✅ Prevent double click
     try {
+      setIsPlacingOrder(true); // ✅ Disable button
+      api.info({
+        message: 'Redirecting...',
+        description: 'You are being redirected to the checkout page.',
+        duration: 2,
+      });
+
       const res = await fetch('/api/placeorder', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -61,7 +70,10 @@ const userEmail = session?.user?.email || 'guest';
       }
       clearCart(userEmail);
       if (data.url) {
-        window.location.href = data.url;
+        // Small delay so user can see the toast
+        setTimeout(() => {
+          window.location.href = data.url;
+        }, 1500);
       } else {
         api.error({ message: 'Payment failed', description: 'No Stripe URL returned' });
       }
@@ -73,6 +85,9 @@ const userEmail = session?.user?.email || 'guest';
         message: 'Payment failed',
         description: 'Something went wrong',
       });
+    } finally {
+      // ✅ Keep disabled state for 3 sec to prevent double-click during redirect
+      setTimeout(() => setIsPlacingOrder(false), 3000);
     }
   };
   const data: cartList[] = (cartItems || []).map((item) => ({
@@ -103,7 +118,7 @@ const userEmail = session?.user?.email || 'guest';
     setIsModalOpen(false);
     if (isBulkDelete) {
       selectedRowKeys.forEach((k) => {
-       removeFromCart(userEmail, String(k));
+        removeFromCart(userEmail, String(k));
       });
       setSelectedRowKeys([]);
     } else if (deleteKey) {
@@ -126,7 +141,7 @@ const userEmail = session?.user?.email || 'guest';
       newCount = Math.max(1, product.count - 1);
     }
     updateQty(userEmail, product.id, newCount);
-  setCartItems(getUserCart(userEmail)); // Refresh cart
+    setCartItems(getUserCart(userEmail)); // Refresh cart
   };
   const columns: ColumnsType<cartList> = [
     {
@@ -280,8 +295,12 @@ const userEmail = session?.user?.email || 'guest';
           </div>
         </div>
         <div className='flex justify-end mt-6'>
-          <Button onClick={placeOrder} type='primary' className='placeorder-button'>
-            Place Order
+          <Button onClick={placeOrder}
+            type='primary'
+            className='placeorder-button'
+            loading={isPlacingOrder}
+            disabled={isPlacingOrder}>
+            {isPlacingOrder ? 'Redirecting...' : 'Place Order'}
           </Button>
         </div>
         <DeleteConfirmModal open={isModalOpen} onCancel={handleCancel} onConfirm={handleConfirm} />
