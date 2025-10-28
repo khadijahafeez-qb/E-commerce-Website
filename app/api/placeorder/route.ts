@@ -26,23 +26,13 @@ export async function POST(req: Request) {
     if (!process.env.STRIPE_SECRET_KEY) {
       return new Response(JSON.stringify({ error: 'Stripe not configured' }), { status: 500 });
     }
-
     const stripe = new Stripe(process.env.STRIPE_SECRET_KEY, {
       apiVersion: '2025-09-30.clover',
     });
-    // Step 2a: Create Stripe Customer if missing
-    let stripeCustomerId = user.stripeCustomerId;
-    if (!stripeCustomerId) {
-      const customer = await stripe.customers.create({
-        email: user.email,
-        name: user.fullname,
-      });
-      stripeCustomerId = customer.id;
-      await prisma.user.update({
-        where: { id: user.id },
-        data: { stripeCustomerId },
-      });
+    if (!user.stripeCustomerId) {
+      return new Response(JSON.stringify({ error: 'User has no Stripe account' }), { status: 400 });
     }
+    const stripeCustomerId = user.stripeCustomerId;
     // Create Checkout Session
     const subtotal = cartItems.reduce((acc: number, item: OrderItem) => acc + item.price * item.count, 0);
     const tax = Math.round(subtotal * 0.10 * 100); // in cents
@@ -92,10 +82,12 @@ export async function POST(req: Request) {
         },
       },
     });
-    return new Response(JSON.stringify({ url: stripe_session.url, orderId: newOrder.id }));
+    return new Response(JSON.stringify({ url: stripe_session.url, orderId: newOrder.id }),{ status: 200 });
   } catch (err) {
     console.error(err);
     return new Response(JSON.stringify({ error: 'Something went wrong' }), { status: 500 });
+  }finally {
+    await prisma.$disconnect(); // ✅ Always close connection
   }
 }
 

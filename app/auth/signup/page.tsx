@@ -25,7 +25,7 @@ export default function SignupPage() {
       if (!res.ok) {
         api.error({
           message: 'Signup Failed',
-          description: result.message || 'Something went wrong',
+          description: result.error || result.message || 'Something went wrong',
           placement: 'topRight',
         });
         return;

@@ -34,7 +34,6 @@ const ShoppingCartPage: React.FC = () => {
   const [deleteKey, setDeleteKey] = useState<string | null>(null);
   const [selectedRowKeys, setSelectedRowKeys] = useState<React.Key[]>([]);
   const [isBulkDelete, setIsBulkDelete] = useState(false);
-  //const cartItems = useAppSelector(selectCartItems);
    const [cartItems, setCartItems] = useState<Product[]>([]);
    const { data: session } = useSession();
 const userEmail = session?.user?.email || 'guest';
@@ -43,8 +42,6 @@ const userEmail = session?.user?.email || 'guest';
   useEffect(() => {
     setCartItems(getUserCart(userEmail));
   }, [userEmail]);
-
-  const refreshCart = () => setCartItems(getUserCart(userEmail));
 
   const placeOrder = async () => {
     try {
