@@ -20,8 +20,35 @@ export async function POST(req: Request) {
     const user = await prisma.user.findUnique({ where: { email: session.user.email } });
     if (!user) return new Response(JSON.stringify({ error: 'User not found' }), { status: 404 });
     const { cartItems, total } = await req.json();
+        // 🧩 1️⃣ Validate cart existence
     if (!cartItems || cartItems.length === 0) {
       return new Response(JSON.stringify({ error: 'Cart is empty' }), { status: 400 });
+    }
+       // 🧩 2️⃣ Pre-check stock for all items (before transaction)
+    for (const item of cartItems) {
+      const variant = await prisma.productVariant.findUnique({
+        where: { id: item.id },
+        select: {
+          stock: true,
+          product: { select: { title: true } },
+        },
+      });
+
+      if (!variant) {
+        return new Response(
+          JSON.stringify({ error: `Product variant for ${item.title} not found` }),
+          { status: 400 }
+        );
+      }
+
+      if (item.count > variant.stock) {
+        return new Response(
+          JSON.stringify({
+            error: `Not enough stock for ${variant.product.title}. Available: ${variant.stock}`,
+          }),
+          { status: 400 }
+        );
+      }
     }
     if (!process.env.STRIPE_SECRET_KEY) {
       return new Response(JSON.stringify({ error: 'Stripe not configured' }), { status: 500 });

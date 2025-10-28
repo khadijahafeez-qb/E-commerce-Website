@@ -47,12 +47,25 @@ const ShoppingCartPage: React.FC = () => {
   const placeOrder = async () => {
     if (isPlacingOrder) return; // ✅ Prevent double click
     try {
+        // ✅ 1️⃣ Check if cart is empty
+   if (!cartItems || cartItems.length === 0) {
+    api.warning({
+      message: 'Cart is empty',
+      description: 'Please add some products before placing an order.',
+    });
+    return;
+  }
+
+  // ✅ 2️⃣ Optionally check if any item has invalid qty or stock 0
+  const hasInvalidItem = cartItems.some((item) => item.count <= 0 || item.stock <= 0);
+  if (hasInvalidItem) {
+    api.error({
+      message: 'Invalid product quantity',
+      description: 'Some products in your cart are out of stock or invalid.',
+    });
+    return;
+  }
       setIsPlacingOrder(true); // ✅ Disable button
-      api.info({
-        message: 'Redirecting...',
-        description: 'You are being redirected to the checkout page.',
-        duration: 2,
-      });
 
       const res = await fetch('/api/placeorder', {
         method: 'POST',
@@ -67,7 +80,15 @@ const ShoppingCartPage: React.FC = () => {
           message: 'Order failed',
           description: data.error || 'Something went wrong',
         });
+        return;
       }
+ 
+// ✅ Only show redirect toast if success
+    api.info({
+      message: 'Redirecting...',
+      description: 'You are being redirected to the checkout page.',
+      duration: 2,
+    });
       clearCart(userEmail);
       if (data.url) {
         // Small delay so user can see the toast
