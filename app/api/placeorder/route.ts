@@ -66,27 +66,51 @@ export async function POST(req: Request) {
       },
     });
     // Create order in DB as pending
-    const newOrder = await prisma.order.create({
-      data: {
-        userId: user.id,
-        total,
-        stripeSessionId: stripe_session.id,
-        status: 'PENDING',
-        items: {
-          create: cartItems.map((item: OrderItem) => ({
-            product: { connect: { id: item.productId } },
-            variant: { connect: { id: item.id } },
-            quantity: item.count,
-            price: item.price,
-          })),
+    // 8️⃣ Transaction: decrease stock + create order atomically
+    const newOrder = await prisma.$transaction(async (tx) => {
+      // Validate & update stock
+      for (const item of cartItems) {
+        const variant = await tx.productVariant.findUnique({
+          where: { id: item.id },
+        });
+        if (!variant) {
+          throw new Error(`Variant not found for ${item.title}`);
+        }
+        if (variant.stock < item.count) {
+          throw new Error(`Insufficient stock for ${item.title}`);
+        }
+
+        await tx.productVariant.update({
+          where: { id: item.id },
+          data: { stock: { decrement: item.count } },
+        });
+      }
+
+      // Create order and related items
+      const order = await tx.order.create({
+        data: {
+          userId: user.id,
+          total,
+          stripeSessionId: stripe_session.id,
+          status: 'PENDING',
+          items: {
+            create: cartItems.map((item: OrderItem) => ({
+              product: { connect: { id: item.productId } },
+              variant: { connect: { id: item.id } },
+              quantity: item.count,
+              price: item.price,
+            })),
+          },
         },
-      },
+      });
+
+      return order;
     });
-    return new Response(JSON.stringify({ url: stripe_session.url, orderId: newOrder.id }),{ status: 200 });
+    return new Response(JSON.stringify({ url: stripe_session.url, orderId: newOrder.id }), { status: 200 });
   } catch (err) {
     console.error(err);
     return new Response(JSON.stringify({ error: 'Something went wrong' }), { status: 500 });
-  }finally {
+  } finally {
     await prisma.$disconnect(); // ✅ Always close connection
   }
 }
