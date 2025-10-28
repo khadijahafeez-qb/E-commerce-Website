@@ -6,6 +6,7 @@ import { z, type ZodTypeAny } from 'zod';
 import { signupSchema, forgotPasswordSchema, resetPasswordApiSchema } from '@/lib/validation/auth';
 import { productSchema, variantSchema, productIdSchema, productQuerySchema } from './lib/validation/product';
 import { orderdetailParamsSchema } from './lib/validation/orderdetail';
+import { getOrdersSchema,updateOrderStatusSchema } from './lib/validation/order';
 
 // Define which APIs need Zod validation
 const validationMap = [
@@ -61,7 +62,18 @@ const validationMap = [
     path: /^\/api\/orderdetail\/.*$/,
     method: 'GET',
     schema: orderdetailParamsSchema,
-  }
+  },
+    {
+    path: /^\/api\/order$/, 
+    method: 'GET',
+    query: getOrdersSchema, // ✅ validate query params like page, limit, search
+  },
+  {
+    path: /^\/api\/order\/.*\/status$/, 
+    method: 'PATCH',
+    schema: updateOrderStatusSchema, // ✅ validate params + body
+  },
+
 
 
 ];
@@ -90,7 +102,30 @@ export async function middleware(req: NextRequest) {
   const url = new URL(req.url);
   const path = url.pathname;
   const searchParams = Object.fromEntries(url.searchParams.entries());
+
+    // ✅ List of public API paths that DON’T require token
+  const publicApiPaths = [
+    /^\/api\/auth\//, // login, signup, forgot-password, etc.
+  ];
+
   if (path.startsWith('/api')) {
+        // 👇 CHANGED: Require token for all /api routes except public ones
+    const isPublicApi = publicApiPaths.some((regex) => regex.test(path));
+
+    if (!isPublicApi) {
+      const token =
+        (await getToken({
+          req,
+          secret: process.env.NEXTAUTH_SECRET,
+          secureCookie: process.env.NODE_ENV === 'production',
+        })) || null;
+
+      // If no token, block the request
+      if (!token) {
+        return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+      }
+    }
+
     const matched = validationMap.find(
       (rule) =>
         rule.method === req.method &&
@@ -103,6 +138,7 @@ export async function middleware(req: NextRequest) {
         if ('query' in matched && matched.query) {
           matched.query.parse(searchParams);
         }
+      
         // ✅ Handle GET with param (like /api/orderdetail/:id)
         else if (req.method === 'GET' && matched.schema) {
           const id = path.split('/').pop();
@@ -147,7 +183,7 @@ export async function middleware(req: NextRequest) {
     return NextResponse.next();
   }
 
-  // ✅ Auth token validation for normal routes
+  // ✅ Auth token validation for normal routes ✅ For frontend pages (non-API)
   const token = await getToken({
     req,
     secret: process.env.NEXTAUTH_SECRET,
