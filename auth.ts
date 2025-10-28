@@ -4,6 +4,7 @@ import GoogleProvider from 'next-auth/providers/google';
 import NextAuth, { type User } from 'next-auth';
 import { prisma } from '@/lib/prisma';
 import bcrypt from 'bcryptjs';
+import Stripe from 'stripe';
 
 declare module 'next-auth' {
   interface User {
@@ -76,24 +77,49 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
   },
 
   callbacks: {
-    async signIn({ user, account}) {
+    async signIn({ user, account }) {
       if (account?.provider === 'google') {
+        // Find or create user
         let dbUser = await prisma.user.findUnique({
-          where: { email: user.email! }
+          where: { email: user.email! },
+        });
+
+        // ✅ Initialize Stripe instance
+        const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
+          apiVersion: '2025-09-30.clover',
         });
 
         if (!dbUser) {
+          // ✅ Create Stripe Customer
+          const customer = await stripe.customers.create({
+            email: user.email!,
+            name: user.name || 'No Name',
+          });
+
+          // ✅ Store user + stripeCustomerId in DB
           dbUser = await prisma.user.create({
             data: {
               email: user.email!,
               fullname: user.name || 'No Name',
-              password: '', 
+              password: '', // Google users have no password
               role: 'USER',
+              stripeCustomerId: customer.id,
             },
+          });
+        } else if (!dbUser.stripeCustomerId) {
+          // ✅ If existing user but no stripe ID, create one now
+          const customer = await stripe.customers.create({
+            email: dbUser.email,
+            name: dbUser.fullname,
+          });
+
+          dbUser = await prisma.user.update({
+            where: { id: dbUser.id },
+            data: { stripeCustomerId: customer.id },
           });
         }
 
-       
+        // Attach updated info to session user
         user.id = String(dbUser.id);
         user.role = dbUser.role;
         user.rememberMe = true;
@@ -101,7 +127,6 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
 
       return true;
     },
-
     async jwt({ token, user }) {
 
       if (user) {
