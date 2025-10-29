@@ -54,7 +54,7 @@ const siderStyle: React.CSSProperties = {
   borderRight: '1px solid #E8E8EC',
 };
 
-const AdminLayout: React.FC<AdminLayoutProps> = ({ children, fullname }) => {
+const AdminLayout: React.FC<AdminLayoutProps> = ({  fullname }) => {
   const [active, setActive] = useState<'products' | 'orders'>('products');
   const renderContent = () => {
     switch (active) {

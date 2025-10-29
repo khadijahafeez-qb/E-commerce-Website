@@ -160,6 +160,7 @@ export async function middleware(req: NextRequest) {
           const body = await req.json();
           matched.schema.body.parse(body);
         }
+        
         // Only param validation (DELETE / soft-delete PUT)
         else if (req.method === 'DELETE' || req.method === 'PUT') {
           const schema = matched.schema as ZodTypeAny;
