@@ -30,55 +30,55 @@ async function main() {
 
   }
 
-  // ✅ 2. Seed Products (each with 4 Variants)
-  const colors = ['Black', 'White', 'Green', 'Grey'];
-  const colorCodes = ['#000000', '#FFFFFF', '#008000', '#808080'];
-  const sizes = ['S', 'M', 'L', 'XL'];
-  const colorImages: Record<string, string> = {
-    Black: 'https://m.media-amazon.com/images/I/61wfjo8j5tL._AC_SX679_.jpg',
-    White: 'https://m.media-amazon.com/images/I/61LT6tiJgoL._AC_SX679_.jpg',
-    Green: 'https://m.media-amazon.com/images/I/71nFRsR7lRL._AC_SX679_.jpg',
-    Grey: 'https://m.media-amazon.com/images/I/618b8Wy4wHL._AC_SX679_.jpg',
-  };
+  // // ✅ 2. Seed Products (each with 4 Variants)
+  // const colors = ['Black', 'White', 'Green', 'Grey'];
+  // const colorCodes = ['#000000', '#FFFFFF', '#008000', '#808080'];
+  // const sizes = ['S', 'M', 'L', 'XL'];
+  // const colorImages: Record<string, string> = {
+  //   Black: 'https://m.media-amazon.com/images/I/61wfjo8j5tL._AC_SX679_.jpg',
+  //   White: 'https://m.media-amazon.com/images/I/61LT6tiJgoL._AC_SX679_.jpg',
+  //   Green: 'https://m.media-amazon.com/images/I/71nFRsR7lRL._AC_SX679_.jpg',
+  //   Grey: 'https://m.media-amazon.com/images/I/618b8Wy4wHL._AC_SX679_.jpg',
+  // };
 
-  const JacketNames = [
-    'Lightweight Tech Jacket',
-    'StormGuard Rain Jacket',
-    'Arctic Parka',
-    'Hybrid Fleece Zip-Up',
-    'Classic Hoodie',
-  ];
+  // const JacketNames = [
+  //   'Lightweight Tech Jacket',
+  //   'StormGuard Rain Jacket',
+  //   'Arctic Parka',
+  //   'Hybrid Fleece Zip-Up',
+  //   'Classic Hoodie',
+  // ];
 
-  for (let i = 0; i < 60; i++) {
-    const baseName = JacketNames[i % JacketNames.length];
+  // for (let i = 0; i < 60; i++) {
+  //   const baseName = JacketNames[i % JacketNames.length];
 
-    // Rotate colors so each product starts with a different color
-    const offset = i % colors.length;
-    const rotatedColors = [...colors.slice(offset), ...colors.slice(0, offset)];
-    const rotatedCodes = [...colorCodes.slice(offset), ...colorCodes.slice(0, offset)];
+  //   // Rotate colors so each product starts with a different color
+  //   const offset = i % colors.length;
+  //   const rotatedColors = [...colors.slice(offset), ...colors.slice(0, offset)];
+  //   const rotatedCodes = [...colorCodes.slice(offset), ...colorCodes.slice(0, offset)];
 
-    const variantsData = rotatedColors.map((color, idx) => ({
-      colour: color,
-      colourcode: rotatedCodes[idx],
-      size: sizes[idx % sizes.length],
-      price: 100 + i * 5 + idx * 10,
-      stock: 20 + i,
-      img: colorImages[color],
-      availabilityStatus: VariantAvailability.ACTIVE,
-    }));
+  //   const variantsData = rotatedColors.map((color, idx) => ({
+  //     colour: color,
+  //     colourcode: rotatedCodes[idx],
+  //     size: sizes[idx % sizes.length],
+  //     price: 100 + i * 5 + idx * 10,
+  //     stock: 20 + i,
+  //     img: colorImages[color],
+  //     availabilityStatus: VariantAvailability.ACTIVE,
+  //   }));
 
-    const product = await prisma.product.create({
-      data: {
-        title: `${baseName} ${i + 1}`,
-        isDeleted: 'active',
-        variants: { create: variantsData },
-      },
-      include: { variants: true },
-    });
+  //   const product = await prisma.product.create({
+  //     data: {
+  //       title: `${baseName} ${i + 1}`,
+  //       isDeleted: 'active',
+  //       variants: { create: variantsData },
+  //     },
+  //     include: { variants: true },
+  //   });
 
    
-    await delay(50); // small delay to avoid connection overload
-  }
+  //   await delay(50); // small delay to avoid connection overload
+  // }
 
 
 }

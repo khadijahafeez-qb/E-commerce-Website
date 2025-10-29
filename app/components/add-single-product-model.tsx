@@ -177,7 +177,7 @@ const AddSingleProductModal: React.FC<AddSingleProductModalProps> = ({
       onCancel={onCancel}
       footer={null}
       width={800}
-      destroyOnClose
+      destroyOnHidden
     >
       <Form layout="vertical" onFinish={handleSubmit(onSubmit)}>
         {/* Product Title */}
