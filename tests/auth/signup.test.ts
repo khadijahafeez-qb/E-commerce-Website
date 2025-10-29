@@ -1,7 +1,6 @@
 import { POST } from '@/app/api/auth/signup/route';
 import { prisma } from '@/lib/prisma';
 import bcrypt from 'bcryptjs';
-import Stripe from 'stripe';
 
 // --- MOCKS ---
 
@@ -133,4 +132,57 @@ describe('POST /api/auth/signup', () => {
     expect(res.status).toBe(500);
     expect(data.error).toBe('Internal server error');
   });
+  it('should handle Stripe customer creation failure', async () => {
+  process.env.STRIPE_SECRET_KEY = 'sk_test_123';
+  (prisma.user.findUnique as jest.Mock).mockResolvedValue(null);
+  (bcrypt.hash as jest.Mock).mockResolvedValue('hashed123');
+
+  // Force Stripe to throw
+  mockCreateCustomer.mockRejectedValue(new Error('Stripe failed'));
+
+  const req = new Request('http://localhost/api/auth/signup', {
+    method: 'POST',
+    body: JSON.stringify({
+      fullname: 'Khadija',
+      email: 'new2@test.com',
+      mobile: '03331234567',
+      password: '123456',
+    }),
+  });
+
+  const res = await POST(req);
+  const data = await res.json();
+
+  expect(res.status).toBe(500);
+  expect(data.error).toBe('Internal server error');
+});
+
+
+it('should handle Prisma create failure', async () => {
+  process.env.STRIPE_SECRET_KEY = 'sk_test_123';
+  (prisma.user.findUnique as jest.Mock).mockResolvedValue(null);
+  (bcrypt.hash as jest.Mock).mockResolvedValue('hashed123');
+  mockCreateCustomer.mockResolvedValue({ id: 'cus_456' });
+
+  (prisma.user.create as jest.Mock).mockRejectedValue(
+    new Error('DB insertion failed')
+  );
+
+  const req = new Request('http://localhost/api/auth/signup', {
+    method: 'POST',
+    body: JSON.stringify({
+      fullname: 'Zain',
+      email: 'zain@test.com',
+      mobile: '03331234567',
+      password: '123456',
+    }),
+  });
+
+  const res = await POST(req);
+  const data = await res.json();
+
+  expect(res.status).toBe(500);
+  expect(data.error).toBe('Internal server error');
+});
+
 });
