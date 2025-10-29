@@ -186,3 +186,9 @@ it('should handle Prisma create failure', async () => {
 });
 
 });
+// ✅ Existing email
+// ✅ Missing Stripe key
+// ✅ Successful signup
+// ✅ Unexpected (DB) error
+// ✅ Stripe failure
+// ✅ Prisma create failure

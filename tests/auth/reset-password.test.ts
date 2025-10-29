@@ -171,3 +171,12 @@ describe('POST /api/auth/reset-password', () => {
     expect(data.error).toBe('Internal server error');
   });
 });
+// | Case                | Covered |
+// | ------------------- | ------- |
+// | ✅ Successful reset  | ✔️      |
+// | ✅ User not found    | ✔️      |
+// | ✅ No resetToken     | ✔️      |
+// | ✅ Invalid token     | ✔️      |
+// | ✅ Expired token     | ✔️      |
+// | ✅ bcrypt.hash fails | ✔️      |
+// | ✅ DB update fails   | ✔️      |
