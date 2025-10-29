@@ -23,6 +23,6 @@
       "@/*": ["./*"]
     }
   },
-  "include": ["next-env.d.ts", "**/*.ts", "**/*.tsx", ".next/types/**/*.ts","middleware.ts", "app/admin/frontend/product"],
+  "include": ["next-env.d.ts", "**/*.ts", "**/*.tsx", ".next/types/**/*.ts","middleware.ts", "app/admin/frontend/product", "jest.setup.js", "jest.config.cjs"],
   "exclude": ["node_modules"]
 }
