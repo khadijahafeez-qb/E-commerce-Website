@@ -405,3 +405,26 @@ describe('NextAuth Configuration (Credentials + Google)', () => {
     });
   });
 });
+// 1️⃣ Credentials Provider Tests
+
+// Inside describe('Credentials Provider'):
+
+// "returns null if email or password missing"
+
+// "returns null if user not found"
+
+// "returns null if password is invalid"
+
+// "returns user if credentials are valid"
+
+// ✅ Total: 4 tests
+
+// 2️⃣ Google Provider signIn callback Tests
+
+// Inside describe('Google Provider signIn callback'):
+
+// "creates new user + stripe customer if not found"
+
+// "adds stripeCustomerId if missing for existing user"
+
+// ✅ Total: 2 tests
