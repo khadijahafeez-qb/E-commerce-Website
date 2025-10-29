@@ -10,7 +10,7 @@ import { Table, Button, Checkbox, notification, Image } from 'antd';
 import { DeleteOutlined, PlusOutlined, MinusOutlined, ArrowLeftOutlined } from '@ant-design/icons';
 import type { ColumnsType } from 'antd/es/table';
 
-import { getUserCart, clearCart, updateQty, removeFromCart } from '@/utils/cart-storage';
+import { getUserCart, clearCart, updateQty, removeFromCart,updateStock } from '@/utils/cart-storage';
 import MainLayout from '@/app/components/mainlayout';
 import DeleteConfirmModal from '@/app/components/deleteconfirmmodal';
 import { tableClasses } from '@/utils/tableClasses';
@@ -55,6 +55,17 @@ const ShoppingCartPage: React.FC = () => {
     });
     return;
   }
+      // ✅ 1️⃣ Frontend stock pre-check
+    const overStockItems = cartItems.filter(item => item.count > item.stock);
+    if (overStockItems.length > 0) {
+      overStockItems.forEach(item => {
+        api.error({
+          message: `Insufficient stock for ${item.title}`,
+          description: `Only ${item.stock} item(s) available.`,
+        });
+      });
+      return; // Prevent API call
+    }
 
   // ✅ 2️⃣ Optionally check if any item has invalid qty or stock 0
   const hasInvalidItem = cartItems.some((item) => item.count <= 0 || item.stock <= 0);
@@ -75,13 +86,27 @@ const ShoppingCartPage: React.FC = () => {
 
       const data = await res.json();
 
-      if (!res.ok) {
-        return api.error({
-          message: 'Order failed',
-          description: data.error || 'Something went wrong',
+     
+    if (!res.ok) {
+      if (data.lowStockItems) {
+        // Update stock in localStorage
+        data.lowStockItems.forEach((item: { id: string; available: number }) => {
+          updateStock(userEmail, item.id, item.available);
         });
-        return;
+        // Refresh cart UI
+        setCartItems(getUserCart(userEmail));
+
+        return api.error({
+          message: 'Some products have insufficient stock',
+          description: 'Stock has been updated. Please check your cart.',
+        });
       }
+
+      return api.error({
+        message: 'Order failed',
+        description: data.error || 'Something went wrong',
+      });
+    }
  
 // ✅ Only show redirect toast if success
     api.info({

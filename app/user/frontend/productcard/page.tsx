@@ -74,7 +74,7 @@ const ProductCard: React.FC<ProductCardProps> = ({ id, title, variants }) => {
       return;
     }
 
-    // ✅ Add directly to localStorage (no Redux, no state)
+    // ✅ Add directly to localStorage
     addToCart(userEmail, {
       productId: id,
       id: currentVariant.id,

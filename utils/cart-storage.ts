@@ -46,6 +46,15 @@ export const removeFromCart = (userId: string, productId: string) => {
   const cart = getUserCart(userId).filter((item) => item.id !== productId);
   saveUserCart(userId, cart);
 };
+// Update stock of a product in localStorage
+export const updateStock = (userId: string, productId: string, stock: number) => {
+  const cart = getUserCart(userId);
+  const product = cart.find((item) => item.id === productId);
+  if (product) {
+    product.stock = stock;  // only update stock
+    saveUserCart(userId, cart);
+  }
+};
 
 // ✅ Update quantity
 export const updateQty = (userId: string, productId: string, count: number) => {

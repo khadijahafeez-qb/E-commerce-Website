@@ -20,11 +20,9 @@ export async function POST(req: Request) {
     const user = await prisma.user.findUnique({ where: { email: session.user.email } });
     if (!user) return new Response(JSON.stringify({ error: 'User not found' }), { status: 404 });
     const { cartItems, total } = await req.json();
-        // 🧩 1️⃣ Validate cart existence
-    if (!cartItems || cartItems.length === 0) {
-      return new Response(JSON.stringify({ error: 'Cart is empty' }), { status: 400 });
-    }
-       // 🧩 2️⃣ Pre-check stock for all items (before transaction)
+    // 🧩 2️⃣ Pre-check stock for all items (before transaction)
+    const lowStockItems: { id: string; title: string; available: number }[] = [];
+
     for (const item of cartItems) {
       const variant = await prisma.productVariant.findUnique({
         where: { id: item.id },
@@ -41,14 +39,25 @@ export async function POST(req: Request) {
         );
       }
 
+      // Collect all low-stock items
       if (item.count > variant.stock) {
-        return new Response(
-          JSON.stringify({
-            error: `Not enough stock for ${variant.product.title}. Available: ${variant.stock}`,
-          }),
-          { status: 400 }
-        );
+        lowStockItems.push({
+          id: item.id,
+          title: variant.product.title,
+          available: variant.stock,
+        });
       }
+    }
+
+    // 🧩 If any item has insufficient stock → stop & return all details
+    if (lowStockItems.length > 0) {
+      return new Response(
+        JSON.stringify({
+          error: 'Insufficient stock',
+          lowStockItems, // send details to frontend
+        }),
+        { status: 400 }
+      );
     }
     if (!process.env.STRIPE_SECRET_KEY) {
       return new Response(JSON.stringify({ error: 'Stripe not configured' }), { status: 500 });
