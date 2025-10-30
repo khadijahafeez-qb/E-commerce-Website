@@ -1,13 +1,28 @@
-from fastapi import FastAPI
-from fastapi_worker.tasks import calculate_order_stats
+# # fastapi_worker/main.py
+# from fastapi import FastAPI
+# from fastapi_worker.tasks import calculate_order_stats
+# from fastapi_worker.celery_app import celery_app
+
+# app = FastAPI()
+
+# @app.get("/calculate-stats")
+# def run_calculate_stats():
+#     task = calculate_order_stats.delay()
+#     return {"task_id": task.id}
+# fastapi_worker/main.py
+
+from fastapi import FastAPI, Depends
+from sqlalchemy.orm import Session
+from .db import Base, engine, SessionLocal
 
 app = FastAPI()
 
-@app.get("/health")
-def health():
-    return {"status": "ok"}
+# Create tables if not exist
+Base.metadata.create_all(bind=engine)
 
-@app.post("/calculate-stats")
-def trigger_task():
-    task = calculate_order_stats.delay()  # run asynchronously
-    return {"task_id": task.id, "status": "queued"}
+def get_db():
+    db = SessionLocal()
+    try:
+        yield db
+    finally:
+        db.close()

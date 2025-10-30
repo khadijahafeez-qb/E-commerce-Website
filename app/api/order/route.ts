@@ -3,6 +3,7 @@ import { NextResponse } from 'next/server';
 import { auth } from '@/auth';
 
 const prisma = new PrismaClient();
+const FASTAPI_URL = process.env.FASTAPI_URL || 'http://localhost:8000';
 
 export async function GET(req: Request) {
   try {
@@ -74,16 +75,27 @@ export async function GET(req: Request) {
     ]);
 
     if (isAdmin) {
-      const allOrders = await prisma.order.findMany({
-        include: { _count: { select: { items: true } } },
-      });
+      // const allOrders = await prisma.order.findMany({
+      //   include: { _count: { select: { items: true } } },
+      // });
 
-      const totalOrders = allOrders.length;
-      const totalUnits = allOrders.reduce((sum, o) => sum + o._count.items, 0);
-      const totalAmount = allOrders.reduce((sum, o) => sum + o.total, 0);
+      // const totalOrders = allOrders.length;
+      // const totalUnits = allOrders.reduce((sum, o) => sum + o._count.items, 0);
+      // const totalAmount = allOrders.reduce((sum, o) => sum + o.total, 0);
+
+      // return NextResponse.json({
+      //   stats: { totalOrders, totalUnits, totalAmount },
+      //   orders,
+      //   total,
+      //   page,
+      //   limit,
+      // });
+      const response = await fetch(`${FASTAPI_URL}/calculate-stats`);
+      const { task_id } = await response.json();
 
       return NextResponse.json({
-        stats: { totalOrders, totalUnits, totalAmount },
+        message: 'Stats calculation started',
+        task_id,
         orders,
         total,
         page,
