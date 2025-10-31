@@ -1,17 +1,27 @@
+# fastapi_worker/celery_app.py
 from celery import Celery
-from fastapi_worker.config import REDIS_URL
+import os
+from dotenv import load_dotenv
 
-celery_app = Celery(
+load_dotenv()
+REDIS_URL = os.getenv("REDIS_URL", "redis://localhost:6379/0")
+
+celery = Celery(
     "fastapi_worker",
     broker=REDIS_URL,
     backend=REDIS_URL,
-    include=["fastapi_worker.tasks"],
+    include=["fastapi_worker.tasks"]
 )
 
-celery_app.conf.update(
-    task_routes={"fastapi_worker.tasks.*": {"queue": "default"}},
-    task_track_started=True,
-    task_serializer="json",
-    result_serializer="json",
-    accept_content=["json"],
+celery.conf.update(
+    task_routes={
+        "fastapi_worker.tasks.*": {"queue": "default"},
+    },
+    beat_schedule={  # schedule periodic tasks
+        "update-every-2-minutes": {
+            "task": "fastapi_worker.tasks.calculate_order_stats",
+            "schedule": 120.0,  # every 120 seconds (2 minutes)
+        },
+    },
+    timezone="UTC"
 )

@@ -74,36 +74,31 @@ export async function GET(req: Request) {
       prisma.order.count({ where }),
     ]);
 
-    if (isAdmin) {
-      // const allOrders = await prisma.order.findMany({
-      //   include: { _count: { select: { items: true } } },
-      // });
+ let stats = { totalOrders: 0, totalUnits: 0, totalAmount: 0 };
 
-      // const totalOrders = allOrders.length;
-      // const totalUnits = allOrders.reduce((sum, o) => sum + o._count.items, 0);
-      // const totalAmount = allOrders.reduce((sum, o) => sum + o.total, 0);
-
-      // return NextResponse.json({
-      //   stats: { totalOrders, totalUnits, totalAmount },
-      //   orders,
-      //   total,
-      //   page,
-      //   limit,
-      // });
-      const response = await fetch(`${FASTAPI_URL}/calculate-stats`);
-      const { task_id } = await response.json();
-
-      return NextResponse.json({
-        message: 'Stats calculation started',
-        task_id,
-        orders,
-        total,
-        page,
-        limit,
+   if (isAdmin) {
+      // Trigger Celery task
+      const response = await fetch(`${FASTAPI_URL}/calculate-stats`, {
+        method: 'POST',
       });
+      const data = await response.json();
+      const task_id = data.task_id;
+
+      // Wait for the task to finish (polling)
+      let done = false;
+      while (!done) {
+        const res = await fetch(`${FASTAPI_URL}/calculate-stats/${task_id}`);
+        const result = await res.json();
+        if (result.status === 'done') {
+          stats = result.result;
+          done = true;
+        } else {
+          await new Promise((r) => setTimeout(r, 500)); // 0.5s delay
+        }
+      }
     }
 
-    return NextResponse.json({ orders, total, page, limit });
+    return NextResponse.json({ orders, total, page, limit, stats });
   } catch (error: unknown) {
     console.error('Error fetching orders:', error);
     return NextResponse.json({ error: 'Failed to fetch orders' }, { status: 500 });

@@ -1,36 +1,27 @@
 # fastapi_worker/tasks.py
-from celery import shared_task
-from sqlalchemy import text
+from fastapi_worker.celery_app import celery
 from fastapi_worker.db import SessionLocal
+from fastapi_worker.models import Order
+from sqlalchemy.orm import joinedload
 
-@shared_task
+@celery.task(name="calculate_order_stats")
 def calculate_order_stats():
+    """Background job to calculate total orders, total units, and total amount."""
     db = SessionLocal()
     try:
-        # Using SQL to calculate the same stats
-        total_orders = db.execute(text("SELECT COUNT(*) FROM \"Order\"")).scalar()
+        orders = db.query(Order).options(joinedload(Order.items)).all()
 
-        total_units = db.execute(
-            text("""
-            SELECT COALESCE(SUM(quantity), 0)
-            FROM "OrderItem"
-            """)
-        ).scalar()
+        total_orders = len(orders)
+        total_units = sum(len(o.items) for o in orders)
+        total_amount = sum(o.total for o in orders if o.total)
 
-        total_amount = db.execute(
-            text("""
-            SELECT COALESCE(SUM(total), 0)
-            FROM "Order"
-            """)
-        ).scalar()
-
-        result = {
+        stats = {
             "totalOrders": total_orders,
             "totalUnits": total_units,
-            "totalAmount": total_amount
+            "totalAmount": total_amount,
         }
 
-        print("✅ Calculated order stats:", result)
-        return result
+        print("✅ Background stats calculated:", stats)
+        return stats
     finally:
         db.close()
