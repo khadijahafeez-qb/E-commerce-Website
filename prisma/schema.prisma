@@ -76,6 +76,14 @@ model OrderItem {
   product   Product        @relation(fields: [productId], references: [id], onDelete: Cascade)
   variant   ProductVariant @relation("VariantOrderItems", fields: [variantId], references: [id])
 }
+model OrderStats {
+  id           String    @id @default(uuid())
+  totalOrders  Int
+  totalUnits   Int
+  totalAmount  Float
+  createdAt    DateTime  @default(now())
+  updatedAt DateTime       @updatedAt
+}
 
 enum Role {
   USER

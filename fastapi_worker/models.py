@@ -113,3 +113,12 @@ class OrderItem(Base):
     order = relationship("Order", back_populates="items")
     product = relationship("Product", back_populates="orderItems")
     variant = relationship("ProductVariant", back_populates="orderItems")
+
+class OrderStats(Base):
+    __tablename__ = "OrderStats"
+
+    id = Column(String, primary_key=True, index=True)
+    totalOrders = Column(Integer, nullable=False)
+    totalUnits = Column(Integer, nullable=False)
+    totalAmount = Column(Float, nullable=False)
+    createdAt = Column(DateTime, default=func.now())
