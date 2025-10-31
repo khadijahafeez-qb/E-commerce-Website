@@ -122,3 +122,4 @@ class OrderStats(Base):
     totalUnits = Column(Integer, nullable=False)
     totalAmount = Column(Float, nullable=False)
     createdAt = Column(DateTime, default=func.now())
+    updatedAt = Column(DateTime, default=func.now(), onupdate=func.now())

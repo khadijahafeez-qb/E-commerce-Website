@@ -31,34 +31,34 @@ export async function GET(req: Request) {
     // ✅ FIX — use Prisma.QueryMode type, not a plain string
     const searchFilter: Prisma.OrderWhereInput = search
       ? {
-          OR: [
-            { id: { contains: search, mode: Prisma.QueryMode.insensitive } },
-            ...(isAdmin
-              ? [
-                  {
-                    user: {
-                      fullname: {
-                        contains: search,
-                        mode: Prisma.QueryMode.insensitive,
-                      },
-                    },
+        OR: [
+          { id: { contains: search, mode: Prisma.QueryMode.insensitive } },
+          ...(isAdmin
+            ? [
+              {
+                user: {
+                  fullname: {
+                    contains: search,
+                    mode: Prisma.QueryMode.insensitive,
                   },
-                ]
-              : []),
-          ],
-        }
+                },
+              },
+            ]
+            : []),
+        ],
+      }
       : {};
 
     const where: Prisma.OrderWhereInput = isAdmin
       ? searchFilter
       : {
-          userId: user.id,
-          ...(search
-            ? {
-                id: { contains: search, mode: Prisma.QueryMode.insensitive },
-              }
-            : {}),
-        };
+        userId: user.id,
+        ...(search
+          ? {
+            id: { contains: search, mode: Prisma.QueryMode.insensitive },
+          }
+          : {}),
+      };
 
     const [orders, total] = await Promise.all([
       prisma.order.findMany({
@@ -73,28 +73,58 @@ export async function GET(req: Request) {
       }),
       prisma.order.count({ where }),
     ]);
+    let stats: { totalOrders: number; totalUnits: number; totalAmount: number; lastUpdated: string | null } = {
+      totalOrders: 0,
+      totalUnits: 0,
+      totalAmount: 0,
+      lastUpdated: null,
+    };
+    // if (isAdmin) {
+    //   // 1️⃣ Get latest precomputed stats
+    //   const latestStats = await prisma.orderStats.findFirst({
+    //     orderBy: { createdAt: 'desc' },
+    //   });
 
- let stats = { totalOrders: 0, totalUnits: 0, totalAmount: 0 };
+    //   const lastUpdated = latestStats?.updatedAt ?? new Date(0);
 
-   if (isAdmin) {
-      // Trigger Celery task
-      const response = await fetch(`${FASTAPI_URL}/calculate-stats`, {
-        method: 'POST',
+    //   // 2️⃣ Get new orders since last stats
+    //   const newOrders = await prisma.order.findMany({
+    //     where: { createdAt: { gt: lastUpdated } },
+    //     include: { items: true },
+    //   });
+
+    //   const newTotalOrders = newOrders.length;
+    //   const newTotalUnits = newOrders.reduce(
+    //     (acc, order) => acc + order.items.reduce((sum, item) => sum + item.quantity, 0),
+    //     0
+    //   );
+    //   const newTotalAmount = newOrders.reduce(
+    //     (acc, order) => acc + (order.total ?? 0),
+    //     0
+    //   );
+
+    //   // 3️⃣ Merge precomputed stats + new orders
+    //   stats = {
+    //     totalOrders: (latestStats?.totalOrders ?? 0) + newTotalOrders,
+    //     totalUnits: (latestStats?.totalUnits ?? 0) + newTotalUnits,
+    //     totalAmount: (latestStats?.totalAmount ?? 0) + newTotalAmount,
+    //     lastUpdated: latestStats?.updatedAt.toISOString() ?? null,
+    //   };
+    // }
+
+    // return NextResponse.json({ orders, total, page, limit, stats });
+        if (isAdmin) {
+      const latestStats = await prisma.orderStats.findFirst({
+        orderBy: { createdAt: 'desc' },
       });
-      const data = await response.json();
-      const task_id = data.task_id;
 
-      // Wait for the task to finish (polling)
-      let done = false;
-      while (!done) {
-        const res = await fetch(`${FASTAPI_URL}/calculate-stats/${task_id}`);
-        const result = await res.json();
-        if (result.status === 'done') {
-          stats = result.result;
-          done = true;
-        } else {
-          await new Promise((r) => setTimeout(r, 500)); // 0.5s delay
-        }
+      if (latestStats) {
+        stats = {
+          totalOrders: latestStats.totalOrders,
+          totalUnits: latestStats.totalUnits,
+          totalAmount: latestStats.totalAmount,
+          lastUpdated: latestStats.updatedAt.toISOString(),
+        };
       }
     }
 
