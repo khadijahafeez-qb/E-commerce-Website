@@ -154,11 +154,14 @@ export async function middleware(req: NextRequest) {
 
         // Combined param + body validation (update-product)
         else if ('param' in matched.schema && 'body' in matched.schema) {
-          const id = path.split('/').pop();
-          matched.schema.param.parse({ id });
-
-          const body = await req.json();
-          matched.schema.body.parse(body);
+          const parts = path.split('/');
+  const id = parts.at(-2); // ✅ second-to-last part
+  matched.schema.param.parse({ id });
+  
+  const clone = req.clone();
+  const text = await clone.text();
+  const body = text ? JSON.parse(text) : {};
+  matched.schema.body.parse(body);
         }
         
         // Only param validation (DELETE / soft-delete PUT)

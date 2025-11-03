@@ -93,6 +93,7 @@ const Orders: React.FC = () => {
     if (!confirmOrderId) return;
     setConfirmLoading(true);
     try {
+      console.log('Updating order ID:', confirmOrderId);
       await handleStatusUpdate(confirmOrderId, 'FULFILLED');
     } catch (err) {
       console.error('confirm ok error', err);

@@ -5,10 +5,13 @@ import { auth } from '@/auth';
 const prisma = new PrismaClient();
 
 export async function PATCH(
-  req: Request,
-  { params }: { params: { id: string } }
+   req: Request,
+  context: { params: Promise<{ id: string }> }  // 👈 awaitable params
 ) {
+  const { id } = await context.params;  // 👈 await here
+
   try {
+    console.log('Incoming ID:', id);
     const session = await auth();
     if (!session?.user?.email) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
@@ -30,7 +33,7 @@ export async function PATCH(
       );
     }
     const updatedOrder = await prisma.order.update({
-      where: { id: params.id },
+      where: { id },
       data: { status },
     });
     return NextResponse.json(updatedOrder);
