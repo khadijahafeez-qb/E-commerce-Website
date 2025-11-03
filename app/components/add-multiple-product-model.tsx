@@ -4,7 +4,7 @@ import React, { useState } from 'react';
 
 import { Modal, Upload, Button } from 'antd';
 import { InboxOutlined, DeleteOutlined, FileOutlined } from '@ant-design/icons';
-import type { UploadFile } from 'antd/es/upload/interface';
+import type { UploadFile,RcFile } from 'antd/es/upload/interface';
 
 const { Dragger } = Upload;
 interface AddMultipleProductsModalProps {
@@ -14,16 +14,38 @@ interface AddMultipleProductsModalProps {
 
 const AddMultipleProductsModal: React.FC<AddMultipleProductsModalProps> = ({ open, onCancel }) => {
   const [fileList, setFileList] = useState<UploadFile[]>([]);
-  const handleBeforeUpload = (file: UploadFile) => {
-    setFileList([file]);
-    return false; 
+const handleBeforeUpload = (file: RcFile) => {
+  const uploadFile: UploadFile = {
+    uid: String(Date.now()),
+    name: file.name,
+    status: 'done',
+    originFileObj: file, // 👈 now originFileObj exists
   };
+  setFileList([uploadFile]);
+  return false; // prevent auto-upload
+};
+
   const handleRemove = () => {
     setFileList([]);
   };
-  const handleUpload = () => {
-    onCancel();
-  };
+const handleUpload = async () => {
+  console.log('in handleupload');
+  console.log('File list:', fileList);
+console.log('OriginFileObj:', fileList[0]?.originFileObj);
+  if (fileList.length === 0 || !fileList[0].originFileObj) return;
+
+  const formData = new FormData();
+  formData.append('file', fileList[0].originFileObj as File);
+console.log('beforeee');
+  const res = await fetch('/api/product/upload-products', {
+    method: 'POST',
+    body: formData,
+  });
+
+  const data = await res.json();
+  console.log('Upload response:', data);
+  onCancel();
+};
 
   return (
     <Modal

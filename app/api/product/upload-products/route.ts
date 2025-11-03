@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 
 export async function POST(req: Request) {
   try {
+     console.log('📥 File upload API hit');
     const formData = await req.formData();
     const file = formData.get('file') as File | null;
 
@@ -9,15 +10,13 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: 'No file uploaded' }, { status: 400 });
     }
 
-    // Convert the uploaded file to text
-    const csvText = await file.text();
+formData.append('file', file, file.name);
+   
+   const res = await fetch('http://localhost:8000/upload-products', {
+  method: 'POST',
+  body: formData,
+});
 
-    // Send CSV directly to FastAPI — no local storage
-    const res = await fetch('http://localhost:8000/upload-products', {
-      method: 'POST',
-      headers: { 'Content-Type': 'text/csv' },
-      body: csvText,
-    });
 
     if (!res.ok) {
       const errText = await res.text();
