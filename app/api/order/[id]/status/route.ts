@@ -11,7 +11,6 @@ export async function PATCH(
   const { id } = await context.params;  // 👈 await here
 
   try {
-    console.log('Incoming ID:', id);
     const session = await auth();
     if (!session?.user?.email) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });

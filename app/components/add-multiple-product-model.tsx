@@ -29,21 +29,14 @@ const handleBeforeUpload = (file: RcFile) => {
     setFileList([]);
   };
 const handleUpload = async () => {
-  console.log('in handleupload');
-  console.log('File list:', fileList);
-console.log('OriginFileObj:', fileList[0]?.originFileObj);
   if (fileList.length === 0 || !fileList[0].originFileObj) return;
-
   const formData = new FormData();
   formData.append('file', fileList[0].originFileObj as File);
-console.log('beforeee');
   const res = await fetch('/api/product/upload-products', {
     method: 'POST',
     body: formData,
   });
-
   const data = await res.json();
-  console.log('Upload response:', data);
   onCancel();
 };
 
