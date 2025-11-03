@@ -68,11 +68,6 @@ const validationMap = [
     method: 'GET',
     query: getOrdersSchema, // ✅ validate query params like page, limit, search
   },
-  {
-    path: /^\/api\/order\/.*\/status$/, 
-    method: 'PATCH',
-    schema: updateOrderStatusSchema, // ✅ validate params + body
-  },
 
 
 

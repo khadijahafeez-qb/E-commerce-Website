@@ -17,7 +17,7 @@ export const getOrdersSchema = z.object({
 
 // PATCH /api/order/[id]/status
 export const updateOrderStatusSchema = {
-  params: z.object({
+  param: z.object({
     id: z.string().uuid('Invalid order ID format'),
   }),
   body: z.object({
