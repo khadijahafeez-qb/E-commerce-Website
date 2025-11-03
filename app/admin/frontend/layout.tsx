@@ -67,7 +67,7 @@ const AdminLayout: React.FC<AdminLayoutProps> = ({  fullname }) => {
     }};
 
   return (
-    <Layout className="h-screen">
+    <Layout className="h-screen" >
       <Sider width={257} style={siderStyle}>
         <div className="flex flex-col justify-between h-full">
           <div>
