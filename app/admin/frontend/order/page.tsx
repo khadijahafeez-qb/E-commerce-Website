@@ -5,6 +5,8 @@ import { Table, Input, Button, Tooltip, Modal } from 'antd';
 import { SearchOutlined, ExportOutlined, CheckOutlined } from '@ant-design/icons';
 import OrderDetailDrawer from '@/app/components/order-detail/order-detail';
 import { ordertable } from '@/app/user/frontend/orders/page';
+import { updateOrderStatus } from '@/lib/features/cart/orderslice';
+import { useAppDispatch } from '@/lib/hook';
 
 interface admin_order_table extends ordertable {
   key: string;
@@ -36,29 +38,16 @@ const Orders: React.FC = () => {
   const [currentPage, setCurrentPage] = useState(1);
   const [total, setTotal] = useState(0);
   const pageSize = 10;
+const dispatch=useAppDispatch();
 
-  const handleStatusUpdate = async (orderId: string, newStatus: string) => {
-    try {
-  const res = await fetch(`/api/order/${orderId}/status`, {
-  method: 'PATCH',
-  headers: { 'Content-Type': 'application/json' },
-  body: JSON.stringify({ status: newStatus }),
-});
-
-      if (!res.ok) throw new Error('Failed to update status');
-
-      const updated = await res.json();
-      setData((prev) =>
-        prev.map((order) =>
-          order.key === updated.id
-            ? { ...order, status: updated.status }
-            : order
-        )
-      );
-    } catch (err) {
-      console.error('Error updating status:', err);
-    }
-  };
+const handleStatusUpdate = async (orderId: string, newStatus: string) => {
+  try {
+    await dispatch(updateOrderStatus({ orderId, status: newStatus })).unwrap();
+    fetchOrders(currentPage);
+  } catch (err) {
+    console.error('Error updating status:', err);
+  }
+};
   const fetchOrders = async (page: number) => {
     setLoading(true);
     try {

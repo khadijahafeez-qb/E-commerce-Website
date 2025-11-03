@@ -150,7 +150,7 @@ const handleDeleteProduct = async (id: string) => {
           <Button type="primary" className="!w-[203px] !h-[36px]" onClick={() => setaddOpen(true)}>+ Add Multiple Products</Button>
         </div>
       </div>
-      <div
+            <div
   style={{
     height: 'calc(100vh - 137px)',
     overflow: 'auto',

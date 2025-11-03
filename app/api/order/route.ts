@@ -3,7 +3,6 @@ import { NextResponse } from 'next/server';
 import { auth } from '@/auth';
 
 const prisma = new PrismaClient();
-const FASTAPI_URL = process.env.FASTAPI_URL || 'http://localhost:8000';
 
 export async function GET(req: Request) {
   try {
@@ -79,40 +78,6 @@ export async function GET(req: Request) {
       totalAmount: 0,
       lastUpdated: null,
     };
-    // if (isAdmin) {
-    //   // 1️⃣ Get latest precomputed stats
-    //   const latestStats = await prisma.orderStats.findFirst({
-    //     orderBy: { createdAt: 'desc' },
-    //   });
-
-    //   const lastUpdated = latestStats?.updatedAt ?? new Date(0);
-
-    //   // 2️⃣ Get new orders since last stats
-    //   const newOrders = await prisma.order.findMany({
-    //     where: { createdAt: { gt: lastUpdated } },
-    //     include: { items: true },
-    //   });
-
-    //   const newTotalOrders = newOrders.length;
-    //   const newTotalUnits = newOrders.reduce(
-    //     (acc, order) => acc + order.items.reduce((sum, item) => sum + item.quantity, 0),
-    //     0
-    //   );
-    //   const newTotalAmount = newOrders.reduce(
-    //     (acc, order) => acc + (order.total ?? 0),
-    //     0
-    //   );
-
-    //   // 3️⃣ Merge precomputed stats + new orders
-    //   stats = {
-    //     totalOrders: (latestStats?.totalOrders ?? 0) + newTotalOrders,
-    //     totalUnits: (latestStats?.totalUnits ?? 0) + newTotalUnits,
-    //     totalAmount: (latestStats?.totalAmount ?? 0) + newTotalAmount,
-    //     lastUpdated: latestStats?.updatedAt.toISOString() ?? null,
-    //   };
-    // }
-
-    // return NextResponse.json({ orders, total, page, limit, stats });
         if (isAdmin) {
       const latestStats = await prisma.orderStats.findFirst({
         orderBy: { createdAt: 'desc' },
