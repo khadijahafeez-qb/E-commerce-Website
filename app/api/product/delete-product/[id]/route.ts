@@ -3,9 +3,11 @@ import { PrismaClient } from '@prisma/client';
 
 const prisma = new PrismaClient();
 
-export async function PUT(req: Request,context: { params: Promise<{ id: string }> } ) {
+export async function PATCH( req: Request,
+  { params }: { params: { id: string } }
+) {
   try {
-    const { id } = await context.params;
+    const { id } = params; // ✅ works now
     // ✅ Soft delete the product
     const product = await prisma.product.update({
       where: { id},

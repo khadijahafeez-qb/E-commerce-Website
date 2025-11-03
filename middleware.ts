@@ -37,7 +37,7 @@ const validationMap = [
   },
   {
     path: /^\/api\/product\/delete-product\/.*$/,
-    method: 'PUT',
+    method: 'PATCH',
     schema: productIdSchema,
   },
   {
@@ -162,7 +162,7 @@ export async function middleware(req: NextRequest) {
         }
         
         // Only param validation (DELETE / soft-delete PUT)
-        else if (req.method === 'DELETE' || req.method === 'PUT') {
+        else if (req.method === 'DELETE' || req.method === 'PUT'|| req.method === 'PATCH') {
           const schema = matched.schema as ZodTypeAny;
           const id = path.split('/').pop();
           schema.parse({ id });

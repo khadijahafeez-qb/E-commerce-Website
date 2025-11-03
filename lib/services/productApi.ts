@@ -25,7 +25,7 @@ export async function addVariant(productId: string, data: VariantInput): Promise
 }
 
 export async function deleteProduct(id: string): Promise<ProductOutput> {
-  const res = await fetch(`/api/product/delete-product/${id}`, { method: 'DELETE' });
+  const res = await fetch(`/api/product/delete-product/${id}`, { method: 'PATCH' });
   const json = await res.json();
   if (!res.ok || !json.success) throw new Error(json.error || 'Failed to delete product');
   return json.product as ProductOutput;
