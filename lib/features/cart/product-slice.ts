@@ -127,7 +127,7 @@ export const getProductsThunk = createAsyncThunk<
         })),
       }));
 
-      return { products, hasMore: dataRaw.hasMore };
+      return { products, hasMore: dataRaw.hasMore,total: dataRaw.total};
     } catch (err) {
       if (err instanceof Error) return rejectWithValue(err.message);
       return rejectWithValue('Unknown error while fetching products');
