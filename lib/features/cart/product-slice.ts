@@ -175,11 +175,9 @@ const productSlice = createSlice({
       })
 
       // Add Variant (merge with existing product if needed)
-      .addCase(addVariantThunk.fulfilled, (state, action) => {
+      .addCase(addVariantThunk.fulfilled, (state) => {
         state.loading = false;
-        const variant = action.payload;
-        // Find the product and add variant manually if desired
-        // (depends on your state shape)
+        
       })
 
       // Deactivate Variant
