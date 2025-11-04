@@ -74,11 +74,7 @@ const handleInactivateVariant = async () => {
   } catch (err) {
     console.error('Inactivate variant failed:', err);
   }
-};
-
-
-
- 
+}; 
 const fetchProducts = async (page: number) => {
   setLoading(true);
   try {
@@ -237,6 +233,7 @@ const handleDeleteProduct = async (id: string) => {
                             className="!text-red-500 !text-[16px]"
                             onClick={() => {
                               setVariantToDelete({ id: variant.id, productId: product.id });
+                              setSelectedVariant(variant); 
                               setIsVariantDeleteModalOpen(true);
                             }}
                           />
@@ -289,23 +286,23 @@ const handleDeleteProduct = async (id: string) => {
 />
 
 
-        <DeleteConfirmModal
+<DeleteConfirmModal
   open={isVariantDeleteModalOpen}
   onCancel={() => setIsVariantDeleteModalOpen(false)}
-  onConfirm={handleInactivateVariant}
+  onConfirm={handleInactivateVariant} // async function
+  getItemName={() => selectedVariant ? `${selectedVariant.colour} - ${selectedVariant.size}` : ''}
 />
-
 {/* ✅ Delete Product Modal */}
 <DeleteConfirmModal
   open={isDeleteOpen}
   onCancel={() => setIsDeleteOpen(false)}
   onConfirm={async () => {
     if (selectedProduct) {
-      await handleDeleteProduct(selectedProduct.id); // ✅ await here
+      await handleDeleteProduct(selectedProduct.id);
       setSelectedProduct(null);
     }
   }}
-  productName={selectedProduct?.title}
+  getItemName={() => selectedProduct?.title || ''}
 />
 
 <AddSingleProductModal

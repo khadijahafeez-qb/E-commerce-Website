@@ -8,14 +8,14 @@ interface DeleteConfirmModalProps {
   open: boolean;
   onCancel: () => void;
   onConfirm: () => Promise<void>; // <- expect async function
-  productName?: string;
+    getItemName?: () => string;
 }
 
 const DeleteConfirmModal: React.FC<DeleteConfirmModalProps> = ({
   open,
   onCancel,
   onConfirm,
-  productName
+  getItemName
 }) => {
   const [loading, setLoading] = useState(false);
   const [api, contextHolder] = notification.useNotification();
@@ -25,25 +25,29 @@ const DeleteConfirmModal: React.FC<DeleteConfirmModalProps> = ({
     try {
       await onConfirm();
 
+      const nameToShow = getItemName ? getItemName() : 'Item';
+
       api.success({
         message: 'Deleted',
-        description: `${productName} has been deleted successfully!`,
+        description: `${nameToShow} has been deleted successfully!`,
         duration: 3,
       });
 
       onCancel(); // close modal
     } catch (err) {
+      const nameToShow = getItemName ? getItemName() : 'Item';
+
       api.error({
         message: 'Deletion Failed',
-        description: `Failed to delete ${productName}.`,
+        description: `Failed to delete ${nameToShow}.`,
         duration: 3,
       });
+
       console.error(err);
     } finally {
       setLoading(false);
     }
   };
-
 
   return (
     <>
@@ -69,7 +73,7 @@ const DeleteConfirmModal: React.FC<DeleteConfirmModalProps> = ({
           <p className='font-inter font-bold text-base '>
             Are you sure you want to
             <br />
-            delete <span className="text-blue-500">{productName}</span>?
+            delete <span className="text-blue-500">{getItemName ? getItemName() : 'this item'}</span>?
           </p>
         </div>
         <div className='flex justify-center gap-3 mt-9'>
