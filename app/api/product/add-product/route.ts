@@ -6,6 +6,18 @@ const prisma = new PrismaClient();
 export async function POST(req: Request) {
   try {
     const body = await req.json();
+        // Check for duplicate colour+size combinations
+    const variantSet = new Set();
+    for (const v of body.variants) {
+      const key = `${v.colour}-${v.size}`;
+      if (variantSet.has(key)) {
+        return NextResponse.json({
+          success: false,
+          error: `Duplicate variant found for colour ${v.colour} and size ${v.size}`,
+        }, { status: 400 });
+      }
+      variantSet.add(key);
+    }
     const product = await prisma.product.create({
       data: {
         title: body.title,

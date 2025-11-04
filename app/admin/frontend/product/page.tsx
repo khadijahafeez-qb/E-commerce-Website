@@ -306,6 +306,7 @@ const handleDeleteProduct = async (id: string) => {
   onConfirm={() => {
     if (selectedProduct) handleDeleteProduct(selectedProduct.id);
   }}
+  productName={selectedProduct?.title}
 />
 
 

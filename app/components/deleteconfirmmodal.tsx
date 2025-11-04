@@ -9,9 +9,10 @@ interface DeleteConfirmModalProps {
   open: boolean;
   onCancel: () => void;
   onConfirm: () => void;
+  productName?: string;
 }
 
-const DeleteConfirmModal: React.FC<DeleteConfirmModalProps> = ({open,onCancel,onConfirm,}) => {
+const DeleteConfirmModal: React.FC<DeleteConfirmModalProps> = ({ open, onCancel, onConfirm, productName}) => {
   return (
     <Modal
       open={open}
@@ -28,16 +29,16 @@ const DeleteConfirmModal: React.FC<DeleteConfirmModalProps> = ({open,onCancel,on
           className=' opacity-100 flex flex-col items-center justify-center'
           style={{ width: '212px', height: '137px' }}
         >
-         <h1 className='font-inter mt-3 font-medium text-[24px] leading-[28.8px] !text-[#007BFF]'>
+          <h1 className='font-inter mt-3 font-medium text-[24px] leading-[28.8px] !text-[#007BFF]'>
             Remove Product
-         </h1>
+          </h1>
           <WarningOutlined className='mt-3' style={{ fontSize: '63px', color: '#FFC107' }} />
         </div>
         <div className='mt-4 '>
           <p className='font-inter font-bold text-base '>
             Are you sure you want to
             <br />
-           Delete the Item!
+            delete <span className="text-blue-500">{productName}</span>?
           </p>
         </div>
         <div className='flex justify-center gap-3 mt-9'>
