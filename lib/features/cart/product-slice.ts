@@ -12,7 +12,7 @@ import type {
   ProductOutput,
   VariantInput,
 } from '@/lib/validation/product';
-
+import { Variant,Product } from '@/app/admin/frontend/product/page';
 export interface ProductState {
   products: ProductOutput[];
   loading: boolean;
@@ -89,6 +89,49 @@ export const updateVariantThunk = createAsyncThunk<
     return rejectWithValue('Unknown error while updating variant');
   }
 });
+// productSlice.ts getproduct thunk
+export const getProductsThunk = createAsyncThunk<
+  { products: Product[]; hasMore: boolean },
+  { page: number; limit: number; search?: string; sort?: string }
+>(
+  'product/getProducts',
+  async ({ page, limit, search = '', sort = '' }, { rejectWithValue }) => {
+    try {
+      const res = await fetch(
+        `/api/product/get-products?page=${page}&limit=${limit}&search=${encodeURIComponent(
+          search
+        )}&sort=${encodeURIComponent(sort)}`
+      );
+
+      if (!res.ok) throw new Error('Failed to fetch products');
+
+      const dataRaw = await res.json();
+
+      // Map API response to match Product interface exactly
+      const products: Product[] = dataRaw.products.map((p: Product) => ({
+        id: p.id,
+        title: p.title,
+        isDeleted: p.isDeleted,
+        img: p.img || '', // fallback if API has img
+        variants: (p.variants || []).map((v: Variant) => ({
+          id: v.id,
+          colour: v.colour,
+          colourcode: v.colourcode,
+          size: v.size,
+          price: v.price,
+          stock: v.stock,
+          img: v.img,
+        })),
+      }));
+
+      return { products, hasMore: dataRaw.hasMore };
+    } catch (err) {
+      if (err instanceof Error) return rejectWithValue(err.message);
+      return rejectWithValue('Unknown error while fetching products');
+    }
+  }
+);
+
 
 // 🧱 Slice
 const productSlice = createSlice({
@@ -144,7 +187,21 @@ const productSlice = createSlice({
       // Update Variant
       .addCase(updateVariantThunk.rejected, (state, action) => {
         state.error = action.payload as string;
-      });
+      })
+      // Fetch products
+    .addCase(getProductsThunk.pending, (state) => {
+      state.loading = true;
+      state.error = null;
+    })
+    .addCase(getProductsThunk.fulfilled, (state, action) => {
+      state.loading = false;
+      // If you want to reset products on first page, handle in component
+      // Or merge here depending on your needs
+    })
+    .addCase(getProductsThunk.rejected, (state, action) => {
+      state.loading = false;
+      state.error = action.payload as string;
+    });
   },
 });
 

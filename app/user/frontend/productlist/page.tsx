@@ -7,13 +7,11 @@ import './page.css';
 import { Input, Select, Col, Row, Spin } from 'antd';
 import { SearchOutlined } from '@ant-design/icons';
 
+import { getProductsThunk } from '@/lib/features/cart/product-slice';
+import { useAppDispatch} from '@/lib/hook';
+
 import MainLayout from '@/app/components/mainlayout';
 import ProductCard, { ProductCardProps } from '../productcard/page';
-
-interface ApiResponse {
-  products: ProductCardProps[];
-  hasMore: boolean;
-}
 
 function App() {
   const WINDOW_SIZE = 40;
@@ -36,7 +34,7 @@ function App() {
   const debouncedSearchRef = useRef<string>(debouncedSearch);
   const sortRef = useRef<string>(sort);
 
-
+  const dispatch = useAppDispatch();
   useEffect(() => { debouncedSearchRef.current = debouncedSearch; }, [debouncedSearch]);
   useEffect(() => { sortRef.current = sort; }, [sort]);
   useEffect(() => { hasMoreRef.current = hasMore; }, [hasMore]);
@@ -47,14 +45,26 @@ function App() {
     setIsLoading(true);
     isLoadingRef.current = true;
     try {
-      const qSearch = encodeURIComponent(debouncedSearchRef.current);
-      const qSort = encodeURIComponent(sortRef.current || '');
-      const res = await fetch(
-        `/api/product/get-products?page=${pageNum}&limit=${PAGE_SIZE}&search=${qSearch}&sort=${qSort}`
-      );
-      if (!res.ok) throw new Error('Failed to fetch products');
-      const data: ApiResponse = await res.json();
-      const fetched = data.products || [];
+      const data = await dispatch(
+        getProductsThunk({ page: pageNum, limit: PAGE_SIZE, search: debouncedSearchRef.current, sort: sortRef.current })
+      ).unwrap();
+    // ✅ Map Product[] → ProductCardProps[]
+    const fetchedCardProps: ProductCardProps[] = data.products.map((p) => ({
+      id: p.id,
+      title: p.title,
+      isDeleted: p.isDeleted === 'deleted',
+      variants: p.variants.map((v) => ({
+        id: v.id,
+        colour: v.colour,
+        colourcode: v.colourcode,
+        size: v.size,
+        stock: v.stock,
+        price: v.price,
+        availabilityStatus: v.stock > 0 ? 'ACTIVE' : 'INACTIVE', 
+        img: v.img,
+      })),
+    }));
+     const fetched = fetchedCardProps;
       if (mode === 'reset') {
         allProductsCache.current = fetched.slice();
         firstPageRef.current = pageNum;
@@ -194,12 +204,12 @@ function App() {
         )}
         <Row gutter={[30, 32]}>
           {visibleProducts.map((p: ProductCardProps) => {
-     
+
             return (
               <Col key={p.id} lg={6} md={8} sm={12} xs={24}>
                 <ProductCard
-                 id={p.id}
-                 isDeleted={p.isDeleted}
+                  id={p.id}
+                  isDeleted={p.isDeleted}
                   title={p.title}
                   variants={p.variants}
                 />

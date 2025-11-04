@@ -10,7 +10,7 @@ import ProductModal from '@/app/components/product-model';
 import DeleteConfirmModal from '@/app/components/deleteconfirmmodal';
 import AddMultipleProductsModal from '@/app/components/add-multiple-product-model';
 import AddSingleProductModal from '@/app/components/add-single-product-model';
-import { deleteProductThunk,deactivateVariantThunk } from '@/lib/features/cart/product-slice';
+import { deleteProductThunk,deactivateVariantThunk ,getProductsThunk} from '@/lib/features/cart/product-slice';
 import { useAppDispatch } from '@/lib/hook';
 
 export interface Variant {
