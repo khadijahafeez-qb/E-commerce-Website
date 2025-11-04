@@ -10,9 +10,13 @@ import ProductModal from '@/app/components/product-model';
 import DeleteConfirmModal from '@/app/components/deleteconfirmmodal';
 import AddMultipleProductsModal from '@/app/components/add-multiple-product-model';
 import AddSingleProductModal from '@/app/components/add-single-product-model';
-import { deleteProductThunk,deactivateVariantThunk ,getProductsThunk} from '@/lib/features/cart/product-slice';
+import { deleteProductThunk,deactivateVariantThunk,getProductsThunk } from '@/lib/features/cart/product-slice';
 import { useAppDispatch } from '@/lib/hook';
-
+interface ProductResponse {
+  products: Product[];
+  total?: number;
+  hasMore?: boolean;
+}
 export interface Variant {
   id: string;
   colour: string;
@@ -21,6 +25,7 @@ export interface Variant {
   price: number;
   stock: number;
   img: string
+  availabilityStatus: 'ACTIVE' | 'INACTIVE';
 }
 
 export interface Product {
@@ -73,20 +78,23 @@ const handleInactivateVariant = async () => {
 
 
 
-  const fetchProducts = async (page: number) => {
-    setLoading(true);
-    try {
-      const res = await fetch(`/api/product/get-products?page=${page}&limit=${pageSize}`);
-      if (!res.ok) throw new Error('Failed to fetch products');
-      const result = await res.json();
-      setData(result.products);
-      setTotal(result.total); // you need to return total count from your API
-    } catch (err) {
-      console.error('Error fetching products:', err);
-    } finally {
-      setLoading(false);
+ 
+const fetchProducts = async (page: number) => {
+  setLoading(true);
+  try {
+    const resultAction = await dispatch(getProductsThunk({ page, limit: pageSize }));
+
+    if (getProductsThunk.fulfilled.match(resultAction)) {
+      const payload = resultAction.payload as ProductResponse; // 👈 type assertion (not `any`)
+      setData(payload.products);
+      setTotal(payload.total ?? 0);
     }
-  };
+  } catch (err) {
+    console.error('Fetch products failed:', err);
+  } finally {
+    setLoading(false);
+  }
+};
 
   useEffect(() => {
     fetchProducts(currentPage);

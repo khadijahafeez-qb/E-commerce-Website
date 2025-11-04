@@ -12,7 +12,8 @@ import type {
   ProductOutput,
   VariantInput,
 } from '@/lib/validation/product';
-import { Variant,Product } from '@/app/admin/frontend/product/page';
+import { Variant, Product } from '@/app/admin/frontend/product/page';
+
 export interface ProductState {
   products: ProductOutput[];
   loading: boolean;
@@ -108,19 +109,21 @@ export const getProductsThunk = createAsyncThunk<
       const dataRaw = await res.json();
 
       // Map API response to match Product interface exactly
+      // ✅ Correct mapping for Product interface
       const products: Product[] = dataRaw.products.map((p: Product) => ({
         id: p.id,
         title: p.title,
         isDeleted: p.isDeleted,
-        img: p.img || '', // fallback if API has img
+        img: p.img || '', // fallback if missing
         variants: (p.variants || []).map((v: Variant) => ({
           id: v.id,
+          img: v.img || '',
           colour: v.colour,
           colourcode: v.colourcode,
           size: v.size,
-          price: v.price,
           stock: v.stock,
-          img: v.img,
+          price: v.price,
+          availabilityStatus: v.availabilityStatus ?? 'ACTIVE', // fallback if missing
         })),
       }));
 
@@ -189,19 +192,24 @@ const productSlice = createSlice({
         state.error = action.payload as string;
       })
       // Fetch products
-    .addCase(getProductsThunk.pending, (state) => {
-      state.loading = true;
-      state.error = null;
-    })
-    .addCase(getProductsThunk.fulfilled, (state, action) => {
-      state.loading = false;
-      // If you want to reset products on first page, handle in component
-      // Or merge here depending on your needs
-    })
-    .addCase(getProductsThunk.rejected, (state, action) => {
-      state.loading = false;
-      state.error = action.payload as string;
-    });
+      .addCase(getProductsThunk.pending, (state) => {
+        state.loading = true;
+        state.error = null;
+      })
+      .addCase(getProductsThunk.fulfilled, (state, action) => {
+        state.loading = false;
+        state.products = action.payload.products.map(p => ({
+          ...p,
+          variants: p.variants.map(v => ({
+            ...v,
+            availabilityStatus: v.availabilityStatus ?? 'ACTIVE', // 👈 default
+          })),
+        }));
+      })
+      .addCase(getProductsThunk.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.payload as string;
+      });
   },
 });
 
