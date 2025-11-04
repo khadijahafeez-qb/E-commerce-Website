@@ -11,6 +11,12 @@ export interface OrdersResponse {
   total: number;
   page: number;
   limit: number;
+  stats?: {
+    totalOrders: number;
+    totalUnits: number;
+    totalAmount: number;
+    lastUpdated?: string;
+  };
 }
 interface OrdersState {
   data: Order[];
@@ -18,6 +24,12 @@ interface OrdersState {
   page: number;
   limit: number;
   loading: boolean;
+  stats: {
+    totalOrders: number;
+    totalUnits: number;
+    totalAmount: number;
+    lastUpdated?: string;
+  };
   error: string | null;
 }
 
@@ -27,6 +39,7 @@ const initialState: OrdersState = {
   page: 1,
   limit: 10,
   loading: false,
+  stats: { totalOrders: 0, totalUnits: 0, totalAmount: 0 },
   error: null,
 };
 interface FetchOrdersArgs {
@@ -89,6 +102,7 @@ extraReducers: (builder) => {
       state.total = action.payload.total;
       state.page = action.payload.page;
       state.limit = action.payload.limit;
+      state.stats = action.payload.stats || { totalOrders: 0, totalUnits: 0, totalAmount: 0 };
     })
     .addCase(fetchOrders.rejected, (state, action) => {
       state.loading = false;
@@ -102,7 +116,6 @@ extraReducers: (builder) => {
     })
     .addCase(updateOrderStatus.fulfilled, (state, action) => {
       state.loading = false;
-      // Update the order in state
       const updatedOrder = action.payload;
       const index = state.data.findIndex((o) => o.id === updatedOrder.id);
       if (index !== -1) {
