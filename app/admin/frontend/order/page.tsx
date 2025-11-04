@@ -1,12 +1,14 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
+import { useAppDispatch, useAppSelector } from '@/lib/hook';
+
 import { Table, Input, Button, Tooltip, Modal } from 'antd';
 import { SearchOutlined, ExportOutlined, CheckOutlined } from '@ant-design/icons';
-import OrderDetailDrawer from '@/app/components/order-detail/order-detail';
+
 import { ordertable } from '@/app/user/frontend/orders/page';
 import { updateOrderStatus, fetchOrders } from '@/lib/features/cart/orderslice';
-import { useAppDispatch, useAppSelector } from '@/lib/hook';
+import OrderDetailDrawer from '@/app/components/order-detail/order-detail';
 import type { Order } from '@/lib/features/cart/orderslice';
 
 interface admin_order_table extends ordertable {
@@ -18,8 +20,6 @@ interface ExtendedOrder extends Order {
   status?: string;
   user?: { fullname: string; email: string };
 }
-
-
 const Orders: React.FC = () => {
   const [confirmVisible, setConfirmVisible] = useState(false);
   const [confirmLoading, setConfirmLoading] = useState(false);
@@ -27,24 +27,15 @@ const Orders: React.FC = () => {
   const [drawerVisible, setDrawerVisible] = useState(false);
   const [selectedOrderId, setSelectedOrderId] = useState<string | null>(null);
   const [search, setSearch] = useState('');
-  //const [stats, setStats] = useState({ totalOrders: 0, totalUnits: 0, totalAmount: 0 });
-
   const pageSize = 10;
   const dispatch = useAppDispatch();
-
-  // ✅ Get data from Redux
-  const {stats, data, total, loading, page } = useAppSelector((state) => state.orders);
-
-  // ✅ Fetch Orders via thunk
+  const { stats, data, total, loading, page } = useAppSelector((state) => state.orders);
   const loadOrders = async (pageNum: number) => {
     await dispatch(fetchOrders({ page: pageNum, search }));
   };
-
   useEffect(() => {
     loadOrders(page);
   }, [page, search]);
-
-  // ✅ Update status
   const handleStatusUpdate = async (orderId: string, newStatus: string) => {
     try {
       await dispatch(updateOrderStatus({ orderId, status: newStatus })).unwrap();
@@ -53,12 +44,10 @@ const Orders: React.FC = () => {
       console.error('Error updating status:', err);
     }
   };
-
   const showConfirm = (orderId: string) => {
     setConfirmOrderId(orderId);
     setConfirmVisible(true);
   };
-
   const handleConfirmOk = async () => {
     if (!confirmOrderId) return;
     setConfirmLoading(true);
@@ -72,12 +61,10 @@ const Orders: React.FC = () => {
       setConfirmOrderId(null);
     }
   };
-
   const handleConfirmCancel = () => {
     setConfirmVisible(false);
     setConfirmOrderId(null);
   };
-
   const columns = [
     { title: 'Date', dataIndex: 'Date', key: 'Date' },
     { title: 'User', dataIndex: 'User', key: 'User' },
@@ -90,13 +77,12 @@ const Orders: React.FC = () => {
       key: 'status',
       render: (status: string) => (
         <span
-          className={`px-2 py-1 rounded text-sm font-medium ${
-            status === 'FULFILLED'
-              ? 'bg-green-100 text-green-700'
-              : status === 'PAID'
+          className={`px-2 py-1 rounded text-sm font-medium ${status === 'FULFILLED'
+            ? 'bg-green-100 text-green-700'
+            : status === 'PAID'
               ? 'bg-yellow-100 text-yellow-700'
               : 'bg-gray-100 text-gray-600'
-          }`}
+            }`}
         >
           {status}
         </span>
@@ -138,10 +124,9 @@ const Orders: React.FC = () => {
     User: order.user?.fullname || '-',
     Order: order.id,
     Products: order._count.items,
-   status: order.status ?? '',
+    status: order.status ?? '',
     Amount: order.total
   }));
-
   return (
     <div className="p-6">
       {/* Stats */}
@@ -153,7 +138,6 @@ const Orders: React.FC = () => {
           </div>
           <div className="bg-blue-100 w-10 h-10 flex items-center justify-center rounded-lg">🧾</div>
         </div>
-
         <div className="w-[324px] h-[81px] bg-white rounded-xl shadow-md flex items-center justify-between px-5">
           <div>
             <p className="text-gray-600 text-sm font-medium">Total Units:</p>
@@ -161,7 +145,6 @@ const Orders: React.FC = () => {
           </div>
           <div className="bg-blue-100 w-10 h-10 flex items-center justify-center rounded-lg">📦</div>
         </div>
-
         <div className="w-[324px] h-[81px] bg-white rounded-xl shadow-md flex items-center justify-between px-5">
           <div>
             <p className="text-gray-600 text-sm font-medium">Total Amount:</p>
@@ -170,7 +153,6 @@ const Orders: React.FC = () => {
           <div className="bg-blue-100 w-10 h-10 flex items-center justify-center rounded-lg">💰</div>
         </div>
       </div>
-
       {/* Search + Table */}
       <div className="flex justify-between items-center mt-9">
         <h4 className="font-medium text-[24px] text-[#007BFF]">Orders</h4>
@@ -184,7 +166,6 @@ const Orders: React.FC = () => {
           />
         </div>
       </div>
-
       <Table
         className="mt-4"
         columns={columns}
@@ -199,13 +180,11 @@ const Orders: React.FC = () => {
         }}
         bordered
       />
-
       <OrderDetailDrawer
         orderId={selectedOrderId}
         visible={drawerVisible}
         onClose={() => setDrawerVisible(false)}
       />
-
       <Modal
         title="Confirm Status Update"
         open={confirmVisible}
@@ -219,5 +198,4 @@ const Orders: React.FC = () => {
     </div>
   );
 };
-
 export default Orders;
