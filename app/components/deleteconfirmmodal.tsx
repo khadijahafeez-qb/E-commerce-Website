@@ -1,19 +1,53 @@
 'use client';
 
-import React from 'react';
-
-import { Modal } from 'antd';
+import React, { useState } from 'react';
+import { Modal,notification} from 'antd';
 import { WarningOutlined } from '@ant-design/icons';
 
 interface DeleteConfirmModalProps {
   open: boolean;
   onCancel: () => void;
-  onConfirm: () => void;
+  onConfirm: () => Promise<void>; // <- expect async function
   productName?: string;
 }
 
-const DeleteConfirmModal: React.FC<DeleteConfirmModalProps> = ({ open, onCancel, onConfirm, productName}) => {
+const DeleteConfirmModal: React.FC<DeleteConfirmModalProps> = ({
+  open,
+  onCancel,
+  onConfirm,
+  productName
+}) => {
+  const [loading, setLoading] = useState(false);
+  const [api, contextHolder] = notification.useNotification();
+
+  const handleConfirm = async () => {
+    setLoading(true);
+    try {
+      await onConfirm();
+
+      api.success({
+        message: 'Deleted',
+        description: `${productName} has been deleted successfully!`,
+        duration: 3,
+      });
+
+      onCancel(); // close modal
+    } catch (err) {
+      api.error({
+        message: 'Deletion Failed',
+        description: `Failed to delete ${productName}.`,
+        duration: 3,
+      });
+      console.error(err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+
   return (
+    <>
+     {contextHolder}
     <Modal
       open={open}
       footer={null}
@@ -25,10 +59,7 @@ const DeleteConfirmModal: React.FC<DeleteConfirmModalProps> = ({ open, onCancel,
       className="!p-0"
     >
       <div className='flex flex-col items-center text-center'>
-        <div
-          className=' opacity-100 flex flex-col items-center justify-center'
-          style={{ width: '212px', height: '137px' }}
-        >
+        <div className='opacity-100 flex flex-col items-center justify-center' style={{ width: '212px', height: '137px' }}>
           <h1 className='font-inter mt-3 font-medium text-[24px] leading-[28.8px] !text-[#007BFF]'>
             Remove Product
           </h1>
@@ -49,14 +80,17 @@ const DeleteConfirmModal: React.FC<DeleteConfirmModalProps> = ({ open, onCancel,
             No
           </button>
           <button
-            onClick={onConfirm}
-            className='w-[103px] h-[36px] rounded-md bg-blue-500 text-white hover:bg-blue-600'
+            onClick={handleConfirm}
+            disabled={loading}
+            className={`w-[103px] h-[36px] rounded-md bg-blue-500 text-white hover:bg-blue-600 ${loading ? 'opacity-50 cursor-not-allowed' : ''}`}
           >
-            Yes
+            {loading ? 'Deleting...' : 'Yes'}
           </button>
         </div>
       </div>
     </Modal>
+      </>
   );
 };
+
 export default DeleteConfirmModal;

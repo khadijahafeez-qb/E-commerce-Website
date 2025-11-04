@@ -100,18 +100,14 @@ const fetchProducts = async (page: number) => {
     fetchProducts(currentPage);
   }, [currentPage]);
 const handleDeleteProduct = async (id: string) => {
-  try {
-    const resultAction = await dispatch(deleteProductThunk(id));
+  const resultAction = await dispatch(deleteProductThunk(id));
 
-    if (deleteProductThunk.fulfilled.match(resultAction)) {
-      setData((prev) => prev.filter((p) => p.id !== id)); // update UI
-      setIsDeleteOpen(false);
-      setSelectedProduct(null);
-    } else {
-      console.error('Delete failed:', resultAction.payload);
-    }
-  } catch (err) {
-    console.error('Delete failed:', err);
+  if (deleteProductThunk.fulfilled.match(resultAction)) {
+    // API call successful → remove product from UI
+    setData((prev) => prev.filter((p) => p.id !== id));
+  } else {
+    // API call failed → throw error to propagate to modal
+    throw new Error(resultAction.payload as string || 'Failed to delete product');
   }
 };
 
@@ -303,13 +299,14 @@ const handleDeleteProduct = async (id: string) => {
 <DeleteConfirmModal
   open={isDeleteOpen}
   onCancel={() => setIsDeleteOpen(false)}
-  onConfirm={() => {
-    if (selectedProduct) handleDeleteProduct(selectedProduct.id);
+  onConfirm={async () => {
+    if (selectedProduct) {
+      await handleDeleteProduct(selectedProduct.id); // ✅ await here
+      setSelectedProduct(null);
+    }
   }}
   productName={selectedProduct?.title}
 />
-
-
 
 <AddSingleProductModal
   open={isEditOpen}
