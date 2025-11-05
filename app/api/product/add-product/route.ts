@@ -6,6 +6,26 @@ const prisma = new PrismaClient();
 export async function POST(req: Request) {
   try {
     const body = await req.json();
+
+    // ✅ Step 1: Check for existing product title (case-insensitive)
+    const existingProduct = await prisma.product.findFirst({
+      where: {
+        title: {
+          equals: body.title,
+          mode: 'insensitive', // ignores case (e.g. "Nike" == "nike")
+        },
+      },
+    });
+
+    if (existingProduct) {
+      return NextResponse.json(
+        {
+          success: false,
+          error: `A product with the title "${body.title}" already exists.`,
+        },
+        { status: 400 }
+      );
+    }
         // Check for duplicate colour+size combinations
     const variantSet = new Set();
     for (const v of body.variants) {
