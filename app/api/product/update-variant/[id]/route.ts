@@ -11,6 +11,26 @@ export async function PUT(
     const { id } = await context.params;
     const body = await req.json();
     const { colour, colourcode, size, price, stock, img } = body;
+        // --- Optional: check for duplicates before updating
+    const duplicate = await prisma.productVariant.findFirst({
+      where: {
+        colour,
+        size,
+        productId: body.productId,
+        NOT: { id },
+      },
+    });
+
+    if (duplicate) {
+      return NextResponse.json(
+        {
+          success: false,
+          error: `Variant with colour "${colour}" and size "${size}" already exists.`,
+          code: 'DUPLICATE_VARIANT',
+        },
+        { status: 400 }
+      );
+    }
 
     // Update variant
     const updatedVariant = await prisma.productVariant.update({
