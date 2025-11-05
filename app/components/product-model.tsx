@@ -2,14 +2,14 @@
 'use client';
 
 import React, { useEffect, useRef, useState } from 'react';
-import { Modal, Input, InputNumber, Button, Image } from 'antd';
+import { Modal, Input, InputNumber, Button, Image, notification } from 'antd';
 import { EditOutlined } from '@ant-design/icons';
 import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { variantSchema } from '@/lib/validation/product';
 import { Variant } from '@/app/admin/frontend/product/page';
-import { addVariantThunk ,updateVariantThunk} from '@/lib/features/cart/product-slice';
-import { useAppDispatch} from '@/lib/hook';
+import { addVariantThunk, updateVariantThunk } from '@/lib/features/cart/product-slice';
+import { useAppDispatch } from '@/lib/hook';
 import z from 'zod';
 
 interface ProductModalProps {
@@ -30,7 +30,7 @@ const ProductModal: React.FC<ProductModalProps> = ({
   mode,
 }) => {
   const dispatch = useAppDispatch();
-
+    const [api, contextHolder] = notification.useNotification(); 
   const fileInputRef = useRef<HTMLInputElement | null>(null);
   const [file, setFile] = useState<File | null>(null);
   const [img, setImg] = useState('');
@@ -58,55 +58,55 @@ const ProductModal: React.FC<ProductModalProps> = ({
   });
 
   // Prefill when editing
-useEffect(() => {
-  if (open) {
-    if (variant) {
-      // Edit mode: prefill values
-      reset({
-        colour: variant.colour || '',
-        colourcode: variant.colourcode || '',
-        size: variant.size || '',
-        price: variant.price ?? 0,
-        stock: variant.stock ?? 0,
-        img: variant.img || '',
-        availabilityStatus: 'ACTIVE',
-      });
-      setImg(variant.img || '');
-      setFile(null);
-    } else {
-      // Add mode: clear all
-      reset({
-        colour: '',
-        colourcode: '',
-        size: '',
-        price: 0,
-        stock: 0,
-        img: '',
-        availabilityStatus: 'ACTIVE',
-      });
-      setImg('');
-      setFile(null);
+  useEffect(() => {
+    if (open) {
+      if (variant) {
+        // Edit mode: prefill values
+        reset({
+          colour: variant.colour || '',
+          colourcode: variant.colourcode || '',
+          size: variant.size || '',
+          price: variant.price ?? 0,
+          stock: variant.stock ?? 0,
+          img: variant.img || '',
+          availabilityStatus: 'ACTIVE',
+        });
+        setImg(variant.img || '');
+        setFile(null);
+      } else {
+        // Add mode: clear all
+        reset({
+          colour: '',
+          colourcode: '',
+          size: '',
+          price: 0,
+          stock: 0,
+          img: '',
+          availabilityStatus: 'ACTIVE',
+        });
+        setImg('');
+        setFile(null);
+      }
     }
-  }
-}, [open, variant, reset]);
+  }, [open, variant, reset]);
 
   const openFilePicker = () => fileInputRef.current?.click();
 
 
-const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-  const selected = e.target.files?.[0];
-  if (selected) {
-    setFile(selected);
-    const blobURL = URL.createObjectURL(selected);
-    setImg(blobURL);
-    setValue('img', blobURL, { shouldValidate: true }); // ✅ This is good
-  } else {
-    setImg('');
-    setValue('img', '', { shouldValidate: true }); // ✅ Triggers validation if no image
-  }
+  const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const selected = e.target.files?.[0];
+    if (selected) {
+      setFile(selected);
+      const blobURL = URL.createObjectURL(selected);
+      setImg(blobURL);
+      setValue('img', blobURL, { shouldValidate: true }); // ✅ This is good
+    } else {
+      setImg('');
+      setValue('img', '', { shouldValidate: true }); // ✅ Triggers validation if no image
+    }
 
-  e.target.value = '';
-};
+    e.target.value = '';
+  };
 
   const onSubmit = async (data: FormData) => {
 
@@ -127,22 +127,35 @@ const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
 
       const payload = { ...data, img: imagePath, productId };
 
-    if (mode === 'edit' && variant?.id) {
-      await dispatch(updateVariantThunk({ id: variant.id, data: payload })).unwrap();
-    } else {
-      
-      await dispatch(addVariantThunk({ productId, data: payload })).unwrap();
-    }
+      if (mode === 'edit' && variant?.id) {
+        await dispatch(updateVariantThunk({ id: variant.id, data: payload })).unwrap();
+        api.success({
+          message: 'Variant Updated',
+          description: `Variant "${data.colour}" has been updated successfully.`,
+          placement: 'topRight',
+        });
+      } else {
 
-    onCancel(); // close modal on success
-  } catch (err) {
-    console.error('Failed to save variant:', err);
-  } finally {
-    setIsUploading(false);
-  }
+        await dispatch(addVariantThunk({ productId, data: payload })).unwrap();
+         api.success({
+          message: 'Variant Added',
+          description: `Variant "${data.colour}" has been added successfully.`,
+          placement: 'topRight',
+        });
+      }
+
+      onCancel(); // close modal on success
+    } catch (err) {
+      console.error('Failed to save variant:', err);
+      
+    } finally {
+      setIsUploading(false);
+    }
   };
 
   return (
+     <>
+      {contextHolder}
     <Modal
       open={open}
       onCancel={onCancel}
@@ -171,7 +184,7 @@ const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
           )}
 
           <div
-            onClick={openFilePicker} 
+            onClick={openFilePicker}
             className="absolute top-2 right-2 bg-white/80 hover:bg-white p-2 rounded-full shadow cursor-pointer"
           >
             <EditOutlined className="text-blue-500 text-lg" />
@@ -258,6 +271,7 @@ const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         </div>
       </form>
     </Modal>
+    </>
   );
 };
 
