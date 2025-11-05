@@ -38,23 +38,19 @@ price: z.number()
   availabilityStatus: z.enum(['ACTIVE', 'INACTIVE']).default('ACTIVE'),
 });
 
-export const productSchema = z
-  .object({
-    title: z
-      .union([z.string(), z.undefined()])
-      .transform((val) => val ?? '')
-      .refine((val) => val.trim().length > 0, { message: 'Title is required' }),
+export const productSchema = z.object({
+  title: z
+    .union([z.string(), z.undefined()])
+    .transform((val) => val ?? '')
+    .refine((val) => val.trim().length > 0, { message: 'Title is required' }),
 
-    isDeleted: z.enum(['active', 'deleted']).default('active'),
+  isDeleted: z.enum(['active', 'deleted']).default('active'),
 
-    variants: z
-      .array(variantSchema)
-      .min(1, 'At least one variant is required'),
-  })
-  .refine((data) => {
-    const combos = data.variants.map((v) => `${v.colour}-${v.size}`);
-    return new Set(combos).size === combos.length;
-  }, { message: 'Variants must have unique colour + size combinations' });
+  variants: z
+    .array(variantSchema)
+    .min(1, 'At least one variant is required'),
+});
+
 
   export const productIdSchema = z.object({
   id: z.string().uuid({ message: 'Invalid product ID' }),

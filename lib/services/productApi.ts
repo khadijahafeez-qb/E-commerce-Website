@@ -1,16 +1,39 @@
 import { ProductInput, ProductOutput, VariantInput } from '@/lib/validation/product';
 
-export async function addProduct(data: ProductInput): Promise<ProductOutput> {
-  const res = await fetch('/api/product/add-product', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(data),
-  });
+// export async function addProduct(data: ProductInput): Promise<ProductOutput> {
+//   const res = await fetch('/api/product/add-product', {
+//     method: 'POST',
+//     headers: { 'Content-Type': 'application/json' },
+//     body: JSON.stringify(data),
+//   });
 
-  const json = await res.json();
-  if (!res.ok || !json.success) throw new Error(json.error || 'Failed to add product');
-  return json.product as ProductOutput;
-}
+//   const json = await res.json();
+//   if (!res.ok || !json.success) throw new Error(json.error || 'Failed to add product');
+//   return json.product as ProductOutput;
+// }
+export const addProduct = async (productData: ProductInput) => {
+  try {
+    const response = await fetch('/api/product/add-product', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(productData),
+    });
+
+    const data = await response.json();
+
+    if (!response.ok) {
+      // Throw the error message from the API
+      throw new Error(data.error || `HTTP error! status: ${response.status}`);
+    }
+
+    return data;
+  } catch (error) {
+    // Re-throw the error so Redux thunk can catch it
+    throw error;
+  }
+};
 
 export async function addVariant(productId: string, data: VariantInput): Promise<VariantInput> {
   const res = await fetch(`/api/product/add-variant/${productId}`, {

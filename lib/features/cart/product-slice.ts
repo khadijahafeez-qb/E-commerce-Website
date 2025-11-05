@@ -27,14 +27,33 @@ const initialState: ProductState = {
 };
 
 // 🧩 Add product
-export const addProductThunk = createAsyncThunk<ProductOutput, ProductInput>(
+// export const addProductThunk = createAsyncThunk<
+//   ProductOutput,          // ✅ return type
+//   ProductInput,           // ✅ argument type
+//   { rejectValue: string } // ✅ rejected payload type
+// >(
+//   'product/addProduct',
+//   async (data, { rejectWithValue }) => {
+//     try {
+//       const response = await addProduct(data);
+//       return response;
+//     } catch (err) {
+//       if (err instanceof Error) {
+//         return rejectWithValue(err.message);
+//       }
+//       return rejectWithValue('Unknown error while adding product');
+//     }
+//   }
+// );
+export const addProductThunk = createAsyncThunk(
   'product/addProduct',
-  async (data, { rejectWithValue }) => {
+  async (productData: ProductInput, { rejectWithValue }) => {
     try {
-      return await addProduct(data);
-    } catch (err) {
-      if (err instanceof Error) return rejectWithValue(err.message);
-      return rejectWithValue('Unknown error while adding product');
+      const response = await addProduct(productData);
+      return response;
+    } catch (error) {
+      // Pass the error message to the rejected action
+      return rejectWithValue(error instanceof Error ? error.message : 'Unknown error occurred');
     }
   }
 );
