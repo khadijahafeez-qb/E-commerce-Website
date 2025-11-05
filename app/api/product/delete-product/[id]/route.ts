@@ -1,13 +1,14 @@
-import { NextResponse } from 'next/server';
+import { NextResponse ,NextRequest} from 'next/server';
 import { PrismaClient } from '@prisma/client';
 
 const prisma = new PrismaClient();
 
-export async function PATCH( req: Request,
-  { params }: { params: { id: string } }
+export async function PATCH(
+  req: NextRequest,
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const { id } = params; // ✅ works now
+    const { id } = await params; // ✅ await the promise
     // ✅ Soft delete the product
     const product = await prisma.product.update({
       where: { id},
