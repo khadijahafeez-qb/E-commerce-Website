@@ -46,7 +46,7 @@ const validationMap = [
     schema: productIdSchema,
   },
   {
-    path: /^\/api\/product\/update-product\/.*$/,
+    path: /^\/api\/product\/update-variant\/.*$/,
     method: 'PUT',
     schema: {
       param: productIdSchema,
@@ -155,7 +155,7 @@ export async function middleware(req: NextRequest) {
         // Combined param + body validation (update-product)
         else if ('param' in matched.schema && 'body' in matched.schema) {
           const parts = path.split('/');
-  const id = parts.at(-2); // ✅ second-to-last part
+  const id = parts.at(-1); // ✅ second-to-last part
   matched.schema.param.parse({ id });
   
   const clone = req.clone();

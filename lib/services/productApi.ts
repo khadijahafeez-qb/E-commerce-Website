@@ -1,16 +1,5 @@
 import { ProductInput, ProductOutput, VariantInput } from '@/lib/validation/product';
 
-// export async function addProduct(data: ProductInput): Promise<ProductOutput> {
-//   const res = await fetch('/api/product/add-product', {
-//     method: 'POST',
-//     headers: { 'Content-Type': 'application/json' },
-//     body: JSON.stringify(data),
-//   });
-
-//   const json = await res.json();
-//   if (!res.ok || !json.success) throw new Error(json.error || 'Failed to add product');
-//   return json.product as ProductOutput;
-// }
 export const addProduct = async (productData: ProductInput) => {
   try {
     const response = await fetch('/api/product/add-product', {
@@ -62,7 +51,7 @@ export async function deactivateVariant(id: string): Promise<VariantInput> {
 }
 
 export async function updateVariant(id: string, data: VariantInput): Promise<VariantInput> {
-  const res = await fetch(`/api/product/update-product/${id}`, {
+  const res = await fetch(`/api/product/update-variant/${id}`, {
     method: 'PUT',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(data),

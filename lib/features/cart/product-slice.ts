@@ -25,26 +25,6 @@ const initialState: ProductState = {
   loading: false,
   error: null,
 };
-
-// 🧩 Add product
-// export const addProductThunk = createAsyncThunk<
-//   ProductOutput,          // ✅ return type
-//   ProductInput,           // ✅ argument type
-//   { rejectValue: string } // ✅ rejected payload type
-// >(
-//   'product/addProduct',
-//   async (data, { rejectWithValue }) => {
-//     try {
-//       const response = await addProduct(data);
-//       return response;
-//     } catch (err) {
-//       if (err instanceof Error) {
-//         return rejectWithValue(err.message);
-//       }
-//       return rejectWithValue('Unknown error while adding product');
-//     }
-//   }
-// );
 export const addProductThunk = createAsyncThunk(
   'product/addProduct',
   async (productData: ProductInput, { rejectWithValue }) => {

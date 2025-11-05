@@ -130,6 +130,7 @@ const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (mode === 'edit' && variant?.id) {
       await dispatch(updateVariantThunk({ id: variant.id, data: payload })).unwrap();
     } else {
+      
       await dispatch(addVariantThunk({ productId, data: payload })).unwrap();
     }
 
