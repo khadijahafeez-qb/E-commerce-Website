@@ -145,10 +145,25 @@ const ProductModal: React.FC<ProductModalProps> = ({
       }
 
       onCancel(); // close modal on success
-    } catch (err) {
-      console.error('Failed to save variant:', err);
-      
-    } finally {
+    }  catch (err: unknown) {
+  console.error('Failed to save variant:', err);
+
+  let description = 'Something went wrong while saving variant.';
+
+  if (typeof err === 'object' && err !== null) {
+    const maybeErr = err as { error?: string; message?: string };
+    if (maybeErr.error) description = maybeErr.error;
+    else if (maybeErr.message) description = maybeErr.message;
+  } else if (typeof err === 'string') {
+    description = err;
+  }
+
+  api.error({
+    message: 'Action Failed',
+    description,
+    placement: 'topRight',
+  });
+}finally {
       setIsUploading(false);
     }
   };
