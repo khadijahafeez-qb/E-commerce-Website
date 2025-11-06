@@ -10,7 +10,7 @@ import { Table, Button, Checkbox, notification, Image } from 'antd';
 import { DeleteOutlined, PlusOutlined, MinusOutlined, ArrowLeftOutlined } from '@ant-design/icons';
 import type { ColumnsType } from 'antd/es/table';
 
-import { getUserCart, clearCart, updateQty, removeFromCart,updateStock } from '@/utils/cart-storage';
+import { getUserCart, clearCart, updateQty, removeFromCart, updateStock } from '@/utils/cart-storage';
 import MainLayout from '@/app/components/mainlayout';
 import DeleteConfirmModal from '@/app/components/deleteconfirmmodal';
 import { tableClasses } from '@/utils/tableClasses';
@@ -47,35 +47,35 @@ const ShoppingCartPage: React.FC = () => {
   const placeOrder = async () => {
     if (isPlacingOrder) return; // ✅ Prevent double click
     try {
-        // ✅ 1️⃣ Check if cart is empty
-   if (!cartItems || cartItems.length === 0) {
-    api.warning({
-      message: 'Cart is empty',
-      description: 'Please add some products before placing an order.',
-    });
-    return;
-  }
-      // ✅ 1️⃣ Frontend stock pre-check
-    const overStockItems = cartItems.filter(item => item.count > item.stock);
-    if (overStockItems.length > 0) {
-      overStockItems.forEach(item => {
-        api.error({
-          message: `Insufficient stock for ${item.title}`,
-          description: `Only ${item.stock} item(s) available.`,
+      // ✅ 1️⃣ Check if cart is empty
+      if (!cartItems || cartItems.length === 0) {
+        api.warning({
+          message: 'Cart is empty',
+          description: 'Please add some products before placing an order.',
         });
-      });
-      return; // Prevent API call
-    }
+        return;
+      }
+      // ✅ 1️⃣ Frontend stock pre-check
+      const overStockItems = cartItems.filter(item => item.count > item.stock);
+      if (overStockItems.length > 0) {
+        overStockItems.forEach(item => {
+          api.error({
+            message: `Insufficient stock for ${item.title}`,
+            description: `Only ${item.stock} item(s) available.`,
+          });
+        });
+        return; // Prevent API call
+      }
 
-  // ✅ 2️⃣ Optionally check if any item has invalid qty or stock 0
-  const hasInvalidItem = cartItems.some((item) => item.count <= 0 || item.stock <= 0);
-  if (hasInvalidItem) {
-    api.error({
-      message: 'Invalid product quantity',
-      description: 'Some products in your cart are out of stock or invalid.',
-    });
-    return;
-  }
+      // ✅ 2️⃣ Optionally check if any item has invalid qty or stock 0
+      const hasInvalidItem = cartItems.some((item) => item.count <= 0 || item.stock <= 0);
+      if (hasInvalidItem) {
+        api.error({
+          message: 'Invalid product quantity',
+          description: 'Some products in your cart are out of stock or invalid.',
+        });
+        return;
+      }
       setIsPlacingOrder(true); // ✅ Disable button
 
       const res = await fetch('/api/placeorder', {
@@ -86,34 +86,38 @@ const ShoppingCartPage: React.FC = () => {
 
       const data = await res.json();
 
-     
-    if (!res.ok) {
-      if (data.lowStockItems) {
-        // Update stock in localStorage
-        data.lowStockItems.forEach((item: { id: string; available: number }) => {
-          updateStock(userEmail, item.id, item.available);
-        });
-        // Refresh cart UI
-        setCartItems(getUserCart(userEmail));
+
+      if (!res.ok) {
+        if (data.lowStockItems) {
+          data.lowStockItems.forEach((item: { title: string; available: number }) => {
+            api.error({
+              message: `Insufficient stock for ${item.title}`,
+              description: `Only ${item.available} item(s) are available.`,
+              duration: 4,
+            });
+          });
+
+          // Update local cart
+          data.lowStockItems.forEach((item: { id: string; available: number }) => {
+            updateStock(userEmail, item.id, item.available);
+          });
+
+          setCartItems(getUserCart(userEmail));
+          return;
+        }
 
         return api.error({
-          message: 'Some products have insufficient stock',
-          description: 'Stock has been updated. Please check your cart.',
+          message: 'Order failed',
+          description: data.error || 'Something went wrong',
         });
       }
 
-      return api.error({
-        message: 'Order failed',
-        description: data.error || 'Something went wrong',
+      // ✅ Only show redirect toast if success
+      api.info({
+        message: 'Redirecting...',
+        description: 'You are being redirected to the checkout page.',
+        duration: 2,
       });
-    }
- 
-// ✅ Only show redirect toast if success
-    api.info({
-      message: 'Redirecting...',
-      description: 'You are being redirected to the checkout page.',
-      duration: 2,
-    });
       clearCart(userEmail);
       if (data.url) {
         // Small delay so user can see the toast
