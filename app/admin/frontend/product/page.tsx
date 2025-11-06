@@ -216,6 +216,7 @@ const handleDeleteProduct = async (id: string) => {
                       render: (price: number) => `$${price.toFixed(2)}`,
                     },
                     { title: 'Stock', dataIndex: 'stock', key: 'stock' },
+                    {title:'Avalability Status' ,dataIndex: 'availabilityStatus', key: 'availabilityStatus' },
                     {
                       title: 'Actions',
                       key: 'actions',
