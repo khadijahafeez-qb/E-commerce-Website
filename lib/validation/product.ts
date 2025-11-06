@@ -77,7 +77,7 @@ export const productQuerySchema = z
       .refine((val) => val > 0, { message: 'Limit must be greater than 0' }),
 
     search: z.string().optional(),
-    sort: z.enum(['', 'price-asc', 'price-desc']).optional(),
+    sort: z.enum(['', 'title-asc', 'title-desc', 'date-asc', 'date-desc']).optional(),
   })
   .strict(); // 🚫 no unknown query keys
 

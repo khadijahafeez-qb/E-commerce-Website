@@ -40,25 +40,30 @@ export async function GET(req: Request) {
           }
         : {}),
     };
-   
-    // Group variants to get min price
-    const priceGroups = await prisma.productVariant.groupBy({
-      by: ['productId'],
-      _min: { price: true },
-       where: { availabilityStatus: 'ACTIVE' },
-    });
+    type ProductOrderBy = Prisma.ProductOrderByWithRelationInput;
+    let orderBy: ProductOrderBy;
 
-
-    const priceMap = Object.fromEntries(
-      priceGroups.map(p => [p.productId, p._min.price ?? 0])
-    );
-
-    // Fetch products with variants
+    switch (sort) {
+      case 'title-asc':
+        orderBy = { title: 'asc' };
+        break;
+      case 'title-desc':
+        orderBy = { title: 'desc' };
+        break;
+      case 'date-asc':
+        orderBy = { createdAt: 'asc' };
+        break;
+      case 'date-desc':
+        orderBy = { createdAt: 'desc' };
+        break;
+      default:
+        orderBy = { createdAt: 'desc' }; // default sorting
+    }
     const products = await prisma.product.findMany({
       where: whereProduct,
       skip,
       take: limit,
-      orderBy: { createdAt: 'desc' },
+      orderBy,
             include: {
         variants:
           role === 'ADMIN'
@@ -68,21 +73,10 @@ export async function GET(req: Request) {
               },
       },
     });
-
-    const enrichedProducts = products.map(p => ({
-      ...p,
-      price: priceMap[p.id] ?? 0,
-    }));
-
-    // Sort manually
-    if (sort === 'price-asc') enrichedProducts.sort((a, b) => a.price - b.price);
-    if (sort === 'price-desc') enrichedProducts.sort((a, b) => b.price - a.price);
-
     const total = await prisma.product.count({ where: whereProduct });
   
-    
     return NextResponse.json({
-      products: enrichedProducts,
+      products,
       total,
       hasMore: limit ? page * limit < total : false,
     });
