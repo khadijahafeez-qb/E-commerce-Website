@@ -1,10 +1,13 @@
 import { NextResponse } from 'next/server';
 import { PrismaClient,Prisma } from '@prisma/client';
+import { auth } from '@/auth';
 
 const prisma = new PrismaClient();
 
 export async function GET(req: Request) {
   try {
+    const session = await auth();
+    const role = session?.user?.role;
 
     const { searchParams } = new URL(req.url);
 
@@ -19,11 +22,22 @@ export async function GET(req: Request) {
     const limit = limitParam ? parseInt(limitParam, 10) : undefined;
     const skip = limit ? (page - 1) * limit : 0;
 
-
-     const whereProduct: Prisma.ProductWhereInput = {
+        // 🧠 Role-based filtering moved here:
+    const whereProduct: Prisma.ProductWhereInput = {
       isDeleted: 'active',
       ...(search
         ? { title: { contains: search, mode: 'insensitive' as Prisma.QueryMode } }
+        : {}),
+
+      ...(role === 'USER'
+        ? {
+            // Show only products that have active variants (and optionally stock > 0)
+            variants: {
+              some: {
+                availabilityStatus: 'ACTIVE',
+              },
+            },
+          }
         : {}),
     };
    
@@ -46,12 +60,14 @@ export async function GET(req: Request) {
       take: limit,
       orderBy: { createdAt: 'desc' },
             include: {
-        variants: {
-          where: { availabilityStatus: 'ACTIVE' },
-        },
+        variants:
+          role === 'ADMIN'
+            ? true // show ALL variants for admin
+            : {
+                where: { availabilityStatus: 'ACTIVE' },
+              },
       },
     });
-    
 
     const enrichedProducts = products.map(p => ({
       ...p,
