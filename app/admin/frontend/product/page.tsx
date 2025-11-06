@@ -102,17 +102,25 @@ const ProductPage: React.FC = () => {
   useEffect(() => {
     fetchProducts(currentPage);
   }, [currentPage]);
-  const handleDeleteProduct = async (id: string) => {
+const handleDeleteProduct = async (id: string) => {
+  try {
     const resultAction = await dispatch(deleteProductThunk(id));
 
     if (deleteProductThunk.fulfilled.match(resultAction)) {
-      // API call successful → remove product from UI
-      setData((prev) => prev.filter((p) => p.id !== id));
+      // ✅ Re-fetch current page after delete to keep pagination in sync
+      await fetchProducts(currentPage);
+
+      // If deleting last item on last page, go back one page
+      if (data.length === 1 && currentPage > 1) {
+        setCurrentPage((prev) => prev - 1);
+      }
     } else {
-      // API call failed → throw error to propagate to modal
-      throw new Error(resultAction.payload as string || 'Failed to delete product');
+      throw new Error((resultAction.payload as string) || 'Failed to delete product');
     }
-  };
+  } catch (err) {
+    console.error('Delete product failed:', err);
+  }
+};
 
 
 
