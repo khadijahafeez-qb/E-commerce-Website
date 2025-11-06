@@ -2,7 +2,7 @@
 
 import React, { useState } from 'react';
 
-import { Modal, Upload, Button } from 'antd';
+import { Modal, Upload, Button ,notification} from 'antd';
 import { InboxOutlined, DeleteOutlined, FileOutlined } from '@ant-design/icons';
 import type { UploadFile,RcFile } from 'antd/es/upload/interface';
 
@@ -13,6 +13,8 @@ interface AddMultipleProductsModalProps {
 }
 
 const AddMultipleProductsModal: React.FC<AddMultipleProductsModalProps> = ({ open, onCancel }) => {
+  const [loading, setLoading] = useState(false);
+  const [api, contextHolder] = notification.useNotification();
   const [fileList, setFileList] = useState<UploadFile[]>([]);
 const handleBeforeUpload = (file: RcFile) => {
   const uploadFile: UploadFile = {
@@ -28,17 +30,43 @@ const handleBeforeUpload = (file: RcFile) => {
   const handleRemove = () => {
     setFileList([]);
   };
-const handleUpload = async () => {
-  if (fileList.length === 0 || !fileList[0].originFileObj) return;
-  const formData = new FormData();
-  formData.append('file', fileList[0].originFileObj as File);
-  const res = await fetch('/api/product/upload-products', {
-    method: 'POST',
-    body: formData,
-  });
-  const data = await res.json();
-  onCancel();
-};
+ const handleUpload = async () => {
+    if (fileList.length === 0 || !fileList[0].originFileObj) return;
+
+    setLoading(true);
+    try {
+      const formData = new FormData();
+      formData.append('file', fileList[0].originFileObj as File);
+
+      const res = await fetch('/api/product/upload-products', {
+        method: 'POST',
+        body: formData,
+      });
+
+      const data = await res.json();
+
+      if (res.ok) {
+        api.success({
+          message: 'Upload Successful',
+          description: data.message || 'Products uploaded successfully!',
+        });
+        setFileList([]);
+        onCancel();
+      } else {
+        api.error({
+          message: 'Upload Failed',
+          description: data.error || 'Something went wrong while uploading.',
+        });
+      }
+    } catch (error) {
+      api.error({
+        message: 'Upload Error',
+        description: 'Network or server issue occurred.',
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
 
   return (
     <Modal
@@ -88,9 +116,10 @@ const handleUpload = async () => {
             type='primary'
             className='px-6 h-10 rounded-md'
             onClick={handleUpload}
-            disabled={fileList.length === 0}
+            disabled={fileList.length === 0 || loading}
+              loading={loading}
           >
-            Upload File
+            {loading ? 'Uploading...' : 'Upload File'}
           </Button>
         </div>
       </div>
