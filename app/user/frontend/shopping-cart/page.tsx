@@ -16,6 +16,7 @@ import DeleteConfirmModal from '@/app/components/deleteconfirmmodal';
 import { tableClasses } from '@/utils/tableClasses';
 import { Product } from '@/utils/cart-storage';
 
+
 interface cartList {
   key: string;
   title: string;
@@ -94,8 +95,7 @@ const ShoppingCartPage: React.FC = () => {
 
             if (reason === 'INACTIVE') {
               api.error({
-                message: `Product inactive: ${item.title}`,
-                description: `This product is currently inactive and cannot be purchased.`,
+                message: `${item.title} is currently not available`,
                 duration: 5,
               });
             } else if (reason === 'LOW_STOCK') {
@@ -191,7 +191,7 @@ const ShoppingCartPage: React.FC = () => {
     }
     setCartItems(getUserCart(userEmail));
   };
-  
+
   const handleCheck = (key: string, checked: boolean) => {
     setSelectedRowKeys((prev) =>
       checked ? [...prev, key] : prev.filter((k) => k !== key)
@@ -369,7 +369,10 @@ const ShoppingCartPage: React.FC = () => {
             {isPlacingOrder ? 'Redirecting...' : 'Place Order'}
           </Button>
         </div>
-        <DeleteConfirmModal open={isModalOpen} onCancel={handleCancel} onConfirm={handleConfirm} />
+        <DeleteConfirmModal open={isModalOpen} onCancel={handleCancel} onConfirm={handleConfirm} getItemName={() => {
+          const item = cartItems.find(i => i.id === deleteKey);
+          return item ? item.title : '';
+        }} />
       </MainLayout>
     </>
   );
