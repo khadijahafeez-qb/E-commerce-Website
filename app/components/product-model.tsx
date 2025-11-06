@@ -18,6 +18,7 @@ interface ProductModalProps {
   variant?: Variant | null;
   productId: string;
   mode: 'add' | 'edit';
+  onSuccess: () => void;
 }
 
 type FormData = z.input<typeof variantSchema>;
@@ -28,6 +29,7 @@ const ProductModal: React.FC<ProductModalProps> = ({
   variant,
   productId,
   mode,
+  onSuccess
 }) => {
   const dispatch = useAppDispatch();
     const [api, contextHolder] = notification.useNotification(); 
@@ -143,7 +145,7 @@ const ProductModal: React.FC<ProductModalProps> = ({
           placement: 'topRight',
         });
       }
-
+     if (onSuccess) onSuccess();
       onCancel(); // close modal on success
     }  catch (err: unknown) {
   console.error('Failed to save variant:', err);

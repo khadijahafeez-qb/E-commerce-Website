@@ -323,6 +323,7 @@ const handleDeleteProduct = async (id: string) => {
         variant={selectedVariant}
         productId={selectedProduct?.id || ''}
         mode={selectedVariant ? 'edit' : 'add'} // 👈 key change
+        onSuccess={() => fetchProducts(currentPage)}
       />
 
 
