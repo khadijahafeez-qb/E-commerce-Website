@@ -27,8 +27,8 @@ export const variantSchema = z.object({
 
 stock: z.number()
   .refine(val => val !== undefined, { message: 'Stock is required' })
-  .refine(val => Number.isInteger(val), { message: 'Stock must be an integer' })
-  .refine(val => val > 0, { message: 'Stock must be greater than 0' }),
+  .refine((val) => Number.isInteger(val), { message: 'Stock must be an integer' })
+    .refine((val) => val >= 0, { message: 'Stock cannot be negative' }),
 
 price: z.number()
   .refine(val => val !== undefined, { message: 'Price is required' })
