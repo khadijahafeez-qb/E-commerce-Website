@@ -48,7 +48,7 @@ const handleBeforeUpload = (file: RcFile) => {
       if (res.ok) {
         api.success({
           message: 'Upload Successful',
-          description: data.message || 'Products uploaded successfully!',
+          description: data.message || 'File Uploaded Successfully!',
         });
         setFileList([]);
         onCancel();
