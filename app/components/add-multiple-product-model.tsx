@@ -69,6 +69,8 @@ const handleBeforeUpload = (file: RcFile) => {
   };
 
   return (
+      <>
+      {contextHolder}
     <Modal
       open={open}
       onCancel={onCancel}
@@ -124,6 +126,7 @@ const handleBeforeUpload = (file: RcFile) => {
         </div>
       </div>
     </Modal>
+    </>
   );
 };
 export default AddMultipleProductsModal;
