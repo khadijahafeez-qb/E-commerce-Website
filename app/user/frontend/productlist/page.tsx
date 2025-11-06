@@ -8,7 +8,7 @@ import { Input, Select, Col, Row, Spin } from 'antd';
 import { SearchOutlined } from '@ant-design/icons';
 
 import { getProductsThunk } from '@/lib/features/cart/product-slice';
-import { useAppDispatch} from '@/lib/hook';
+import { useAppDispatch } from '@/lib/hook';
 
 import MainLayout from '@/app/components/mainlayout';
 import ProductCard, { ProductCardProps } from '../productcard/page';
@@ -48,23 +48,23 @@ function App() {
       const data = await dispatch(
         getProductsThunk({ page: pageNum, limit: PAGE_SIZE, search: debouncedSearchRef.current, sort: sortRef.current })
       ).unwrap();
-    // ✅ Map Product[] → ProductCardProps[]
-    const fetchedCardProps: ProductCardProps[] = data.products.map((p) => ({
-      id: p.id,
-      title: p.title,
-      isDeleted: p.isDeleted === 'deleted',
-      variants: p.variants.map((v) => ({
-        id: v.id,
-        colour: v.colour,
-        colourcode: v.colourcode,
-        size: v.size,
-        stock: v.stock,
-        price: v.price,
-        availabilityStatus: v.stock > 0 ? 'ACTIVE' : 'INACTIVE', 
-        img: v.img,
-      })),
-    }));
-     const fetched = fetchedCardProps;
+      // ✅ Map Product[] → ProductCardProps[]
+      const fetchedCardProps: ProductCardProps[] = data.products.map((p) => ({
+        id: p.id,
+        title: p.title,
+        isDeleted: p.isDeleted === 'deleted',
+        variants: p.variants.map((v) => ({
+          id: v.id,
+          colour: v.colour,
+          colourcode: v.colourcode,
+          size: v.size,
+          stock: v.stock,
+          price: v.price,
+          availabilityStatus: v.stock > 0 ? 'ACTIVE' : 'INACTIVE',
+          img: v.img,
+        })),
+      }));
+      const fetched = fetchedCardProps;
       if (mode === 'reset') {
         allProductsCache.current = fetched.slice();
         firstPageRef.current = pageNum;
@@ -193,6 +193,10 @@ function App() {
             <Select.Option value="">Sort by</Select.Option>
             <Select.Option value="price-asc">Price: Low to High</Select.Option>
             <Select.Option value="price-desc">Price: High to Low</Select.Option>
+            <Select.Option value="title-asc">Title: A → Z</Select.Option>
+            <Select.Option value="title-desc">Title: Z → A</Select.Option>
+            <Select.Option value="date-desc">Date: Newest → Oldest</Select.Option>
+            <Select.Option value="date-asc">Date: Oldest → Newest</Select.Option>
           </Select>
         </div>
       </div>
