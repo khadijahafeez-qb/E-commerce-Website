@@ -137,7 +137,7 @@ export const activateVariantThunk = createAsyncThunk(
   'product/activateVariant',
   async (id: string, { rejectWithValue }) => {
     try {
-      const res = await fetch(`/api/product/activate-variant/${id}`, {
+      const res = await fetch(`/api/product/reactivate-variant/${id}`, {
         method: 'PATCH',
       });
       if (!res.ok) throw new Error('Failed to activate variant');
