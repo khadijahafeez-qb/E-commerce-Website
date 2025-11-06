@@ -4,13 +4,13 @@ import React, { useState } from 'react';
 import { Table, Button } from 'antd';
 import { useEffect } from 'react';
 import './page.css';
-import { EditOutlined, DeleteOutlined } from '@ant-design/icons';
-import { Image,notification } from 'antd';
+import { EditOutlined, DeleteOutlined, UndoOutlined } from '@ant-design/icons';
+import { Image, notification } from 'antd';
 import ProductModal from '@/app/components/product-model';
 import DeleteConfirmModal from '@/app/components/deleteconfirmmodal';
 import AddMultipleProductsModal from '@/app/components/add-multiple-product-model';
 import AddSingleProductModal from '@/app/components/add-single-product-model';
-import { deleteProductThunk, deactivateVariantThunk, getProductsThunk } from '@/lib/features/cart/product-slice';
+import { deleteProductThunk, deactivateVariantThunk, getProductsThunk, reactivateVariantThunk } from '@/lib/features/cart/product-slice';
 import { useAppDispatch } from '@/lib/hook';
 interface ProductResponse {
   products: Product[];
@@ -51,6 +51,54 @@ const ProductPage: React.FC = () => {
   const [isVariantDeleteModalOpen, setIsVariantDeleteModalOpen] = useState(false);
   const [variantToDelete, setVariantToDelete] = useState<{ id: string; productId: string } | null>(null);
   const dispatch = useAppDispatch();
+  const [isReactivateModalOpen, setIsReactivateModalOpen] = useState(false);
+  const [loadingReactivate, setLoadingReactivate] = useState(false);
+  const [variantToReactivate, setVariantToReactivate] = useState<{ id: string; productId: string } | null>(null);
+
+  const handleReactivateVariant = async () => {
+    if (!variantToReactivate) return;
+    setLoadingReactivate(true);
+
+    try {
+      const resultAction = await dispatch(reactivateVariantThunk(variantToReactivate.id));
+
+      if (reactivateVariantThunk.fulfilled.match(resultAction)) {
+        notification.success({
+          message: 'Variant Reactivated',
+          description: 'The variant has been successfully reactivated.',
+        });
+
+        setData(prev =>
+          prev.map(p =>
+            p.id === variantToReactivate.productId
+              ? {
+                ...p,
+                variants: p.variants.map(v =>
+                  v.id === variantToReactivate.id
+                    ? { ...v, availabilityStatus: 'ACTIVE' }
+                    : v
+                ),
+              }
+              : p
+          )
+        );
+        setIsReactivateModalOpen(false);
+        setVariantToReactivate(null);
+      } else {
+        notification.error({
+          message: 'Error',
+          description: resultAction.payload as string,
+        });
+      }
+    } catch (err) {
+      notification.error({
+        message: 'Error',
+        description: 'Something went wrong while reactivating.',
+      });
+    } finally {
+      setLoadingReactivate(false);
+    }
+  };
 
 
   const handleInactivateVariant = async () => {
@@ -102,25 +150,25 @@ const ProductPage: React.FC = () => {
   useEffect(() => {
     fetchProducts(currentPage);
   }, [currentPage]);
-const handleDeleteProduct = async (id: string) => {
-  try {
-    const resultAction = await dispatch(deleteProductThunk(id));
+  const handleDeleteProduct = async (id: string) => {
+    try {
+      const resultAction = await dispatch(deleteProductThunk(id));
 
-    if (deleteProductThunk.fulfilled.match(resultAction)) {
-      // ✅ Re-fetch current page after delete to keep pagination in sync
-      await fetchProducts(currentPage);
+      if (deleteProductThunk.fulfilled.match(resultAction)) {
+        // ✅ Re-fetch current page after delete to keep pagination in sync
+        await fetchProducts(currentPage);
 
-      // If deleting last item on last page, go back one page
-      if (data.length === 1 && currentPage > 1) {
-        setCurrentPage((prev) => prev - 1);
+        // If deleting last item on last page, go back one page
+        if (data.length === 1 && currentPage > 1) {
+          setCurrentPage((prev) => prev - 1);
+        }
+      } else {
+        throw new Error((resultAction.payload as string) || 'Failed to delete product');
       }
-    } else {
-      throw new Error((resultAction.payload as string) || 'Failed to delete product');
+    } catch (err) {
+      console.error('Delete product failed:', err);
     }
-  } catch (err) {
-    console.error('Delete product failed:', err);
-  }
-};
+  };
 
 
 
@@ -254,31 +302,42 @@ const handleDeleteProduct = async (id: string) => {
 
                           return (
                             <div className="flex gap-[12px] opacity-90">
-                              <EditOutlined
-                                className={`!text-[16px] ${isInactive ? '!text-gray-400 cursor-not-allowed' : '!text-blue-500 cursor-pointer'
-                                  }`}
-                                onClick={() => {
-                                  if (isInactive) return; // disable click
-                                  setSelectedVariant(variant);
-                                  setSelectedProduct(product);
-                                  setIsVariantModalOpen(true);
-                                }}
-                              />
-
-                              <DeleteOutlined
-                                className={`!text-[16px] ${isInactive ? '!text-gray-400 cursor-not-allowed' : '!text-red-500 cursor-pointer'
-                                  }`}
-                                onClick={() => {
-                                  if (isInactive) return; // disable click
-                                  setVariantToDelete({ id: variant.id, productId: product.id });
-                                  setSelectedVariant(variant);
-                                  setIsVariantDeleteModalOpen(true);
-                                }}
-                              />
+                              {isInactive ? (
+                                // 🟢 Reactivate icon if variant is inactive
+                                <UndoOutlined
+                                  className="!text-green-600 cursor-pointer !text-[16px]"
+                                  onClick={() => {
+                                    setVariantToReactivate({ id: variant.id, productId: product.id });
+                                    setSelectedVariant(variant);
+                                    setIsReactivateModalOpen(true);
+                                  }}
+                                />
+                              ) : (
+                                // ✏️ Edit + 🗑️ Delete icons if active
+                                <>
+                                  <EditOutlined
+                                    className="!text-blue-500 cursor-pointer !text-[16px]"
+                                    onClick={() => {
+                                      setSelectedVariant(variant);
+                                      setSelectedProduct(product);
+                                      setIsVariantModalOpen(true);
+                                    }}
+                                  />
+                                  <DeleteOutlined
+                                    className="!text-red-500 cursor-pointer !text-[16px]"
+                                    onClick={() => {
+                                      setVariantToDelete({ id: variant.id, productId: product.id });
+                                      setSelectedVariant(variant);
+                                      setIsVariantDeleteModalOpen(true);
+                                    }}
+                                  />
+                                </>
+                              )}
                             </div>
                           );
                         },
-                      },
+                      }
+
 
                     ]}
                     rowKey="id"
@@ -352,6 +411,16 @@ const handleDeleteProduct = async (id: string) => {
         onSuccess={() => fetchProducts(currentPage)}
       />
       <AddMultipleProductsModal open={addopen} onCancel={() => setaddOpen(false)} />
+        <DeleteConfirmModal
+  open={isReactivateModalOpen}
+  onCancel={() => setIsReactivateModalOpen(false)}
+  onConfirm={handleReactivateVariant}
+  getItemName={() =>
+    selectedVariant ? `${selectedVariant.colour} - ${selectedVariant.size}` : ''
+  }
+  actionType="reactivate" // 👈 this changes text + color + icon
+/>
+
 
     </>
   );

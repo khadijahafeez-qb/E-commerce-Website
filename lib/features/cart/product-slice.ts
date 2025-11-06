@@ -133,8 +133,8 @@ export const getProductsThunk = createAsyncThunk<
     }
   }
 );
-export const activateVariantThunk = createAsyncThunk(
-  'product/activateVariant',
+export const reactivateVariantThunk = createAsyncThunk(
+  'product/reactivateVariant',
   async (id: string, { rejectWithValue }) => {
     try {
       const res = await fetch(`/api/product/reactivate-variant/${id}`, {
