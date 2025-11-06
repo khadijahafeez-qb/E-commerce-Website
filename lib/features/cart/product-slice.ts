@@ -133,6 +133,20 @@ export const getProductsThunk = createAsyncThunk<
     }
   }
 );
+export const activateVariantThunk = createAsyncThunk(
+  'product/activateVariant',
+  async (id: string, { rejectWithValue }) => {
+    try {
+      const res = await fetch(`/api/product/activate-variant/${id}`, {
+        method: 'PATCH',
+      });
+      if (!res.ok) throw new Error('Failed to activate variant');
+      return await res.json();
+    } catch (err) {
+      return rejectWithValue((err as Error).message);
+    }
+  }
+);
 
 
 // 🧱 Slice
