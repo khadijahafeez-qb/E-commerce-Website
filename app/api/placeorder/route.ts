@@ -20,14 +20,15 @@ export async function POST(req: Request) {
     const user = await prisma.user.findUnique({ where: { email: session.user.email } });
     if (!user) return new Response(JSON.stringify({ error: 'User not found' }), { status: 404 });
     const { cartItems, total } = await req.json();
-    // 🧩 2️⃣ Pre-check stock for all items (before transaction)
-    const lowStockItems: { id: string; title: string; available: number }[] = [];
 
+    // 🧩 2️⃣ Pre-check stock for all items (before transaction)
+    const issues: { id: string; title: string; available: number; reason: string }[] = [];
     for (const item of cartItems) {
       const variant = await prisma.productVariant.findUnique({
         where: { id: item.id },
         select: {
           stock: true,
+          availabilityStatus: true,
           product: { select: { title: true } },
         },
       });
@@ -38,23 +39,33 @@ export async function POST(req: Request) {
           { status: 400 }
         );
       }
+      if (variant.availabilityStatus === 'INACTIVE') {
+        issues.push({
+          id: item.id,
+          title: variant.product.title,
+          available: 0,
+          reason: 'INACTIVE',
+        });
+        continue; // <-- means: skip the rest of THIS loop iteration
+      }
 
       // Collect all low-stock items
       if (item.count > variant.stock) {
-        lowStockItems.push({
+        issues.push({
           id: item.id,
           title: variant.product.title,
           available: variant.stock,
+          reason: 'low stock'
         });
       }
     }
 
-    // 🧩 If any item has insufficient stock → stop & return all details
-    if (lowStockItems.length > 0) {
+    // 🧩 Return if any problem
+    if (issues.length > 0) {
       return new Response(
         JSON.stringify({
-          error: 'Insufficient stock',
-          lowStockItems, // send details to frontend
+          error: 'Some items are unavailable or low on stock',
+          issues,
         }),
         { status: 400 }
       );
@@ -69,7 +80,6 @@ export async function POST(req: Request) {
       return new Response(JSON.stringify({ error: 'User has no Stripe account' }), { status: 400 });
     }
     const stripeCustomerId = user.stripeCustomerId;
-    // Create Checkout Session
     const subtotal = cartItems.reduce((acc: number, item: OrderItem) => acc + item.price * item.count, 0);
     const tax = Math.round(subtotal * 0.10 * 100); // in cents
     const stripe_session = await stripe.checkout.sessions.create({

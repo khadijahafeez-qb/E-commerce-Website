@@ -86,31 +86,46 @@ const ShoppingCartPage: React.FC = () => {
 
       const data = await res.json();
 
-
       if (!res.ok) {
-        if (data.lowStockItems) {
-          data.lowStockItems.forEach((item: { title: string; available: number }) => {
-            api.error({
-              message: `Insufficient stock for ${item.title}`,
-              description: `Only ${item.available} item(s) are available.`,
-              duration: 4,
-            });
+        // ✅ Handle backend "issues" array (for low stock or inactive products)
+        if (data.issues && Array.isArray(data.issues)) {
+          data.issues.forEach((item: { id: string; title: string; available: number; reason: string }) => {
+            const reason = item.reason?.toUpperCase?.().replace(/\s/g, '_'); // normalize e.g. "low stock" → "LOW_STOCK"
+
+            if (reason === 'INACTIVE') {
+              api.error({
+                message: `Product inactive: ${item.title}`,
+                description: `This product is currently inactive and cannot be purchased.`,
+                duration: 5,
+              });
+            } else if (reason === 'LOW_STOCK') {
+              api.warning({
+                message: `Low stock for ${item.title}`,
+                description: `Only ${item.available} item(s) available.`,
+                duration: 5,
+              });
+              updateStock(userEmail, item.id, item.available);
+            } else {
+              api.error({
+                message: `Issue with ${item.title}`,
+                description: item.reason || 'Unknown issue occurred.',
+                duration: 5,
+              });
+            }
           });
 
-          // Update local cart
-          data.lowStockItems.forEach((item: { id: string; available: number }) => {
-            updateStock(userEmail, item.id, item.available);
-          });
-
+          // ✅ Refresh cart after updates
           setCartItems(getUserCart(userEmail));
           return;
         }
 
         return api.error({
           message: 'Order failed',
-          description: data.error || 'Something went wrong',
+          description: data.error || 'Something went wrong while placing order',
         });
       }
+
+
 
       // ✅ Only show redirect toast if success
       api.info({
@@ -164,7 +179,7 @@ const ShoppingCartPage: React.FC = () => {
     setDeleteKey(null);
     setIsBulkDelete(false);
   };
-  const handleConfirm = () => {
+  const handleConfirm = async () => {
     setIsModalOpen(false);
     if (isBulkDelete) {
       selectedRowKeys.forEach((k) => {
@@ -176,6 +191,7 @@ const ShoppingCartPage: React.FC = () => {
     }
     setCartItems(getUserCart(userEmail));
   };
+  
   const handleCheck = (key: string, checked: boolean) => {
     setSelectedRowKeys((prev) =>
       checked ? [...prev, key] : prev.filter((k) => k !== key)
