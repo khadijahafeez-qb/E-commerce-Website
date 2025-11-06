@@ -191,8 +191,6 @@ function App() {
             style={{ width: 150 }}
           >
             <Select.Option value="">Sort by</Select.Option>
-            {/* <Select.Option value="price-asc">Price: Low to High</Select.Option>
-            <Select.Option value="price-desc">Price: High to Low</Select.Option> */}
             <Select.Option value="title-asc">Title: A → Z</Select.Option>
             <Select.Option value="title-desc">Title: Z → A</Select.Option>
             <Select.Option value="date-desc">Date: Newest → Oldest</Select.Option>
