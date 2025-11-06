@@ -5,7 +5,7 @@ import { Table, Button } from 'antd';
 import { useEffect } from 'react';
 import './page.css';
 import { EditOutlined, DeleteOutlined } from '@ant-design/icons';
-import { Image } from 'antd';
+import { Image,notification } from 'antd';
 import ProductModal from '@/app/components/product-model';
 import DeleteConfirmModal from '@/app/components/deleteconfirmmodal';
 import AddMultipleProductsModal from '@/app/components/add-multiple-product-model';
