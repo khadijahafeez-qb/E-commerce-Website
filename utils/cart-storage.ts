@@ -48,25 +48,22 @@ export const removeFromCart = (userId: string, productId: string) => {
   saveUserCart(userId, cart);
 };
 // Update stock of a product in localStorage
-export const updateStock = (userId: string, productId: string, stock: number) => {
+export const updateStock = (userId: string, variantId: string, stock: number) => {
   const cart = getUserCart(userId);
-  const product = cart.find((item) => item.id === productId);
+  const product = cart.find((item) => item.id === variantId);
   if (product) {
     product.stock = stock;  // only update stock
     saveUserCart(userId, cart);
   }
 };
-export const updateAvalabilityStatus = (userId: string, variantId: string, stock: number) => {
- const cart = getUserCart(userId);
-
-  const updatedCart = cart.map((item) =>
-    item.id === variantId
-      ? { ...item, stock } // update stock of this variant only
-      : item
-  );
-
-  saveUserCart(userId, updatedCart);
-  
+// ✅ Update availability status
+export const updateAvailabilityStatus = (userId: string,variantId: string,status: 'ACTIVE' | 'INACTIVE') => {
+  const cart = getUserCart(userId);
+  const product = cart.find((item) => item.id === variantId);
+  if (product) {
+    product.availabilityStatus = status;
+    saveUserCart(userId, cart);
+  }
 };
 
 // ✅ Update quantity
