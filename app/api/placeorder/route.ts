@@ -34,10 +34,13 @@ export async function POST(req: Request) {
       });
 
       if (!variant) {
-        return new Response(
-          JSON.stringify({ error: `Product variant for ${item.title} not found` }),
-          { status: 400 }
-        );
+        issues.push({
+          id: item.id,
+          title: item.title,
+          available: 0,
+          reason: 'not found',
+        });
+        continue;
       }
       if (variant.availabilityStatus === 'INACTIVE') {
         issues.push({

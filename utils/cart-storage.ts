@@ -56,6 +56,18 @@ export const updateStock = (userId: string, productId: string, stock: number) =>
     saveUserCart(userId, cart);
   }
 };
+export const updateAvalabilityStatus = (userId: string, variantId: string, stock: number) => {
+ const cart = getUserCart(userId);
+
+  const updatedCart = cart.map((item) =>
+    item.id === variantId
+      ? { ...item, stock } // update stock of this variant only
+      : item
+  );
+
+  saveUserCart(userId, updatedCart);
+  
+};
 
 // ✅ Update quantity
 export const updateQty = (userId: string, productId: string, count: number) => {

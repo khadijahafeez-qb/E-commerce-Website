@@ -56,6 +56,19 @@ const ShoppingCartPage: React.FC = () => {
         });
         return;
       }
+      // ✅ 2️⃣ Local check: inactive or unavailable items
+      const inactiveItems = cartItems.filter(
+        (item: Product) => item.availabilityStatus === 'INACTIVE'
+      );
+      if (inactiveItems.length > 0) {
+        inactiveItems.forEach((item) => {
+          api.error({
+            message: `${item.title} is currently not available`,
+            duration: 2,
+          });
+        });
+        return; // ⛔ Stop before hitting API
+      }
       // ✅ 1️⃣ Frontend stock pre-check
       const overStockItems = cartItems.filter(item => item.count > item.stock);
       if (overStockItems.length > 0) {
@@ -63,6 +76,7 @@ const ShoppingCartPage: React.FC = () => {
           api.error({
             message: `Insufficient stock for ${item.title}`,
             description: `Only ${item.stock} item(s) available.`,
+            duration: 2,
           });
         });
         return; // Prevent API call
@@ -92,24 +106,23 @@ const ShoppingCartPage: React.FC = () => {
         if (data.issues && Array.isArray(data.issues)) {
           data.issues.forEach((item: { id: string; title: string; available: number; reason: string }) => {
             const reason = item.reason?.toUpperCase?.().replace(/\s/g, '_'); // normalize e.g. "low stock" → "LOW_STOCK"
-
             if (reason === 'INACTIVE') {
               api.error({
                 message: `${item.title} is currently not available`,
-                duration: 5,
+                duration: 2,
               });
             } else if (reason === 'LOW_STOCK') {
               api.warning({
                 message: `Low stock for ${item.title}`,
                 description: `Only ${item.available} item(s) available.`,
-                duration: 5,
+                duration: 2,
               });
               updateStock(userEmail, item.id, item.available);
             } else {
               api.error({
                 message: `Issue with ${item.title}`,
                 description: item.reason || 'Unknown issue occurred.',
-                duration: 5,
+                duration: 2,
               });
             }
           });
