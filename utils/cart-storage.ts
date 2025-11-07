@@ -8,6 +8,7 @@ export interface Product {
   size: string;
   stock: number;
   count: number;
+  availabilityStatus:'ACTIVE'|'INACTIVE'
 }
 
 const CART_KEY_PREFIX = 'cart_';

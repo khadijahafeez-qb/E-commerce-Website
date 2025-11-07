@@ -85,6 +85,7 @@ const ProductCard: React.FC<ProductCardProps> = ({ id, title, variants }) => {
       size: currentVariant.size,
       stock: currentVariant.stock,
       count,
+      availabilityStatus:currentVariant.availabilityStatus
     });
 
     api.success({
