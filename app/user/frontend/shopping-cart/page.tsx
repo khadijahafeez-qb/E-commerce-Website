@@ -10,7 +10,7 @@ import { Table, Button, Checkbox, notification, Image } from 'antd';
 import { DeleteOutlined, PlusOutlined, MinusOutlined, ArrowLeftOutlined } from '@ant-design/icons';
 import type { ColumnsType } from 'antd/es/table';
 
-import { getUserCart, clearCart, updateQty, removeFromCart, updateStock } from '@/utils/cart-storage';
+import { getUserCart, clearCart, updateQty, removeFromCart, updateStock ,updateAvailabilityStatus} from '@/utils/cart-storage';
 import MainLayout from '@/app/components/mainlayout';
 import DeleteConfirmModal from '@/app/components/deleteconfirmmodal';
 import { tableClasses } from '@/utils/tableClasses';
@@ -111,6 +111,7 @@ const ShoppingCartPage: React.FC = () => {
                 message: `${item.title} is currently not available`,
                 duration: 2,
               });
+              updateAvailabilityStatus(userEmail, item.id, 'INACTIVE');
             } else if (reason === 'LOW_STOCK') {
               api.warning({
                 message: `Low stock for ${item.title}`,
