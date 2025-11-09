@@ -19,14 +19,7 @@ export default function SignupPage() {
   });
   async function onSubmit(data: SignupData) {
     try {
-      // const res = await fetch('/api/auth/signup', {
-      //   method: 'POST',
-      //   headers: { 'Content-Type': 'application/json' },
-      //   body: JSON.stringify(data),
-      // });
       const resultAction = await dispatch(signupThunk(data));
-
-
     if (signupThunk.rejected.match(resultAction)) {
       api.error({
         message: 'Signup Failed',
