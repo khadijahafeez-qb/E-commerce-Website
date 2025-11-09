@@ -3,11 +3,14 @@
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { notification } from 'antd';
+import { useAppDispatch,useAppSelector } from '@/lib/hook';
+import { signupThunk } from '@/lib/features/cart/auth-slice';
 
 import AuthForm, { type Field } from '../authform';
 import { signupSchema, type SignupData } from '@/lib/validation/auth';
 
 export default function SignupPage() {
+    const dispatch = useAppDispatch();
   const [api, contextHolder] = notification.useNotification();
   const { register, handleSubmit, formState: { errors, isSubmitting } } = useForm<SignupData>({
     resolver: zodResolver(signupSchema),
@@ -16,20 +19,21 @@ export default function SignupPage() {
   });
   async function onSubmit(data: SignupData) {
     try {
-      const res = await fetch('/api/auth/signup', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(data),
+      // const res = await fetch('/api/auth/signup', {
+      //   method: 'POST',
+      //   headers: { 'Content-Type': 'application/json' },
+      //   body: JSON.stringify(data),
+      // });
+      const resultAction = await dispatch(signupThunk(data));
+
+
+    if (signupThunk.rejected.match(resultAction)) {
+      api.error({
+        message: 'Signup Failed',
+        description: resultAction.payload ?? 'Something went wrong',
+        placement: 'topRight',
       });
-      const result = await res.json();
-      if (!res.ok) {
-        api.error({
-          message: 'Signup Failed',
-          description: result.error || result.message || 'Something went wrong',
-          placement: 'topRight',
-        });
-        return;
-      }
+    } else if (signupThunk.fulfilled.match(resultAction)) {
       api.success({
         message: 'Signup Successful',
         description: 'Your account has been created. Redirecting to login...',
@@ -39,6 +43,7 @@ export default function SignupPage() {
       setTimeout(() => {
         window.location.href = '/auth/login';
       }, 2000);
+    }
     } catch (err) {
       api.error({
         message: 'Network Error',
