@@ -53,11 +53,9 @@ export const loginSchema = z.object({
 });
 
 export const forgotPasswordSchema = z.object({
-
   email: z
-    .union([z.string(), z.undefined()])
-    .transform((val) => val ?? '')
-    .refine((val) => val.trim().length > 0, { message: 'Email is required' })
+    .string()
+    .nonempty('Email is required')
     .refine((val) => val.includes('@'), {
       message: 'Email must contain @ symbol',
     })
@@ -69,7 +67,6 @@ export const forgotPasswordSchema = z.object({
       { message: 'Only .pk, .co, .com, .org emails are allowed' }
     ),
 });
-
 export const resetPasswordSchema = z.object({
   password: z.string()
     .nonempty('Password is required')

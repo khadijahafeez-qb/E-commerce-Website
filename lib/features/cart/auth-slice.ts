@@ -53,6 +53,37 @@ export const resetPasswordThunk = createAsyncThunk<
     return rejectWithValue('Network error');
   }
 });
+export interface ForgotPasswordData {
+  email: string;
+}
+
+// ⬇️ Thunk
+export const forgotPasswordThunk = createAsyncThunk<
+  string, // return type (message)
+  ForgotPasswordData, // input type (form data)
+  { rejectValue: string } // error type
+>(
+  'auth/forgotPassword',
+  async (data, { rejectWithValue }) => {
+    try {
+      const res = await fetch('/api/auth/forgot-password', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(data),
+      });
+
+      const result = await res.json();
+
+      if (!res.ok) {
+        return rejectWithValue(result.message || 'Failed to send reset email');
+      }
+
+      return result.message || 'Password reset link sent to your email';
+    } catch (err) {
+      return rejectWithValue('Network error, please try again later');
+    }
+  }
+);
 
 const authSlice = createSlice({
   name: 'auth',

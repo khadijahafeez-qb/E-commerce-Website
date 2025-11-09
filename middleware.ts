@@ -6,7 +6,7 @@ import { z, type ZodTypeAny } from 'zod';
 import { signupSchema, forgotPasswordSchema, resetPasswordApiSchema } from '@/lib/validation/auth';
 import { productSchema, variantSchema, productIdSchema, productQuerySchema } from './lib/validation/product';
 import { orderdetailParamsSchema } from './lib/validation/orderdetail';
-import { getOrdersSchema,updateOrderStatusSchema } from './lib/validation/order';
+import { getOrdersSchema, updateOrderStatusSchema } from './lib/validation/order';
 
 // Define which APIs need Zod validation
 const validationMap = [
@@ -26,12 +26,12 @@ const validationMap = [
     schema: resetPasswordApiSchema,
   },
   {
-    path: /^\/api\/product\/add-product$/, // 👈 your new route for product creation
+    path: /^\/api\/product\/add-product$/,
     method: 'POST',
     schema: productSchema,
   },
   {
-    path: /^\/api\/product\/add-variant\/.*$/, // 👈 your new route for product creation
+    path: /^\/api\/product\/add-variant\/.*$/,
     method: 'POST',
     schema: variantSchema,
   },
@@ -54,65 +54,55 @@ const validationMap = [
     },
   },
   {
-    path: /^\/api\/product\/get-products$/, // exact path for GET products
+    path: /^\/api\/product\/get-products$/,
     method: 'GET',
-    query: productQuerySchema, // ✅ add query validation
+    query: productQuerySchema,
   },
   {
     path: /^\/api\/orderdetail\/.*$/,
     method: 'GET',
     schema: orderdetailParamsSchema,
   },
-    {
-    path: /^\/api\/order$/, 
+  {
+    path: /^\/api\/order$/,
     method: 'GET',
-    query: getOrdersSchema, // ✅ validate query params like page, limit, search
+    query: getOrdersSchema,
   },
   {
-    path: /^\/api\/order\/.*\/status$/, 
+    path: /^\/api\/order\/.*\/status$/,
     method: 'PATCH',
-    schema: updateOrderStatusSchema, // ✅ validate params + body
+    schema: updateOrderStatusSchema,
   },
-
-
-
 ];
-
 function handleValidationError(error: unknown) {
   if (error instanceof z.ZodError) {
     const detailedErrors = error.issues.map((issue) => ({
       path: issue.path.join('.'),
       message: issue.message,
     }));
-
     return NextResponse.json(
       { error: 'Validation failed', details: detailedErrors },
       { status: 400 }
     );
   }
-
   return NextResponse.json(
     { error: 'Validation failed', details: (error as Error).message },
     { status: 400 }
   );
 }
 
-
 export async function middleware(req: NextRequest) {
   const url = new URL(req.url);
   const path = url.pathname;
   const searchParams = Object.fromEntries(url.searchParams.entries());
-
-    // ✅ List of public API paths that DON’T require token
+  // ✅ List of public API paths that DON’T require token
   const publicApiPaths = [
     /^\/api\/auth\//, // login, signup, forgot-password, etc.
-     /^\/api\/webhook$/,
+    /^\/api\/webhook$/,
   ];
-
   if (path.startsWith('/api')) {
-        // 👇 CHANGED: Require token for all /api routes except public ones
+    // 👇 CHANGED: Require token for all /api routes except public ones
     const isPublicApi = publicApiPaths.some((regex) => regex.test(path));
-
     if (!isPublicApi) {
       const token =
         (await getToken({
@@ -120,30 +110,25 @@ export async function middleware(req: NextRequest) {
           secret: process.env.NEXTAUTH_SECRET,
           secureCookie: process.env.NODE_ENV === 'production',
         })) || null;
-
       // If no token, block the request
       if (!token) {
         return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
       }
     }
-
     const matched = validationMap.find(
       (rule) =>
         rule.method === req.method &&
         (rule.path instanceof RegExp ? rule.path.test(path) : rule.path === path)
     );
-
     if (matched) {
       try {
         // ✅ Query validation
         if ('query' in matched && matched.query) {
           matched.query.parse(searchParams);
         }
-      
         // ✅ Handle GET with param (like /api/orderdetail/:id)
         else if (req.method === 'GET' && matched.schema) {
           const id = path.split('/').pop();
-
           // Narrow the type to only call .parse if it's a Zod schema
           if ('parse' in matched.schema && typeof matched.schema.parse === 'function') {
             matched.schema.parse({ id });
@@ -151,21 +136,18 @@ export async function middleware(req: NextRequest) {
             matched.schema.param.parse({ id });
           }
         }
-
         // Combined param + body validation (update-product)
         else if ('param' in matched.schema && 'body' in matched.schema) {
           const parts = path.split('/');
-  const id = parts.at(-1); // ✅ second-to-last part
-  matched.schema.param.parse({ id });
-  
-  const clone = req.clone();
-  const text = await clone.text();
-  const body = text ? JSON.parse(text) : {};
-  matched.schema.body.parse(body);
+          const id = parts.at(-1); // ✅ second-to-last part
+          matched.schema.param.parse({ id });
+          const clone = req.clone();
+          const text = await clone.text();
+          const body = text ? JSON.parse(text) : {};
+          matched.schema.body.parse(body);
         }
-        
         // Only param validation (DELETE / soft-delete PUT)
-        else if (req.method === 'DELETE' || req.method === 'PUT'|| req.method === 'PATCH') {
+        else if (req.method === 'DELETE' || req.method === 'PUT' || req.method === 'PATCH') {
           const schema = matched.schema as ZodTypeAny;
           const id = path.split('/').pop();
           schema.parse({ id });
@@ -187,14 +169,12 @@ export async function middleware(req: NextRequest) {
 
     return NextResponse.next();
   }
-
   // ✅ Auth token validation for normal routes ✅ For frontend pages (non-API)
   const token = await getToken({
     req,
     secret: process.env.NEXTAUTH_SECRET,
     secureCookie: process.env.NODE_ENV === 'production',
   });
-
   const publicPaths = [
     '/',
     '/auth/login',
@@ -202,15 +182,12 @@ export async function middleware(req: NextRequest) {
     '/auth/reset-password',
     '/auth/forgot-password',
   ];
-
   if (publicPaths.includes(path) || path.includes('uploads')) {
     return NextResponse.next();
   }
-
   if (!token) {
     return NextResponse.redirect(new URL('/auth/login', req.url));
   }
-
   if (token.expire && dayjs(token.expire).isBefore(new Date())) {
     const res = NextResponse.redirect(new URL('/auth/login', req.url));
     res.cookies.set('__Secure-next-auth.session-token', '', {
@@ -223,23 +200,18 @@ export async function middleware(req: NextRequest) {
     });
     return res;
   }
-
   const sharedPrefixes = ['/user/frontend/orderdetails'];
   if (sharedPrefixes.some((prefix) => path.startsWith(prefix))) {
     return NextResponse.next();
   }
-
   if (path.startsWith('/admin') && token.role !== 'ADMIN') {
     return NextResponse.redirect(new URL('/auth/login', req.url));
   }
-
   if (path.startsWith('/user') && token.role !== 'USER') {
     return NextResponse.redirect(new URL('/auth/login', req.url));
   }
-
   return NextResponse.next();
 }
-
 // Run middleware for all non-static routes
 export const config = {
   matcher: ['/((?!_next/static|_next/image|favicon.ico).*)'],

@@ -1,14 +1,16 @@
 'use client';
-
+import { useAppDispatch } from '@/lib/hook';
 import { useForm } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
 
 import { notification } from 'antd';
-import { zodResolver } from '@hookform/resolvers/zod';
 
 import AuthForm, { type Field } from '../authform';
 import { ForgotPasswordData, forgotPasswordSchema } from '@/lib/validation/auth';
+import { forgotPasswordThunk } from '@/lib/features/cart/auth-slice';
 
 export default function ForgotpassPage() {
+  const dispatch = useAppDispatch();
   const [api, contextHolder] = notification.useNotification();
   const { register, handleSubmit, formState: { errors, isSubmitting } } = useForm<ForgotPasswordData>({
     resolver: zodResolver(forgotPasswordSchema),
@@ -16,41 +18,28 @@ export default function ForgotpassPage() {
     reValidateMode: 'onBlur'
   });
   async function onSubmit(data: ForgotPasswordData) {
-    try {
-      const res = await fetch('/api/auth/forgot-password', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(data),
-      });
-      const result = await res.json();
-      if (!res.ok) {
-        api.error({
-          message: 'Forgot-password Failed',
-          description: result.message || 'Something went wrong',
-          placement: 'topRight',
-        });
-        return;
-      }
-      api.success({
-        message: 'Email Sent',
-        description: result.message || 'Reset Password Instructions has been sent to your email address. ',
-        placement: 'topRight',
-        duration: 3,
-      });
-    } catch (err) {
+    const resultAction = await dispatch(forgotPasswordThunk(data));
+    if (forgotPasswordThunk.rejected.match(resultAction)) {
       api.error({
-        message: 'Network Error',
-        description: 'Please try again later',
+        message: 'Forgot Password Failed',
+        description: resultAction.payload || 'Something went wrong',
         placement: 'topRight',
       });
+      return;
     }
+    api.success({
+      message: 'Email Sent',
+      description: resultAction.payload || 'Reset password link sent to your email.',
+      placement: 'topRight',
+      duration: 3,
+    });
   }
   const fields: Field<ForgotPasswordData>[] = [
     { name: 'email', type: 'email', placeholder: 'Enter your email', label: 'Email address', required: true },
   ];
   return (
     <>
-      {contextHolder}
+        {contextHolder}
       <AuthForm<ForgotPasswordData>
         heading='Forgot Password'
         fields={fields}
