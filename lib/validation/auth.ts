@@ -1,6 +1,5 @@
 import { z } from 'zod';
 
-
 export const signupSchema = z.object({
   fullname: z
     .string()
@@ -13,7 +12,6 @@ export const signupSchema = z.object({
     .regex(/^[\w.%+-]+@[A-Za-z0-9.-]+\.(pk|co|com|org)$/, {
       message: 'Only .pk, .co, .com, .org emails are allowed',
     }),
-
   mobile: z
     .string()
     .min(1, { message: 'Mobile number is required' })
@@ -34,15 +32,14 @@ export const signupSchema = z.object({
           'Password must include uppercase, lowercase, number, and special character',
       }
     ),
-
   confirmpassword: z
     .string()
     .min(1, { message: 'Confirm password is required' }),
 })
-.refine((data) => data.password === data.confirmpassword, {
-  message: 'Passwords do not match',
-  path: ['confirmpassword'],
-});
+  .refine((data) => data.password === data.confirmpassword, {
+    message: 'Passwords do not match',
+    path: ['confirmpassword'],
+  });
 export const loginSchema = z.object({
   email: z
     .string()
@@ -54,8 +51,6 @@ export const loginSchema = z.object({
     ),
   password: z.string().nonempty('Password is required'),
 });
-
-
 
 export const forgotPasswordSchema = z.object({
 
@@ -95,7 +90,6 @@ export const resetPasswordSchema = z.object({
   path: ['confirmpassword'],
 });
 
-
 export const resetPasswordApiSchema = z
   .object({
     email: z
@@ -110,7 +104,6 @@ export const resetPasswordApiSchema = z
         (val) => /^[\w.%+-]+@[A-Za-z0-9.-]+\.(pk|co|com|org)$/.test(val),
         { message: 'Only .pk, .co, .com, .org emails are allowed' }
       ),
-
     token: z
       .union([z.string(), z.undefined()])
       .transform((val) => val ?? '')
@@ -136,10 +129,6 @@ export const resetPasswordApiSchema = z
 
   });
 
-
-
-
-// ✅ Types auto-generated from schemas
 export type SignupData = z.infer<typeof signupSchema>;
 export type LoginData = z.infer<typeof loginSchema>;
 export type ForgotPasswordData = z.infer<typeof forgotPasswordSchema>;

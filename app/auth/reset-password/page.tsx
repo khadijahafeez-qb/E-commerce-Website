@@ -3,13 +3,13 @@
 import { useSearchParams } from 'next/navigation';
 import { useForm } from 'react-hook-form';
 import { useAppDispatch } from '@/lib/hook';
+import { zodResolver } from '@hookform/resolvers/zod';
 
 import { notification } from 'antd';
 
 import AuthForm, { type Field } from '../authform';
 import { resetPasswordSchema, ResetPasswordData } from '@/lib/validation/auth';
 import { resetPasswordThunk } from '@/lib/features/cart/auth-slice';
-import { zodResolver } from '@hookform/resolvers/zod';
 
 export default function ResetpassPage() {
   const dispatch = useAppDispatch();
@@ -23,14 +23,12 @@ export default function ResetpassPage() {
     reValidateMode: 'onBlur'
   });
   async function onSubmit(data: ResetPasswordData) {
- try {
+    try {
       const resultAction = await dispatch(resetPasswordThunk({
         email,
         token,
         password: data.password
-        
       }));
-
       if (resetPasswordThunk.rejected.match(resultAction)) {
         api.error({
           message: 'Error',
@@ -39,18 +37,15 @@ export default function ResetpassPage() {
         });
         return;
       }
-
       api.success({
         message: 'Password Reset Successful',
         description: 'Your password has been updated. Redirecting to login...',
         placement: 'topRight',
         duration: 2,
       });
-
       setTimeout(() => {
         window.location.href = '/auth/login';
       }, 2000);
-
     } catch (err) {
       api.error({
         message: 'Network Error',
@@ -75,7 +70,6 @@ export default function ResetpassPage() {
         onSubmit={handleSubmit(onSubmit)}
         register={register}
         errors={errors}
-
       />
     </>
   );

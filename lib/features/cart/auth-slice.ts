@@ -3,21 +3,18 @@ import type { User } from '@prisma/client';
 import { SignupData } from '@/lib/validation/auth';
 import { createAsyncThunk } from '@reduxjs/toolkit';
 
-
 interface AuthState {
   user: User | null;
   loading: boolean;
   error: string | null;
 }
-
 const initialState: AuthState = {
   user: null,
   loading: false,
   error: null,
 };
-
 export const signupThunk = createAsyncThunk<
-  { user: User }, // ✅ use Prisma's type
+  { user: User },
   SignupData,
   { rejectValue: string }
 >('auth/signup', async (data, { rejectWithValue }) => {
@@ -27,7 +24,6 @@ export const signupThunk = createAsyncThunk<
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(data),
     });
-
     const result = await res.json();
     if (!res.ok) {
       return rejectWithValue(result.error || 'Signup failed');
@@ -48,12 +44,10 @@ export const resetPasswordThunk = createAsyncThunk<
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(data),
     });
-
     const result = await res.json();
     if (!res.ok) {
       return rejectWithValue(result.error || result.message || 'Password reset failed');
     }
-
     return result as { message: string };
   } catch {
     return rejectWithValue('Network error');
