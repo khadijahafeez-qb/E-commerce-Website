@@ -2,14 +2,17 @@
 
 import { useSearchParams } from 'next/navigation';
 import { useForm } from 'react-hook-form';
+import { useAppDispatch } from '@/lib/hook';
 
 import { notification } from 'antd';
 
 import AuthForm, { type Field } from '../authform';
 import { resetPasswordSchema, ResetPasswordData } from '@/lib/validation/auth';
+import { resetPasswordThunk } from '@/lib/features/cart/auth-slice';
 import { zodResolver } from '@hookform/resolvers/zod';
 
 export default function ResetpassPage() {
+  const dispatch = useAppDispatch();
   const searchParams = useSearchParams();
   const email = searchParams.get('email') || '';
   const token = searchParams.get('token') || '';
@@ -20,20 +23,23 @@ export default function ResetpassPage() {
     reValidateMode: 'onBlur'
   });
   async function onSubmit(data: ResetPasswordData) {
-    try {
-      const res = await fetch('/api/auth/reset-password', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email, token, password: data.password }),
-      });
-      if (!res.ok) {
+ try {
+      const resultAction = await dispatch(resetPasswordThunk({
+        email,
+        token,
+        password: data.password
+        
+      }));
+
+      if (resetPasswordThunk.rejected.match(resultAction)) {
         api.error({
-          message: 'Network Error',
-          description: 'Please try again later',
+          message: 'Error',
+          description: resultAction.payload || 'Password reset failed',
           placement: 'topRight',
         });
         return;
       }
+
       api.success({
         message: 'Password Reset Successful',
         description: 'Your password has been updated. Redirecting to login...',
@@ -51,7 +57,6 @@ export default function ResetpassPage() {
         description: 'Please try again later',
         placement: 'topRight',
       });
-      return;
     }
   }
   const fields: Field<ResetPasswordData>[] = [

@@ -51,7 +51,7 @@ export const resetPasswordThunk = createAsyncThunk<
 
     const result = await res.json();
     if (!res.ok) {
-      return rejectWithValue(result.error || 'Password reset failed');
+      return rejectWithValue(result.error || result.message || 'Password reset failed');
     }
 
     return result as { message: string };
@@ -78,18 +78,18 @@ const authSlice = createSlice({
         state.loading = false;
         state.error = action.payload ?? 'Signup failed';
       })
-       // ✅ handle reset password
-    .addCase(resetPasswordThunk.pending, (state) => {
-      state.loading = true;
-      state.error = null;
-    })
-    .addCase(resetPasswordThunk.fulfilled, (state) => {
-      state.loading = false;
-    })
-    .addCase(resetPasswordThunk.rejected, (state, action) => {
-      state.loading = false;
-      state.error = action.payload ?? 'Password reset failed';
-    });
+      // ✅ handle reset password
+      .addCase(resetPasswordThunk.pending, (state) => {
+        state.loading = true;
+        state.error = null;
+      })
+      .addCase(resetPasswordThunk.fulfilled, (state) => {
+        state.loading = false;
+      })
+      .addCase(resetPasswordThunk.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.payload ?? 'Password reset failed';
+      });
   },
 });
 

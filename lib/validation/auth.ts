@@ -134,17 +134,8 @@ export const resetPasswordApiSchema = z
           'Password must be at least 8 chars and include uppercase, lowercase, number, and special character',
       }),
 
-    confirmpassword: z
-      .union([z.string(), z.undefined()])
-      .transform((val) => val ?? '')
-      .refine((val) => val.trim().length > 0, {
-        message: 'Confirm password is required',
-      }),
-  })
-  .refine((data) => data.password === data.confirmpassword, {
-    message: 'Passwords do not match',
-    path: ['confirmpassword'],
   });
+
 
 
 
