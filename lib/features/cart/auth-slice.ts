@@ -37,6 +37,28 @@ export const signupThunk = createAsyncThunk<
     return rejectWithValue('Network error');
   }
 });
+export const resetPasswordThunk = createAsyncThunk<
+  { message: string },
+  { email: string; token: string; password: string },
+  { rejectValue: string }
+>('auth/resetPassword', async (data, { rejectWithValue }) => {
+  try {
+    const res = await fetch('/api/auth/reset-password', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(data),
+    });
+
+    const result = await res.json();
+    if (!res.ok) {
+      return rejectWithValue(result.error || 'Password reset failed');
+    }
+
+    return result as { message: string };
+  } catch {
+    return rejectWithValue('Network error');
+  }
+});
 
 const authSlice = createSlice({
   name: 'auth',
@@ -55,7 +77,19 @@ const authSlice = createSlice({
       .addCase(signupThunk.rejected, (state, action) => {
         state.loading = false;
         state.error = action.payload ?? 'Signup failed';
-      });
+      })
+       // ✅ handle reset password
+    .addCase(resetPasswordThunk.pending, (state) => {
+      state.loading = true;
+      state.error = null;
+    })
+    .addCase(resetPasswordThunk.fulfilled, (state) => {
+      state.loading = false;
+    })
+    .addCase(resetPasswordThunk.rejected, (state, action) => {
+      state.loading = false;
+      state.error = action.payload ?? 'Password reset failed';
+    });
   },
 });
 

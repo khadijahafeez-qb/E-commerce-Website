@@ -2,15 +2,16 @@
 
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { notification } from 'antd';
-import { useAppDispatch,useAppSelector } from '@/lib/hook';
-import { signupThunk } from '@/lib/features/cart/auth-slice';
+import { useAppDispatch } from '@/lib/hook';
 
+import { notification } from 'antd';
+
+import { signupThunk } from '@/lib/features/cart/auth-slice';
 import AuthForm, { type Field } from '../authform';
 import { signupSchema, type SignupData } from '@/lib/validation/auth';
 
 export default function SignupPage() {
-    const dispatch = useAppDispatch();
+  const dispatch = useAppDispatch();
   const [api, contextHolder] = notification.useNotification();
   const { register, handleSubmit, formState: { errors, isSubmitting } } = useForm<SignupData>({
     resolver: zodResolver(signupSchema),
@@ -20,23 +21,23 @@ export default function SignupPage() {
   async function onSubmit(data: SignupData) {
     try {
       const resultAction = await dispatch(signupThunk(data));
-    if (signupThunk.rejected.match(resultAction)) {
-      api.error({
-        message: 'Signup Failed',
-        description: resultAction.payload ?? 'Something went wrong',
-        placement: 'topRight',
-      });
-    } else if (signupThunk.fulfilled.match(resultAction)) {
-      api.success({
-        message: 'Signup Successful',
-        description: 'Your account has been created. Redirecting to login...',
-        placement: 'topRight',
-        duration: 2,
-      });
-      setTimeout(() => {
-        window.location.href = '/auth/login';
-      }, 2000);
-    }
+      if (signupThunk.rejected.match(resultAction)) {
+        api.error({
+          message: 'Signup Failed',
+          description: resultAction.payload ?? 'Something went wrong',
+          placement: 'topRight',
+        });
+      } else if (signupThunk.fulfilled.match(resultAction)) {
+        api.success({
+          message: 'Signup Successful',
+          description: 'Your account has been created. Redirecting to login...',
+          placement: 'topRight',
+          duration: 2,
+        });
+        setTimeout(() => {
+          window.location.href = '/auth/login';
+        }, 2000);
+      }
     } catch (err) {
       api.error({
         message: 'Network Error',

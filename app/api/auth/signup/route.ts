@@ -20,7 +20,6 @@ export async function POST(req: Request) {
         { status: 500 }
       );
     }
-
     const stripe = new Stripe(process.env.STRIPE_SECRET_KEY, {
       apiVersion: '2025-09-30.clover',
     });
@@ -36,7 +35,7 @@ export async function POST(req: Request) {
         email,
         mobile,
         password: hashedPassword,
-         stripeCustomerId: customer.id,
+        stripeCustomerId: customer.id,
       }
     });
     return NextResponse.json({ user }, { status: 201 });
