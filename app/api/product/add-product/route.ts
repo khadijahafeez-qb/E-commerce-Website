@@ -6,17 +6,14 @@ const prisma = new PrismaClient();
 export async function POST(req: Request) {
   try {
     const body = await req.json();
-
-    // ✅ Step 1: Check for existing product title (case-insensitive)
     const existingProduct = await prisma.product.findFirst({
       where: {
         title: {
           equals: body.title,
-          mode: 'insensitive', // ignores case (e.g. "Nike" == "nike")
+          mode: 'insensitive', 
         },
       },
     });
-
     if (existingProduct) {
       return NextResponse.json(
         {
@@ -26,7 +23,6 @@ export async function POST(req: Request) {
         { status: 400 }
       );
     }
-        // Check for duplicate colour+size combinations
     const variantSet = new Set();
     for (const v of body.variants) {
       const key = `${v.colour}-${v.size}`;
