@@ -30,12 +30,11 @@ const Orders: React.FC = () => {
   const [confirmOrderId, setConfirmOrderId] = useState<string | null>(null);
   const [drawerVisible, setDrawerVisible] = useState(false);
   const [selectedOrderId, setSelectedOrderId] = useState<string | null>(null);
-  //const [search, setSearch] = useState('');
   const pageSize = 10;
   const dispatch = useAppDispatch();
   const { stats, data, total, loading, page } = useAppSelector((state) => state.orders);
   const loadOrders = async (pageNum: number) => {
-    await dispatch(fetchOrders({ page: pageNum, search:debouncedSearch}));
+    await dispatch(fetchOrders({ page: pageNum, search: debouncedSearch }));
   };
   useEffect(() => {
     loadOrders(page);
@@ -92,7 +91,12 @@ const Orders: React.FC = () => {
     { title: 'User', dataIndex: 'User', key: 'User' },
     { title: 'Order#', dataIndex: 'Order', key: 'Order' },
     { title: 'Products', dataIndex: 'Products', key: 'Products' },
-    { title: 'Amount', dataIndex: 'Amount', key: 'Amount' },
+    {
+      title: 'Amount',
+      dataIndex: 'Amount',
+      key: 'Amount',
+      render: (value?: number) => `$${(value ?? 0).toFixed(2)}`
+    },
     {
       title: 'Status',
       dataIndex: 'status',
