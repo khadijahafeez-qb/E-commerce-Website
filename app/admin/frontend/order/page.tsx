@@ -3,7 +3,7 @@
 import React, { useState, useEffect } from 'react';
 import { useAppDispatch, useAppSelector } from '@/lib/hook';
 
-import { Table, Input, Button, Tooltip, Modal,notification } from 'antd';
+import { Table, Input, Button, Tooltip, Modal, notification } from 'antd';
 import { SearchOutlined, ExportOutlined, CheckOutlined } from '@ant-design/icons';
 
 import { ordertable } from '@/app/user/frontend/orders/page';
@@ -38,30 +38,30 @@ const Orders: React.FC = () => {
     loadOrders(page);
   }, [page, search]);
   const handleStatusUpdate = async (orderId: string, newStatus: string) => {
-     try {
-    await dispatch(updateOrderStatus({ orderId, status: newStatus })).unwrap();
-    api.success({
-      message: 'Status Updated',
-      description: `Order marked as ${newStatus}`,
-      placement: 'topRight',
-      duration:2000
-    });
-    return true;
-  } catch (err: unknown) {
-    let errorMsg = 'Unknown error';
-    if (err instanceof Error) {
-      errorMsg = err.message;
-    } else if (typeof err === 'object' && err !== null && 'message' in err) {
-      errorMsg = String((err as { message: unknown }).message);
-    }
+    try {
+      await dispatch(updateOrderStatus({ orderId, status: newStatus })).unwrap();
+      api.success({
+        message: 'Status Updated',
+        description: `Order marked as ${newStatus}`,
+        placement: 'topRight',
+        duration: 2000
+      });
+      return true;
+    } catch (err: unknown) {
+      let errorMsg = 'Unknown error';
+      if (err instanceof Error) {
+        errorMsg = err.message;
+      } else if (typeof err === 'object' && err !== null && 'message' in err) {
+        errorMsg = String((err as { message: unknown }).message);
+      }
 
-    api.error({
-      message: 'Update Failed',
-      description: `Failed to update order ${orderId}: ${errorMsg}`,
-      placement: 'topRight',
-    });
-    return false;
-  }
+      api.error({
+        message: 'Update Failed',
+        description: `Failed to update order ${orderId}: ${errorMsg}`,
+        placement: 'topRight',
+      });
+      return false;
+    }
   };
   const showConfirm = (orderId: string) => {
     setConfirmOrderId(orderId);
@@ -146,7 +146,7 @@ const Orders: React.FC = () => {
   }));
   return (
     <div className="p-6">
-       {contextHolder}
+      {contextHolder}
       <div className="flex justify-between gap-4 w-full mt-6">
         <div className="w-[324px] h-[81px] bg-white rounded-xl shadow-md flex items-center justify-between px-5">
           <div>

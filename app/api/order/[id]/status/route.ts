@@ -5,8 +5,8 @@ import { auth } from '@/auth';
 const prisma = new PrismaClient();
 
 export async function PATCH(
-   req: Request,
-  context: { params: Promise<{ id: string }> } 
+  req: Request,
+  context: { params: Promise<{ id: string }> }
 ) {
   const { id } = await context.params;
   try {
@@ -15,7 +15,7 @@ export async function PATCH(
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
     const user = await prisma.user.findUnique({
-      where: { email: session.user.email},
+      where: { email: session.user.email },
     });
     if (!user) {
       return NextResponse.json({ error: 'User not found' }, { status: 404 });

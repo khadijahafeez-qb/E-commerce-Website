@@ -10,24 +10,18 @@ export async function GET(req: Request) {
     if (!session?.user?.email) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
-
     const { searchParams } = new URL(req.url);
     const page = parseInt(searchParams.get('page') || '1', 10);
     const limit = parseInt(searchParams.get('limit') || '10', 10);
     const skip = (page - 1) * limit;
     const search = searchParams.get('search') || '';
-
     const user = await prisma.user.findUnique({
       where: { email: session.user.email ?? undefined },
     });
-
     if (!user) {
       return NextResponse.json({ error: 'User not found' }, { status: 404 });
     }
-
     const isAdmin = user.role === 'ADMIN';
-
-    // ✅ FIX — use Prisma.QueryMode type, not a plain string
     const searchFilter: Prisma.OrderWhereInput = search
       ? {
         OR: [
@@ -47,7 +41,6 @@ export async function GET(req: Request) {
         ],
       }
       : {};
-
     const where: Prisma.OrderWhereInput = isAdmin
       ? searchFilter
       : {
@@ -58,7 +51,6 @@ export async function GET(req: Request) {
           }
           : {}),
       };
-
     const [orders, total] = await Promise.all([
       prisma.order.findMany({
         where,
@@ -78,11 +70,10 @@ export async function GET(req: Request) {
       totalAmount: 0,
       lastUpdated: null,
     };
-        if (isAdmin) {
+    if (isAdmin) {
       const latestStats = await prisma.orderStats.findFirst({
         orderBy: { createdAt: 'desc' },
       });
-
       if (latestStats) {
         stats = {
           totalOrders: latestStats.totalOrders,
@@ -92,7 +83,6 @@ export async function GET(req: Request) {
         };
       }
     }
-
     return NextResponse.json({ orders, total, page, limit, stats });
   } catch (error: unknown) {
     console.error('Error fetching orders:', error);
