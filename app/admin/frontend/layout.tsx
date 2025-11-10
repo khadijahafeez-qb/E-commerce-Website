@@ -1,6 +1,8 @@
 'use client';
 
-import React, { useState, ReactNode } from 'react';
+import React, { useState, ReactNode, useEffect } from 'react';
+import { useRouter, usePathname } from 'next/navigation';
+
 import { signOut } from 'next-auth/react';
 import { Layout, Button } from 'antd';
 import {
@@ -12,37 +14,32 @@ import './layout.css';
 import Productpage from './product/page';
 import Orders from './order/page';
 
-
-
 const { Header, Sider, Content } = Layout;
 interface AdminLayoutProps {
   children: ReactNode;
   fullname?: string;
 }
-
 const headerStyle: React.CSSProperties = {
   height: 48,
   backgroundColor: '#FFFFFF',
-   textAlign: 'right',   
-  paddingRight: 36 , 
-   display: 'flex',
-  alignItems: 'center',      
-  justifyContent: 'flex-end', 
-    fontFamily: 'Inter, sans-serif',
+  textAlign: 'right',
+  paddingRight: 36,
+  display: 'flex',
+  alignItems: 'center',
+  justifyContent: 'flex-end',
+  fontFamily: 'Inter, sans-serif',
   fontWeight: 500,
   fontSize: 12,
   lineHeight: '12px',
-  color: '#007BFF',  
-  boxShadow: '0px 4px 24px 0px #00000012', 
+  color: '#007BFF',
+  boxShadow: '0px 4px 24px 0px #00000012',
 };
-
 const contentStyle: React.CSSProperties = {
-  background:'#F8F9FA',
+  background: '#F8F9FA',
   minHeight: 120,
-  paddingRight:36,
-  paddingLeft:36
+  paddingRight: 36,
+  paddingLeft: 36
 };
-
 const siderStyle: React.CSSProperties = {
   display: 'flex',
   flexDirection: 'column',
@@ -53,9 +50,14 @@ const siderStyle: React.CSSProperties = {
   backgroundColor: '#FFFFFF',
   borderRight: '1px solid #E8E8EC',
 };
-
-const AdminLayout: React.FC<AdminLayoutProps> = ({  fullname }) => {
+const AdminLayout: React.FC<AdminLayoutProps> = ({ fullname }) => {
+  const router = useRouter();
+  const pathname = usePathname();
   const [active, setActive] = useState<'products' | 'orders'>('products');
+  useEffect(() => {
+    if (pathname.includes('/product')) setActive('products');
+    else if (pathname.includes('/order')) setActive('orders');
+  }, [pathname]);
   const renderContent = () => {
     switch (active) {
       case 'products':
@@ -63,20 +65,20 @@ const AdminLayout: React.FC<AdminLayoutProps> = ({  fullname }) => {
       case 'orders':
         return <Orders></Orders>;
       default:
-        return ;
-    }};
-
+        return;
+    }
+  };
   return (
     <Layout className="h-screen" >
       <Sider width={257} style={siderStyle}>
         <div className="flex flex-col justify-between h-full">
           <div>
-            <p className="font-inter font-bold text-[16px] leading-6 " style={{color: 'black'}}>
+            <p className="font-inter font-bold text-[16px] leading-6 " style={{ color: 'black' }}>
               E-commerce
             </p>
             <Button
               icon={<AppstoreOutlined />}
-              onClick={() => setActive('products')}
+              onClick={() => router.push('/admin/frontend/product')}
               block
               className={`mt-[24px] sidebar-button ${active === 'products' ? 'active' : 'inactive'}`}
             >
@@ -84,17 +86,16 @@ const AdminLayout: React.FC<AdminLayoutProps> = ({  fullname }) => {
             </Button>
             <Button
               icon={<ShoppingOutlined />}
-              onClick={() => setActive('orders')}
+              onClick={() => router.push('/admin/frontend/order')}
               block
               className={`!mt-3 sidebar-button ${active === 'orders' ? 'active' : 'inactive'}`}
             >
               Orders
             </Button>
           </div>
-
           <Button
             icon={<LogoutOutlined />}
-             onClick={() => signOut({ callbackUrl: '/auth/login' })}
+            onClick={() => signOut({ callbackUrl: '/auth/login' })}
             block
             className="logout-button"
           >
@@ -102,16 +103,13 @@ const AdminLayout: React.FC<AdminLayoutProps> = ({  fullname }) => {
           </Button>
         </div>
       </Sider>
-
       <Layout>
         <Header style={headerStyle}>
-        {fullname} 
+          {fullname}
         </Header>
-
         <Content style={contentStyle}> {renderContent()}</Content>
       </Layout>
     </Layout>
   );
 };
-
 export default AdminLayout;
