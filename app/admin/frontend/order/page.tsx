@@ -44,6 +44,7 @@ const Orders: React.FC = () => {
       message: 'Status Updated',
       description: `Order marked as ${newStatus}`,
       placement: 'topRight',
+      duration:2000
     });
     return true;
   } catch (err: unknown) {
@@ -134,8 +135,6 @@ const Orders: React.FC = () => {
       ),
     },
   ];
-
-  // ✅ Transform Redux data for table
   const tableData: admin_order_table[] = data.map((order: ExtendedOrder) => ({
     key: order.id,
     Date: new Date(order.createdAt).toLocaleDateString(),
@@ -148,7 +147,6 @@ const Orders: React.FC = () => {
   return (
     <div className="p-6">
        {contextHolder}
-      {/* Stats */}
       <div className="flex justify-between gap-4 w-full mt-6">
         <div className="w-[324px] h-[81px] bg-white rounded-xl shadow-md flex items-center justify-between px-5">
           <div>
@@ -172,7 +170,6 @@ const Orders: React.FC = () => {
           <div className="bg-blue-100 w-10 h-10 flex items-center justify-center rounded-lg">💰</div>
         </div>
       </div>
-      {/* Search + Table */}
       <div className="flex justify-between items-center mt-9">
         <h4 className="font-medium text-[24px] text-[#007BFF]">Orders</h4>
         <div className="relative w-[300px]">
