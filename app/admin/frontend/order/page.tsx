@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { useAppDispatch, useAppSelector } from '@/lib/hook';
+import { useDebounce } from 'use-debounce';
 
 import { Table, Input, Button, Tooltip, Modal, notification } from 'antd';
 import { SearchOutlined, ExportOutlined, CheckOutlined } from '@ant-design/icons';
@@ -21,22 +22,24 @@ interface ExtendedOrder extends Order {
   user?: { fullname: string; email: string };
 }
 const Orders: React.FC = () => {
+  const [search, setSearch] = useState('');
+  const [debouncedSearch] = useDebounce(search, 500);
   const [api, contextHolder] = notification.useNotification();
   const [confirmVisible, setConfirmVisible] = useState(false);
   const [confirmLoading, setConfirmLoading] = useState(false);
   const [confirmOrderId, setConfirmOrderId] = useState<string | null>(null);
   const [drawerVisible, setDrawerVisible] = useState(false);
   const [selectedOrderId, setSelectedOrderId] = useState<string | null>(null);
-  const [search, setSearch] = useState('');
+  //const [search, setSearch] = useState('');
   const pageSize = 10;
   const dispatch = useAppDispatch();
   const { stats, data, total, loading, page } = useAppSelector((state) => state.orders);
   const loadOrders = async (pageNum: number) => {
-    await dispatch(fetchOrders({ page: pageNum, search }));
+    await dispatch(fetchOrders({ page: pageNum, search:debouncedSearch}));
   };
   useEffect(() => {
     loadOrders(page);
-  }, [page, search]);
+  }, [page, debouncedSearch]);
   const handleStatusUpdate = async (orderId: string, newStatus: string) => {
     try {
       await dispatch(updateOrderStatus({ orderId, status: newStatus })).unwrap();
