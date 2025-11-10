@@ -1,27 +1,36 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { Modal, Input, Button, Row, Col, InputNumber, Form, notification } from 'antd';
-import { PlusOutlined, MinusCircleOutlined, UploadOutlined } from '@ant-design/icons';
 import { useForm, useFieldArray, Controller } from 'react-hook-form';
+import { useAppDispatch } from '@/lib/hook';
+
+import { PlusOutlined, MinusCircleOutlined, UploadOutlined } from '@ant-design/icons';
+import {
+  Modal,
+  Input,
+  Button,
+  Row,
+  Col,
+  InputNumber,
+  Form,
+  notification
+} from 'antd';
+
 import { zodResolver } from '@hookform/resolvers/zod';
 import { productSchema, ProductInput } from '@/lib/validation/product';
 import { addProductThunk } from '@/lib/features/cart/product-slice';
-import { useAppDispatch } from '@/lib/hook';
 
 interface AddSingleProductModalProps {
   open: boolean;
   onCancel: () => void;
   onSuccess?: () => void;
 }
-
 interface FileState {
   file: File | null;
   preview: string;
   isUploading: boolean;
   uploadedPath?: string;
 }
-
 const AddSingleProductModal: React.FC<AddSingleProductModalProps> = ({
   open,
   onCancel,
@@ -31,13 +40,13 @@ const AddSingleProductModal: React.FC<AddSingleProductModalProps> = ({
   const [loading, setLoading] = useState(false);
   const [files, setFiles] = useState<FileState[]>([]);
   const [api, contextHolder] = notification.useNotification();
-
   const {
     control,
     handleSubmit,
     formState: { errors },
     reset,
     setValue,
+    trigger
   } = useForm<ProductInput>({
     resolver: zodResolver(productSchema),
     mode: 'onBlur',
@@ -49,13 +58,10 @@ const AddSingleProductModal: React.FC<AddSingleProductModalProps> = ({
       ],
     },
   });
-
   const { fields, append, remove } = useFieldArray({
     control,
     name: 'variants',
   });
-
-  // Reset form when modal opens
   useEffect(() => {
     if (open) {
       reset({
@@ -68,12 +74,9 @@ const AddSingleProductModal: React.FC<AddSingleProductModalProps> = ({
       setFiles([{ file: null, preview: '', isUploading: false }]);
     }
   }, [open, reset]);
-
   // Image upload handler
   const handleImageUpload = async (index: number, file: File) => {
     if (!file) return;
-
-    // Set uploading state
     setFiles(prev => {
       const updated = [...prev];
       updated[index] = {
@@ -83,24 +86,19 @@ const AddSingleProductModal: React.FC<AddSingleProductModalProps> = ({
       };
       return updated;
     });
-
     try {
       const formData = new FormData();
       formData.append('file', file);
-
       const res = await fetch('/api/upload', {
         method: 'POST',
         body: formData,
       });
-
       const uploadData = await res.json();
-
       if (!res.ok || !uploadData.success) {
         throw new Error(uploadData.error || 'Upload failed');
       }
-
       setValue(`variants.${index}.img`, uploadData.path);
-
+      trigger(`variants.${index}.img`);
       setFiles(prev => {
         const updated = [...prev];
         updated[index] = {
@@ -110,7 +108,6 @@ const AddSingleProductModal: React.FC<AddSingleProductModalProps> = ({
         };
         return updated;
       });
-
       api.success({
         message: 'Image Uploaded',
         description: `Image uploaded successfully for variant ${index + 1}`,
@@ -135,27 +132,10 @@ const AddSingleProductModal: React.FC<AddSingleProductModalProps> = ({
       });
     }
   };
-
-  // Form submit handler
   const onSubmit = async (data: ProductInput) => {
     try {
       setLoading(true);
-
-      const missingImages = data.variants.filter((_, index) => {
-        return !files[index]?.uploadedPath;
-      });
-
-      if (missingImages.length > 0) {
-        throw new Error('Please upload images for all variants.');
-      }
-
-      const uploadingInProgress = files.some(file => file.isUploading);
-      if (uploadingInProgress) {
-        throw new Error('Please wait for images to finish uploading.');
-      }
-
       const resultAction = await dispatch(addProductThunk(data));
-
       if (addProductThunk.fulfilled.match(resultAction)) {
         api.success({
           message: 'Product Added',
@@ -188,7 +168,6 @@ const AddSingleProductModal: React.FC<AddSingleProductModalProps> = ({
       setLoading(false);
     }
   };
-
   return (
     <>
       {contextHolder}
@@ -215,15 +194,12 @@ const AddSingleProductModal: React.FC<AddSingleProductModalProps> = ({
               )}
             />
           </Form.Item>
-
-          {/* Variants */}
           <div style={{ marginBottom: 16 }}>
             <h4>Product Variants</h4>
             <p style={{ color: '#666', fontSize: '14px' }}>
               Add multiple variants with different colors, sizes, and images
             </p>
           </div>
-
           {fields.map((field, index) => (
             <div
               key={field.id}
@@ -258,9 +234,7 @@ const AddSingleProductModal: React.FC<AddSingleProductModalProps> = ({
                   </Button>
                 )}
               </div>
-
               <Row gutter={16}>
-                {/* Image Upload */}
                 <Col span={12}>
                   <Form.Item
                     label="Product Image"
@@ -297,8 +271,7 @@ const AddSingleProductModal: React.FC<AddSingleProductModalProps> = ({
                           ? 'Uploading...'
                           : 'Choose Image'}
                       </Button>
-
-                      {files[index]?.preview && (
+                      {files[index]?.preview && (   //Shows a small preview image below the button
                         <div style={{ marginTop: 8, textAlign: 'center' }}>
                           <img
                             src={files[index].preview}
@@ -327,7 +300,6 @@ const AddSingleProductModal: React.FC<AddSingleProductModalProps> = ({
                     </div>
                   </Form.Item>
                 </Col>
-
                 {/* Color and Code */}
                 <Col span={12}>
                   <Row gutter={8}>
@@ -362,7 +334,6 @@ const AddSingleProductModal: React.FC<AddSingleProductModalProps> = ({
                       </Form.Item>
                     </Col>
                   </Row>
-
                   <Form.Item
                     label="Size"
                     validateStatus={errors.variants?.[index]?.size ? 'error' : ''}
@@ -378,7 +349,6 @@ const AddSingleProductModal: React.FC<AddSingleProductModalProps> = ({
                   </Form.Item>
                 </Col>
               </Row>
-
               <Row gutter={16}>
                 <Col span={12}>
                   <Form.Item
@@ -418,7 +388,6 @@ const AddSingleProductModal: React.FC<AddSingleProductModalProps> = ({
               </Row>
             </div>
           ))}
-
           {/* Add Variant */}
           <Button
             type="dashed"
@@ -443,8 +412,6 @@ const AddSingleProductModal: React.FC<AddSingleProductModalProps> = ({
           >
             Add Another Variant
           </Button>
-
-          {/* Footer Buttons */}
           <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 8 }}>
             <Button onClick={onCancel}>Cancel</Button>
             <Button type="primary" htmlType="submit" loading={loading}>
@@ -456,5 +423,4 @@ const AddSingleProductModal: React.FC<AddSingleProductModalProps> = ({
     </>
   );
 };
-
 export default AddSingleProductModal;

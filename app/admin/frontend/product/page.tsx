@@ -1,17 +1,25 @@
 'use client';
 
 import React, { useState } from 'react';
-import { Table, Button } from 'antd';
 import { useEffect } from 'react';
-import './page.css';
+import { useAppDispatch } from '@/lib/hook';
+
+import { Table, Button } from 'antd';
 import { EditOutlined, DeleteOutlined, UndoOutlined } from '@ant-design/icons';
 import { Image, notification } from 'antd';
+
 import ProductModal from '@/app/components/product-model';
 import DeleteConfirmModal from '@/app/components/deleteconfirmmodal';
 import AddMultipleProductsModal from '@/app/components/add-multiple-product-model';
 import AddSingleProductModal from '@/app/components/add-single-product-model';
-import { deleteProductThunk, deactivateVariantThunk, getProductsThunk, reactivateVariantThunk } from '@/lib/features/cart/product-slice';
-import { useAppDispatch } from '@/lib/hook';
+import {
+  deleteProductThunk,
+  deactivateVariantThunk,
+  getProductsThunk,
+  reactivateVariantThunk
+} from '@/lib/features/cart/product-slice';
+import './page.css';
+
 interface ProductResponse {
   products: Product[];
   total?: number;
@@ -27,15 +35,13 @@ export interface Variant {
   img: string
   availabilityStatus: 'ACTIVE' | 'INACTIVE';
 }
-
 export interface Product {
   id: string;
   isDeleted: 'active' | 'deleted';
   title: string;
   img: string;
-  variants: Variant[]; // ⬅️ Add this
+  variants: Variant[]; 
 }
-
 const ProductPage: React.FC = () => {
   const [isEditOpen, setIsEditOpen] = useState(false);
   const [isDeleteOpen, setIsDeleteOpen] = useState(false);
@@ -54,20 +60,16 @@ const ProductPage: React.FC = () => {
   const [isReactivateModalOpen, setIsReactivateModalOpen] = useState(false);
   const [loadingReactivate, setLoadingReactivate] = useState(false);
   const [variantToReactivate, setVariantToReactivate] = useState<{ id: string; productId: string } | null>(null);
-
   const handleReactivateVariant = async () => {
     if (!variantToReactivate) return;
     setLoadingReactivate(true);
-
     try {
       const resultAction = await dispatch(reactivateVariantThunk(variantToReactivate.id));
-
       if (reactivateVariantThunk.fulfilled.match(resultAction)) {
         notification.success({
           message: 'Variant Reactivated',
           description: 'The variant has been successfully reactivated.',
         });
-
         setData(prev =>
           prev.map(p =>
             p.id === variantToReactivate.productId
@@ -99,8 +101,6 @@ const ProductPage: React.FC = () => {
       setLoadingReactivate(false);
     }
   };
-
-
   const handleInactivateVariant = async () => {
     if (!variantToDelete) return;
     try {
@@ -134,9 +134,8 @@ const ProductPage: React.FC = () => {
     setLoading(true);
     try {
       const resultAction = await dispatch(getProductsThunk({ page, limit: pageSize }));
-
       if (getProductsThunk.fulfilled.match(resultAction)) {
-        const payload = resultAction.payload as ProductResponse; // 👈 type assertion (not `any`)
+        const payload = resultAction.payload as ProductResponse;
         setData(payload.products);
         setTotal(payload.total ?? 0);
       }
@@ -146,18 +145,15 @@ const ProductPage: React.FC = () => {
       setLoading(false);
     }
   };
-
   useEffect(() => {
     fetchProducts(currentPage);
   }, [currentPage]);
   const handleDeleteProduct = async (id: string) => {
     try {
       const resultAction = await dispatch(deleteProductThunk(id));
-
       if (deleteProductThunk.fulfilled.match(resultAction)) {
         // ✅ Re-fetch current page after delete to keep pagination in sync
         await fetchProducts(currentPage);
-
         // If deleting last item on last page, go back one page
         if (data.length === 1 && currentPage > 1) {
           setCurrentPage((prev) => prev - 1);
@@ -169,9 +165,6 @@ const ProductPage: React.FC = () => {
       console.error('Delete product failed:', err);
     }
   };
-
-
-
   const columns = [
     {
       title: 'Title',
@@ -199,7 +192,6 @@ const ProductPage: React.FC = () => {
       ),
     },
   ];
-
   return (
     <>
       <div className="flex justify-between items-center mt-9 ">
@@ -207,7 +199,7 @@ const ProductPage: React.FC = () => {
         <div className="flex gap-3">
           <Button className=" !w-[203px] !h-[36px] !bg-white !text-[#007BFF] !border !border-[#007BFF]"
             onClick={() => {
-              setSelectedProduct(null); // reset → open Add mode
+              setSelectedProduct(null); 
               setIsEditOpen(true);
             }} >+ Add a Single Product</Button>
           <Button type="primary" className="!w-[203px] !h-[36px]" onClick={() => setaddOpen(true)}>+ Add Multiple Products</Button>
@@ -411,19 +403,16 @@ const ProductPage: React.FC = () => {
         onSuccess={() => fetchProducts(currentPage)}
       />
       <AddMultipleProductsModal open={addopen} onCancel={() => setaddOpen(false)} />
-        <DeleteConfirmModal
-  open={isReactivateModalOpen}
-  onCancel={() => setIsReactivateModalOpen(false)}
-  onConfirm={handleReactivateVariant}
-  getItemName={() =>
-    selectedVariant ? `${selectedVariant.colour} - ${selectedVariant.size}` : ''
-  }
-  actionType="reactivate" // 👈 this changes text + color + icon
-/>
-
-
+      <DeleteConfirmModal
+        open={isReactivateModalOpen}
+        onCancel={() => setIsReactivateModalOpen(false)}
+        onConfirm={handleReactivateVariant}
+        getItemName={() =>
+          selectedVariant ? `${selectedVariant.colour} - ${selectedVariant.size}` : ''
+        }
+        actionType="reactivate" // 👈 this changes text + color + icon
+      />
     </>
   );
 };
-
 export default ProductPage;
