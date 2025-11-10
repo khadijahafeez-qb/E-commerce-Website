@@ -350,10 +350,7 @@ const ShoppingCartPage: React.FC = () => {
           <Table<cartList>
             columns={columns}
             dataSource={data}
-            pagination={{
-              pageSize: 8,
-              showSizeChanger: false,
-            }}
+            pagination={false}
             bordered
             className='rounded-lg min-w-[600px] '
           />
