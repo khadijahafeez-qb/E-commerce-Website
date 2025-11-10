@@ -1,10 +1,10 @@
 'use client';
 
 import React, { useEffect, } from 'react';
-import { Divider, Table, Image, Drawer, Spin } from 'antd';
-import type { ColumnsType } from 'antd/es/table';
 import { useSession } from 'next-auth/react';
 
+import { Divider, Table, Image, Drawer, Spin } from 'antd';
+import type { ColumnsType } from 'antd/es/table';
 
 import { Product, fetchOrderDetail } from '@/lib/features/cart/orderdetailslice';
 import { useAppSelector, useAppDispatch } from '@/lib/hook';
@@ -21,13 +21,11 @@ const OrderDetailDrawer: React.FC<OrderDetailDrawerProps> = ({ orderId, visible,
   const { data: session } = useSession();
   const dispatch = useAppDispatch();
   const { products, orderInfo, loading } = useAppSelector((state: RootState) => state.orderDetail);
-
   useEffect(() => {
     if (orderId && visible) {
       dispatch(fetchOrderDetail(orderId));
     }
   }, [orderId, visible, dispatch]);
-
   const productColumns: ColumnsType<Product> = [
     {
       title: <span className={tableClasses.heading}>Products</span>,
@@ -89,9 +87,7 @@ const OrderDetailDrawer: React.FC<OrderDetailDrawerProps> = ({ orderId, visible,
           <Divider className="border-t border-[#979797] mb-4" />
           <div className="label-div">
             {orderInfo.map((item, index: number) => {
-              // Hide "User" label for non-admins
               if (item.label === 'User' && session?.user?.role !== 'ADMIN') return null;
-
               return (
                 <div key={index}>
                   <p className="label">{item.label}</p>

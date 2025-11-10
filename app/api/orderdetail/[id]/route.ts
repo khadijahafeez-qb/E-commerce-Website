@@ -5,7 +5,6 @@ const prisma = new PrismaClient();
 
 export async function GET(req: NextRequest, context: { params: Promise<{ id: string }> }) {
   const { id } = await context.params;
-  // ✅ Validate params before hitting DB
   try {
     const order = await prisma.order.findUnique({
       where: { id },

@@ -114,27 +114,36 @@ export async function POST(req: Request) {
         receipt_email: user.email, // ensure Stripe sends the receipt
       },
     });
-    // Create order in DB as pending
-    // 8️⃣ Transaction: decrease stock + create order atomically
-    const newOrder = await prisma.$transaction(async (tx) => {
-      // Validate & update stock
-      for (const item of cartItems) {
-        const variant = await tx.productVariant.findUnique({
-          where: { id: item.id },
-        });
+    // Pre-check before transaction
+    const errors: { id: string; title: string; reason: string }[] = [];
+
+    await Promise.all(
+      cartItems.map(async (item: OrderItem) => {
+        const variant = await prisma.productVariant.findUnique({ where: { id: item.id } });
         if (!variant) {
-          throw new Error(`Variant not found for ${item.title}`);
+          errors.push({ id: item.id, title: item.title, reason: 'Variant not found' });
+          return;
         }
         if (variant.stock < item.count) {
-          throw new Error(`Insufficient stock for ${item.title}`);
+          errors.push({ id: item.id, title: item.title, reason: 'Insufficient stock' });
         }
-
-        await tx.productVariant.update({
-          where: { id: item.id },
-          data: { stock: { decrement: item.count } },
-        });
-      }
-
+      })
+    );
+    if (errors.length > 0) {
+      return new Response(
+        JSON.stringify({ error: 'Some items are invalid or out of stock', issues: errors }),
+        { status: 400 }
+      );
+    }
+    const newOrder = await prisma.$transaction(async (tx) => {
+      await Promise.all(
+        cartItems.map((item: OrderItem) =>
+          tx.productVariant.update({
+            where: { id: item.id },
+            data: { stock: { decrement: item.count } },
+          })
+        )
+      );
       // Create order and related items
       const order = await tx.order.create({
         data: {
