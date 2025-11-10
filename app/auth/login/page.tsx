@@ -22,10 +22,8 @@ export default function LoginPage() {
     mode: 'onBlur',
     reValidateMode: 'onBlur'
   });
-
   async function onSubmit(data: LoginData) {
     try {
-
       const res = await signIn('credentials', {
         redirect: false,
         email: data.email,
