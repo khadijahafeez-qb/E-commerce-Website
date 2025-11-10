@@ -9,7 +9,6 @@ export async function PATCH(
   context: { params: Promise<{ id: string }> } 
 ) {
   const { id } = await context.params;
-
   try {
     const session = await auth();
     if (!session?.user?.email) {

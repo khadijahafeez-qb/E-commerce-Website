@@ -52,6 +52,7 @@ const validationMap = [
       param: productIdSchema,
       body: variantSchema,
     },
+     paramIndex: -1,
   },
   {
     path: /^\/api\/product\/get-products$/,
@@ -72,6 +73,7 @@ const validationMap = [
     path: /^\/api\/order\/.*\/status$/,
     method: 'PATCH',
     schema: updateOrderStatusSchema,
+     paramIndex: -2,
   },
 ];
 function handleValidationError(error: unknown) {
@@ -140,7 +142,8 @@ export async function middleware(req: NextRequest) {
         // Combined param + body validation (update-product)
         else if ('param' in matched.schema && 'body' in matched.schema) {
           const parts = path.split('/');
-          const id = parts.at(-1); // ✅ second-to-last part
+          const index = matched.paramIndex ?? -1;
+          const id = parts.at(index); // ✅ second-to-last part
           matched.schema.param.parse({ id });
           const clone = req.clone();
           const text = await clone.text();
