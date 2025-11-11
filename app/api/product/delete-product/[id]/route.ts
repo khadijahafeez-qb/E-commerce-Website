@@ -1,4 +1,4 @@
-import { NextResponse ,NextRequest} from 'next/server';
+import { NextResponse, NextRequest } from 'next/server';
 import { PrismaClient } from '@prisma/client';
 
 const prisma = new PrismaClient();
@@ -8,9 +8,18 @@ export async function PATCH(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const { id } = await params; 
+    const { id } = await params;
+    const existingProduct = await prisma.product.findUnique({
+      where: { id },
+    });
+    if (!existingProduct) {
+      return NextResponse.json(
+        { success: false, error: 'Product not found' },
+        { status: 404 }
+      );
+    }
     const product = await prisma.product.update({
-      where: { id},
+      where: { id },
       data: { isDeleted: 'deleted' },
     });
     await prisma.productVariant.updateMany({
