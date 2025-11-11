@@ -363,7 +363,7 @@ const ProductPage: React.FC = () => {
           setIsVariantModalOpen(false);
           setSelectedVariant(null);
         }}
-        variant={selectedVariant}
+        variant={selectedVariant}//nul in add mode
         productId={selectedProduct?.id || ''}
         mode={selectedVariant ? 'edit' : 'add'} // 👈 key change
         onSuccess={() => fetchProducts(currentPage)}

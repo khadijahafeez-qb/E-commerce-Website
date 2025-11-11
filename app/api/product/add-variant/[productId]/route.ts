@@ -9,7 +9,6 @@ export async function POST(
   try {
     const { productId } = await context.params;
     const body = await req.json();
-     // ✅ Check for existing variant with same colour + size under same product
     const existingVariant = await prisma.productVariant.findFirst({
       where: {
         productId,
@@ -17,13 +16,12 @@ export async function POST(
         size: body.size,
       },
     });
-
     if (existingVariant) {
       return NextResponse.json(
         {
           success: false,
           error: `Variant with colour "${body.colour}" and size "${body.size}" already exists.`,
-          code: 'DUPLICATE_VARIANT', // 👈 helpful for frontend checks
+          code: 'DUPLICATE_VARIANT', 
         },
         { status: 400 }
       );
@@ -39,7 +37,6 @@ export async function POST(
         img:body.img,
       },
     });
-
     return NextResponse.json({ success: true, variant });
   } catch (err: unknown) {
     const message =
