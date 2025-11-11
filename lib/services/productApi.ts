@@ -44,7 +44,7 @@ export async function deleteProduct(id: string): Promise<ProductOutput> {
 }
 
 export async function deactivateVariant(id: string): Promise<VariantInput> {
-  const res = await fetch(`/api/product/delete-product-variant/${id}`, { method: 'PUT' });
+  const res = await fetch(`/api/product/delete-product-variant/${id}`, { method: 'PATCH' });
   const json = await res.json();
   if (!res.ok || !json.success) throw new Error(json.error || 'Failed to deactivate variant');
   return json.variant as VariantInput;

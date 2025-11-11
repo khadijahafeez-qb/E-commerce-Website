@@ -9,18 +9,14 @@ export async function PATCH(
 ) {
   try {
     const { id } = await params; // ✅ await the promise
-    // ✅ Soft delete the product
     const product = await prisma.product.update({
       where: { id},
       data: { isDeleted: 'deleted' },
     });
-
-    // ✅ Mark all its variants as INACTIVE
     await prisma.productVariant.updateMany({
       where: { productId: id },
       data: { availabilityStatus: 'INACTIVE' },
     });
-
     return NextResponse.json({
       success: true,
       message: 'Product and its variants marked inactive',

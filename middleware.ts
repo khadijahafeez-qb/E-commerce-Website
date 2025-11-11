@@ -42,7 +42,7 @@ const validationMap = [
   },
   {
     path: /^\/api\/product\/delete-product-variant\/.*$/,
-    method: 'PUT',
+    method: 'PATCH',
     schema: productIdSchema,
   },
   {

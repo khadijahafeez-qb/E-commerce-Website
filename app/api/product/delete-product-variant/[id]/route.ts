@@ -3,14 +3,13 @@ import { PrismaClient } from '@prisma/client';
 
 const prisma = new PrismaClient();
 
-export async function PUT(req: Request, context: { params: Promise<{ id: string }> }) {
+export async function PATCH(req: Request, context: { params: Promise<{ id: string }> }) {
   try {
     const { id } = await context.params;
     const variant = await prisma.productVariant.update({
       where: { id },
       data: { availabilityStatus: 'INACTIVE' },
     });
-
     return NextResponse.json({ success: true, variant });
   } catch (err: unknown) {
     const message = err instanceof Error ? err.message : 'Unknown error';

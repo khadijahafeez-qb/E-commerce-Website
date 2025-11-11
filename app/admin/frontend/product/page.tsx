@@ -105,7 +105,6 @@ const ProductPage: React.FC = () => {
     if (!variantToDelete) return;
     try {
       const resultAction = await dispatch(deactivateVariantThunk(variantToDelete.id));
-
       if (deactivateVariantThunk.fulfilled.match(resultAction)) {
         setData((prev) =>
           prev.map((p) =>
@@ -114,7 +113,7 @@ const ProductPage: React.FC = () => {
                 ...p,
                 variants: p.variants.map(v =>
                   v.id === variantToDelete.id
-                    ? { ...v, availabilityStatus: 'INACTIVE' } // just mark inactive
+                    ? { ...v, availabilityStatus: 'INACTIVE' } 
                     : v
                 ),
               }
@@ -152,9 +151,7 @@ const ProductPage: React.FC = () => {
     try {
       const resultAction = await dispatch(deleteProductThunk(id));
       if (deleteProductThunk.fulfilled.match(resultAction)) {
-        // ✅ Re-fetch current page after delete to keep pagination in sync
         await fetchProducts(currentPage);
-        // If deleting last item on last page, go back one page
         if (data.length === 1 && currentPage > 1) {
           setCurrentPage((prev) => prev - 1);
         }
@@ -371,10 +368,9 @@ const ProductPage: React.FC = () => {
       <DeleteConfirmModal
         open={isVariantDeleteModalOpen}
         onCancel={() => setIsVariantDeleteModalOpen(false)}
-        onConfirm={handleInactivateVariant} // async function
+        onConfirm={handleInactivateVariant} 
         getItemName={() => selectedVariant ? `${selectedVariant.colour} - ${selectedVariant.size}` : ''}
       />
-      {/* ✅ Delete Product Modal */}
       <DeleteConfirmModal
         open={isDeleteOpen}
         onCancel={() => setIsDeleteOpen(false)}
@@ -399,7 +395,7 @@ const ProductPage: React.FC = () => {
         getItemName={() =>
           selectedVariant ? `${selectedVariant.colour} - ${selectedVariant.size}` : ''
         }
-        actionType="reactivate" // 👈 this changes text + color + icon
+        actionType="reactivate" 
       />
     </>
   );

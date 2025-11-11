@@ -9,9 +9,8 @@ interface DeleteConfirmModalProps {
   onCancel: () => void;
   onConfirm: () => Promise<void>;
   getItemName?: () => string;
-  actionType?: 'delete' | 'reactivate'; // 👈 new optional prop
+  actionType?: 'delete' | 'reactivate';
 }
-
 const DeleteConfirmModal: React.FC<DeleteConfirmModalProps> = ({
   open,
   onCancel,
@@ -21,40 +20,32 @@ const DeleteConfirmModal: React.FC<DeleteConfirmModalProps> = ({
 }) => {
   const [loading, setLoading] = useState(false);
   const [api, contextHolder] = notification.useNotification();
-
   const handleConfirm = async () => {
     setLoading(true);
     try {
       await onConfirm();
-
       const nameToShow = getItemName ? getItemName() : 'Item';
       const actionText = actionType === 'reactivate' ? 'Reactivated' : 'Deleted';
-
       api.success({
         message: `${actionText}`,
         description: `${nameToShow} has been ${actionText.toLowerCase()} successfully!`,
         duration: 3,
       });
-
       onCancel();
     } catch (err) {
       const nameToShow = getItemName ? getItemName() : 'Item';
       const actionText = actionType === 'reactivate' ? 'Reactivation' : 'Deletion';
-
       api.error({
         message: `${actionText} Failed`,
         description: `Failed to ${actionText.toLowerCase()} ${nameToShow}.`,
         duration: 3,
       });
-
       console.error(err);
     } finally {
       setLoading(false);
     }
   };
-
   const isReactivate = actionType === 'reactivate';
-
   return (
     <>
       {contextHolder}
@@ -78,7 +69,6 @@ const DeleteConfirmModal: React.FC<DeleteConfirmModalProps> = ({
               <WarningOutlined className="mt-3" style={{ fontSize: '63px', color: '#FFC107' }} />
             )}
           </div>
-
           <div className="mt-4">
             <p className="font-inter font-bold text-base">
               Are you sure you want to{' '}
@@ -93,7 +83,6 @@ const DeleteConfirmModal: React.FC<DeleteConfirmModalProps> = ({
               )}
             </p>
           </div>
-
           <div className="flex justify-center gap-3 mt-9">
             <button
               onClick={onCancel}
@@ -120,5 +109,4 @@ const DeleteConfirmModal: React.FC<DeleteConfirmModalProps> = ({
     </>
   );
 };
-
 export default DeleteConfirmModal;
