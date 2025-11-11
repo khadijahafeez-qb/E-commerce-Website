@@ -11,7 +11,6 @@ interface AddMultipleProductsModalProps {
   open: boolean;
   onCancel: () => void;
 }
-
 const AddMultipleProductsModal: React.FC<AddMultipleProductsModalProps> = ({ open, onCancel }) => {
   const [loading, setLoading] = useState(false);
   const [api, contextHolder] = notification.useNotification();
@@ -21,30 +20,25 @@ const handleBeforeUpload = (file: RcFile) => {
     uid: String(Date.now()),
     name: file.name,
     status: 'done',
-    originFileObj: file, // 👈 now originFileObj exists
+    originFileObj: file, //originFileObj exists
   };
   setFileList([uploadFile]);
   return false; // prevent auto-upload
 };
-
   const handleRemove = () => {
     setFileList([]);
   };
  const handleUpload = async () => {
     if (fileList.length === 0 || !fileList[0].originFileObj) return;
-
     setLoading(true);
     try {
       const formData = new FormData();
       formData.append('file', fileList[0].originFileObj as File);
-
       const res = await fetch('/api/product/upload-products', {
         method: 'POST',
         body: formData,
       });
-
       const data = await res.json();
-
       if (res.ok) {
         api.success({
           message: 'Upload Successful',
@@ -67,7 +61,6 @@ const handleBeforeUpload = (file: RcFile) => {
       setLoading(false);
     }
   };
-
   return (
       <>
       {contextHolder}

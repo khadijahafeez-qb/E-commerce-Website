@@ -173,7 +173,6 @@ const Orders: React.FC = () => {
           </div>
           <div className="bg-blue-100 w-10 h-10 flex items-center justify-center rounded-lg">🧾</div>
         </div>
-
         <div className="w-[324px] h-[81px] bg-white rounded-xl shadow-md flex items-center justify-between px-5">
           <div>
             <p className="text-gray-600 text-sm font-medium">Total Units:</p>
@@ -185,14 +184,13 @@ const Orders: React.FC = () => {
           </div>
           <div className="bg-blue-100 w-10 h-10 flex items-center justify-center rounded-lg">📦</div>
         </div>
-
         <div className="w-[324px] h-[81px] bg-white rounded-xl shadow-md flex items-center justify-between px-5">
           <div>
             <p className="text-gray-600 text-sm font-medium">Total Amount:</p>
             {loading ? (
               <Skeleton.Input style={{ width: 80 }} active size="small" />
             ) : (
-              <p className="text-blue-500 text-2xl font-bold mt-1">${stats.totalAmount}</p>
+              <p className="text-blue-500 text-2xl font-bold mt-1">${stats.totalAmount.toFixed(2)}</p>
             )}
           </div>
           <div className="bg-blue-100 w-10 h-10 flex items-center justify-center rounded-lg">💰</div>
