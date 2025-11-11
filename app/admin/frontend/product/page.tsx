@@ -221,7 +221,6 @@ const ProductPage: React.FC = () => {
           expandable={{
             expandedRowRender: (product: Product) => {
               const hasScroll = product.variants.length > 10;
-
               return (
                 <div className="overflow-x-auto bg-[#fafafa] rounded-md p-4 border border-gray-200">
                   <Table<Variant>
@@ -240,8 +239,6 @@ const ProductPage: React.FC = () => {
                             alt={text}
                             className="!w-[24px] !h-[24px] object-cover"
                           ></Image>
-
-
                         ),
                       },
                       {
@@ -291,7 +288,6 @@ const ProductPage: React.FC = () => {
                         key: 'actions',
                         render: (variant: Variant) => {
                           const isInactive = variant.availabilityStatus === 'INACTIVE';
-
                           return (
                             <div className="flex gap-[12px] opacity-90">
                               {isInactive ? (
@@ -329,13 +325,10 @@ const ProductPage: React.FC = () => {
                           );
                         },
                       }
-
-
                     ]}
                     rowKey="id"
                     dataSource={product.variants}
                   />
-
                   {/* Optional Add Variant Button */}
                   <div className="mt-2 flex justify-end">
                     <Button
@@ -354,7 +347,6 @@ const ProductPage: React.FC = () => {
               );
             },
           }}
-
           pagination={{
             current: currentPage,
             pageSize,
@@ -376,8 +368,6 @@ const ProductPage: React.FC = () => {
         mode={selectedVariant ? 'edit' : 'add'} // 👈 key change
         onSuccess={() => fetchProducts(currentPage)}
       />
-
-
       <DeleteConfirmModal
         open={isVariantDeleteModalOpen}
         onCancel={() => setIsVariantDeleteModalOpen(false)}
@@ -396,7 +386,6 @@ const ProductPage: React.FC = () => {
         }}
         getItemName={() => selectedProduct?.title || ''}
       />
-
       <AddSingleProductModal
         open={isEditOpen}
         onCancel={() => setIsEditOpen(false)}
