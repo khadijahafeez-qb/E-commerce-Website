@@ -8,7 +8,7 @@ export async function PATCH(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const { id } = await params; // ✅ await the promise
+    const { id } = await params; 
     const product = await prisma.product.update({
       where: { id},
       data: { isDeleted: 'deleted' },
