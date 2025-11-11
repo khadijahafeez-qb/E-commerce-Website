@@ -4,7 +4,7 @@ import React, { useState, useEffect } from 'react';
 import { useAppDispatch, useAppSelector } from '@/lib/hook';
 import { useDebounce } from 'use-debounce';
 
-import { Table, Input, Button, Tooltip, Modal, notification } from 'antd';
+import { Table, Input, Button, Tooltip, Modal, notification, Skeleton } from 'antd';
 import { SearchOutlined, ExportOutlined, CheckOutlined } from '@ant-design/icons';
 
 import { ordertable } from '@/app/user/frontend/orders/page';
@@ -158,21 +158,35 @@ const Orders: React.FC = () => {
         <div className="w-[324px] h-[81px] bg-white rounded-xl shadow-md flex items-center justify-between px-5">
           <div>
             <p className="text-gray-600 text-sm font-medium">Total Orders:</p>
-            <p className="text-blue-500 text-2xl font-bold mt-1">{stats.totalOrders}</p>
+            {loading ? (
+              <Skeleton.Input style={{ width: 80 }} active size="small" />
+            ) : (
+              <p className="text-blue-500 text-2xl font-bold mt-1">{stats.totalOrders}</p>
+            )}
           </div>
           <div className="bg-blue-100 w-10 h-10 flex items-center justify-center rounded-lg">🧾</div>
         </div>
+
         <div className="w-[324px] h-[81px] bg-white rounded-xl shadow-md flex items-center justify-between px-5">
           <div>
             <p className="text-gray-600 text-sm font-medium">Total Units:</p>
-            <p className="text-blue-500 text-2xl font-bold mt-1">{stats.totalUnits}</p>
+            {loading ? (
+              <Skeleton.Input style={{ width: 80 }} active size="small" />
+            ) : (
+              <p className="text-blue-500 text-2xl font-bold mt-1">{stats.totalUnits}</p>
+            )}
           </div>
           <div className="bg-blue-100 w-10 h-10 flex items-center justify-center rounded-lg">📦</div>
         </div>
+
         <div className="w-[324px] h-[81px] bg-white rounded-xl shadow-md flex items-center justify-between px-5">
           <div>
             <p className="text-gray-600 text-sm font-medium">Total Amount:</p>
-            <p className="text-blue-500 text-2xl font-bold mt-1">${stats.totalAmount}</p>
+            {loading ? (
+              <Skeleton.Input style={{ width: 80 }} active size="small" />
+            ) : (
+              <p className="text-blue-500 text-2xl font-bold mt-1">${stats.totalAmount}</p>
+            )}
           </div>
           <div className="bg-blue-100 w-10 h-10 flex items-center justify-center rounded-lg">💰</div>
         </div>
