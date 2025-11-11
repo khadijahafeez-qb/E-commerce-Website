@@ -35,8 +35,6 @@ export default function RootLayout({
             {children}
         </Clientprovider>
         </StoreProvider>
-       
-      
       </body>
     </html>
   );

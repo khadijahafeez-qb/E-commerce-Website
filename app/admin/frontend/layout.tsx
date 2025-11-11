@@ -10,6 +10,7 @@ import {
   ShoppingOutlined,
   LogoutOutlined,
 } from '@ant-design/icons';
+
 import './layout.css';
 import Productpage from './product/page';
 import Orders from './order/page';

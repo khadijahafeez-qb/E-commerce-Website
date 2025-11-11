@@ -7,5 +7,4 @@ export const prisma =
   new PrismaClient({
     log: ['query'], // optional: shows queries in terminal
   });
-
 if (process.env.NODE_ENV !== 'production') globalForPrisma.prisma = prisma;

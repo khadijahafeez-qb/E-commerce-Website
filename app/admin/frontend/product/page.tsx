@@ -40,7 +40,7 @@ export interface Product {
   isDeleted: 'active' | 'deleted';
   title: string;
   img: string;
-  variants: Variant[]; 
+  variants: Variant[];
 }
 const ProductPage: React.FC = () => {
   const [isEditOpen, setIsEditOpen] = useState(false);
@@ -113,7 +113,7 @@ const ProductPage: React.FC = () => {
                 ...p,
                 variants: p.variants.map(v =>
                   v.id === variantToDelete.id
-                    ? { ...v, availabilityStatus: 'INACTIVE' } 
+                    ? { ...v, availabilityStatus: 'INACTIVE' }
                     : v
                 ),
               }
@@ -196,7 +196,7 @@ const ProductPage: React.FC = () => {
         <div className="flex gap-3">
           <Button className=" !w-[203px] !h-[36px] !bg-white !text-[#007BFF] !border !border-[#007BFF]"
             onClick={() => {
-              setSelectedProduct(null); 
+              setSelectedProduct(null);
               setIsEditOpen(true);
             }} >+ Add a Single Product</Button>
           <Button type="primary" className="!w-[203px] !h-[36px]" onClick={() => setaddOpen(true)}>+ Add Multiple Products</Button>
@@ -334,7 +334,6 @@ const ProductPage: React.FC = () => {
                       onClick={() => {
                         setSelectedProduct(product);
                         setIsVariantModalOpen(true);
-                        // open modal for adding variant
                       }}
                     >
                       + Add Variant
@@ -368,7 +367,7 @@ const ProductPage: React.FC = () => {
       <DeleteConfirmModal
         open={isVariantDeleteModalOpen}
         onCancel={() => setIsVariantDeleteModalOpen(false)}
-        onConfirm={handleInactivateVariant} 
+        onConfirm={handleInactivateVariant}
         getItemName={() => selectedVariant ? `${selectedVariant.colour} - ${selectedVariant.size}` : ''}
       />
       <DeleteConfirmModal
@@ -395,7 +394,7 @@ const ProductPage: React.FC = () => {
         getItemName={() =>
           selectedVariant ? `${selectedVariant.colour} - ${selectedVariant.size}` : ''
         }
-        actionType="reactivate" 
+        actionType="reactivate"
       />
     </>
   );

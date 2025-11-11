@@ -7,13 +7,11 @@ export async function PATCH(
   context: { params: Promise<{ id: string }> }
 ) {
   const { id } = await context.params;
-
   try {
     const variant = await prisma.productVariant.update({
       where: { id },
       data: { availabilityStatus: 'ACTIVE' },
     });
-
     return NextResponse.json(variant);
   } catch (err) {
     return NextResponse.json({ error: 'Failed to reactivate variant' }, { status: 500 });

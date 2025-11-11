@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { PrismaClient,Prisma } from '@prisma/client';
+import { PrismaClient, Prisma } from '@prisma/client';
 import { auth } from '@/auth';
 
 const prisma = new PrismaClient();
@@ -8,41 +8,31 @@ export async function GET(req: Request) {
   try {
     const session = await auth();
     const role = session?.user?.role;
-
     const { searchParams } = new URL(req.url);
-
-    // 🧠 Extract query params
     const pageParam = searchParams.get('page');
     const limitParam = searchParams.get('limit');
     const search = searchParams.get('search') || '';
     const sort = searchParams.get('sort') || '';
-
-    // 🧩 If no limit, we fetch all (no pagination)
     const page = pageParam ? parseInt(pageParam, 10) : 1;
     const limit = limitParam ? parseInt(limitParam, 10) : undefined;
     const skip = limit ? (page - 1) * limit : 0;
-
-        // 🧠 Role-based filtering moved here:
     const whereProduct: Prisma.ProductWhereInput = {
       isDeleted: 'active',
       ...(search
         ? { title: { contains: search, mode: 'insensitive' as Prisma.QueryMode } }
         : {}),
-
       ...(role === 'USER'
         ? {
-            // Show only products that have active variants (and optionally stock > 0)
-            variants: {
-              some: {
-                availabilityStatus: 'ACTIVE',
-              },
+          variants: {
+            some: {
+              availabilityStatus: 'ACTIVE',
             },
-          }
+          },
+        }
         : {}),
     };
     type ProductOrderBy = Prisma.ProductOrderByWithRelationInput;
     let orderBy: ProductOrderBy;
-
     switch (sort) {
       case 'title-asc':
         orderBy = { title: 'asc' };
@@ -64,17 +54,16 @@ export async function GET(req: Request) {
       skip,
       take: limit,
       orderBy,
-            include: {
+      include: {
         variants:
           role === 'ADMIN'
-            ? true // show ALL variants for admin
+            ? true 
             : {
-                where: { availabilityStatus: 'ACTIVE' },
-              },
+              where: { availabilityStatus: 'ACTIVE' },
+            },
       },
     });
     const total = await prisma.product.count({ where: whereProduct });
-  
     return NextResponse.json({
       products,
       total,
