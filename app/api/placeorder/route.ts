@@ -20,7 +20,6 @@ export async function POST(req: Request) {
     const user = await prisma.user.findUnique({ where: { email: session.user.email } });
     if (!user) return new Response(JSON.stringify({ error: 'User not found' }), { status: 404 });
     const { cartItems, total } = await req.json();
-
     // 🧩 2️⃣ Pre-check stock for all items (before transaction)
     const issues: { id: string; title: string; available: number; reason: string }[] = [];
     for (const item of cartItems) {
@@ -32,7 +31,6 @@ export async function POST(req: Request) {
           product: { select: { title: true } },
         },
       });
-
       if (!variant) {
         issues.push({
           id: item.id,
@@ -51,7 +49,6 @@ export async function POST(req: Request) {
         });
         continue; // <-- means: skip the rest of THIS loop iteration
       }
-
       // Collect all low-stock items
       if (item.count > variant.stock) {
         issues.push({
@@ -62,7 +59,6 @@ export async function POST(req: Request) {
         });
       }
     }
-
     // 🧩 Return if any problem
     if (issues.length > 0) {
       return new Response(
