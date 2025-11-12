@@ -5,12 +5,12 @@ import { FieldErrors, UseFormRegister, Path } from 'react-hook-form';
 type FormValue = string | number | boolean | null;
 type FormValues = Record<string, FormValue>;
 
- export type Field<T extends FormValues> = {
+export type Field<T extends FormValues> = {
   name: Path<T>;
   type: string;
   placeholder: string;
   label?: string;
-  required?:boolean
+  required?: boolean
 };
 
 type AuthFormProps<T extends FormValues> = {
@@ -43,7 +43,6 @@ export default function AuthForm<T extends FormValues>({
       <h2 className="font-inter font-medium text-[#007BFF] mb-[45px] !text-[32px] text-center leading-[38px]">
         {heading}
       </h2>
-
       <div className="bg-white px-8 pt-8 pb-8 shadow-lg rounded-lg">
         <form onSubmit={onSubmit} className="flex flex-col gap-6">
           {fields.map((field) => (
@@ -55,10 +54,9 @@ export default function AuthForm<T extends FormValues>({
                 >
                   {field.required && <span className="text-red-500 ml-1">*</span>}
                   {field.label}
-                  
+
                 </label>
               )}
-
               <input
                 {...register(field.name)}
                 id={field.name}
@@ -67,7 +65,6 @@ export default function AuthForm<T extends FormValues>({
                 placeholder={field.placeholder}
                 className="border border-[#CED4DA] py-2 px-2 rounded font-inter font-medium leading-[24px] !text-[#6C757D]"
               />
-
               {errors?.[field.name] && (
                 <p className="text-red-500 text-sm">
                   {String(errors[field.name]?.message)}
@@ -75,20 +72,16 @@ export default function AuthForm<T extends FormValues>({
               )}
             </div>
           ))}
-
           {children}
-
           <button
             type={buttonType}
             disabled={disabled}
-            className={`bg-blue-500 text-white p-2 rounded mt-8 ${
-              disabled ? 'opacity-50 cursor-not-allowed' : ''
-            }`}
+            className={`bg-blue-500 text-white p-2 rounded mt-8 ${disabled ? 'opacity-50 cursor-not-allowed' : ''
+              }`}
           >
             {buttonLabel}
           </button>
         </form>
-
         {footer && <div className="font-inter text-center font-normal">{footer}</div>}
       </div>
     </>

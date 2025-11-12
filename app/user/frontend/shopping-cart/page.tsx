@@ -10,12 +10,18 @@ import { Table, Button, Checkbox, notification, Image } from 'antd';
 import { DeleteOutlined, PlusOutlined, MinusOutlined, ArrowLeftOutlined } from '@ant-design/icons';
 import type { ColumnsType } from 'antd/es/table';
 
-import { getUserCart, clearCart, updateQty, removeFromCart, updateStock ,updateAvailabilityStatus} from '@/utils/cart-storage';
 import MainLayout from '@/app/components/mainlayout';
+import {
+  getUserCart,
+  clearCart,
+  updateQty,
+  removeFromCart,
+  updateStock,
+  updateAvailabilityStatus
+} from '@/utils/cart-storage';
 import DeleteConfirmModal from '@/app/components/deleteconfirmmodal';
 import { tableClasses } from '@/utils/tableClasses';
 import { Product } from '@/utils/cart-storage';
-
 
 interface cartList {
   key: string;
@@ -27,9 +33,7 @@ interface cartList {
   image: string;
   stock: number;
 }
-
 const ShoppingCartPage: React.FC = () => {
-
   const [api, contextHolder] = notification.useNotification();
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [deleteKey, setDeleteKey] = useState<string | null>(null);
@@ -39,16 +43,12 @@ const ShoppingCartPage: React.FC = () => {
   const [isPlacingOrder, setIsPlacingOrder] = useState(false);
   const { data: session } = useSession();
   const userEmail = session?.user?.email || 'guest';
-
-
   useEffect(() => {
     setCartItems(getUserCart(userEmail));
   }, [userEmail]);
-
   const placeOrder = async () => {
-    if (isPlacingOrder) return; // ✅ Prevent double click
+    if (isPlacingOrder) return; //Prevent double click
     try {
-      // ✅ 1️⃣ Check if cart is empty
       if (!cartItems || cartItems.length === 0) {
         api.warning({
           message: 'Cart is empty',
@@ -56,7 +56,6 @@ const ShoppingCartPage: React.FC = () => {
         });
         return;
       }
-      // ✅ 2️⃣ Local check: inactive or unavailable items
       const inactiveItems = cartItems.filter(
         (item: Product) => item.availabilityStatus === 'INACTIVE'
       );
@@ -67,9 +66,8 @@ const ShoppingCartPage: React.FC = () => {
             duration: 2,
           });
         });
-        return; // ⛔ Stop before hitting API
+        return;
       }
-      // ✅ 1️⃣ Frontend stock pre-check
       const overStockItems = cartItems.filter(item => item.count > item.stock);
       if (overStockItems.length > 0) {
         overStockItems.forEach(item => {
@@ -79,10 +77,8 @@ const ShoppingCartPage: React.FC = () => {
             duration: 2,
           });
         });
-        return; // Prevent API call
+        return;
       }
-
-      // ✅ 2️⃣ Optionally check if any item has invalid qty or stock 0
       const hasInvalidItem = cartItems.some((item) => item.count <= 0 || item.stock <= 0);
       if (hasInvalidItem) {
         api.error({
@@ -91,18 +87,14 @@ const ShoppingCartPage: React.FC = () => {
         });
         return;
       }
-      setIsPlacingOrder(true); // ✅ Disable button
-
+      setIsPlacingOrder(true);
       const res = await fetch('/api/placeorder', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ cartItems, total })
       });
-
       const data = await res.json();
-
       if (!res.ok) {
-        // ✅ Handle backend "issues" array (for low stock or inactive products)
         if (data.issues && Array.isArray(data.issues)) {
           data.issues.forEach((item: { id: string; title: string; available: number; reason: string }) => {
             const reason = item.reason?.toUpperCase?.().replace(/\s/g, '_'); // normalize e.g. "low stock" → "LOW_STOCK"
@@ -127,21 +119,14 @@ const ShoppingCartPage: React.FC = () => {
               });
             }
           });
-
-          // ✅ Refresh cart after updates
           setCartItems(getUserCart(userEmail));
           return;
         }
-
         return api.error({
           message: 'Order failed',
           description: data.error || 'Something went wrong while placing order',
         });
       }
-
-
-
-      // ✅ Only show redirect toast if success
       api.info({
         message: 'Redirecting...',
         description: 'You are being redirected to the checkout page.',
@@ -149,15 +134,12 @@ const ShoppingCartPage: React.FC = () => {
       });
       clearCart(userEmail);
       if (data.url) {
-        // Small delay so user can see the toast
         setTimeout(() => {
           window.location.href = data.url;
         }, 1500);
       } else {
         api.error({ message: 'Payment failed', description: 'No Stripe URL returned' });
       }
-
-
     } catch (err) {
       console.error(err);
       api.error({
@@ -165,7 +147,6 @@ const ShoppingCartPage: React.FC = () => {
         description: 'Something went wrong',
       });
     } finally {
-      // ✅ Keep disabled state for 3 sec to prevent double-click during redirect
       setTimeout(() => setIsPlacingOrder(false), 3000);
     }
   };

@@ -24,15 +24,9 @@ const MainLayout: React.FC<MainLayoutProps> = ({ children, showHeader = true, })
       const cart = getUserCart(userEmail);
       setCartCount(cart.length);
     };
-
     updateCartCount();
-
-    // Listen for localStorage changes (like add/remove from other components)
     window.addEventListener('storage', updateCartCount);
-
-    // Optional: trigger when component re-renders or user changes
     const interval = setInterval(updateCartCount, 1000);
-
     return () => {
       window.removeEventListener('storage', updateCartCount);
       clearInterval(interval);

@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect, useRef } from 'react';
+import { useAppDispatch } from '@/lib/hook';
 import { useDebounce } from 'use-debounce';
 import './page.css';
 
@@ -8,11 +9,8 @@ import { Input, Select, Col, Row, Spin } from 'antd';
 import { SearchOutlined } from '@ant-design/icons';
 
 import { getProductsThunk } from '@/lib/features/cart/product-slice';
-import { useAppDispatch } from '@/lib/hook';
-
 import MainLayout from '@/app/components/mainlayout';
 import ProductCard, { ProductCardProps } from '../productcard/page';
-
 function App() {
   const WINDOW_SIZE = 40;
   const PAGE_SIZE = 8;
@@ -33,7 +31,6 @@ function App() {
   const scrollTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const debouncedSearchRef = useRef<string>(debouncedSearch);
   const sortRef = useRef<string>(sort);
-
   const dispatch = useAppDispatch();
   useEffect(() => { debouncedSearchRef.current = debouncedSearch; }, [debouncedSearch]);
   useEffect(() => { sortRef.current = sort; }, [sort]);
@@ -206,7 +203,6 @@ function App() {
         )}
         <Row gutter={[30, 32]}>
           {visibleProducts.map((p: ProductCardProps) => {
-
             return (
               <Col key={p.id} lg={6} md={8} sm={12} xs={24}>
                 <ProductCard

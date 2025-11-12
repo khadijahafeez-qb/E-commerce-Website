@@ -125,7 +125,6 @@ const Orders: React.FC = () => {
           />
         </div>
       </div>
-
       <div className='overflow-x-auto'>
         <Table<ordertable>
           loading={loading}

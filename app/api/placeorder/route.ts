@@ -20,7 +20,7 @@ export async function POST(req: Request) {
     const user = await prisma.user.findUnique({ where: { email: session.user.email } });
     if (!user) return new Response(JSON.stringify({ error: 'User not found' }), { status: 404 });
     const { cartItems, total } = await req.json();
-    // 🧩 2️⃣ Pre-check stock for all items (before transaction)
+    // Pre-check stock for all items (before transaction)
     const issues: { id: string; title: string; available: number; reason: string }[] = [];
     for (const item of cartItems) {
       const variant = await prisma.productVariant.findUnique({
@@ -47,9 +47,8 @@ export async function POST(req: Request) {
           available: 0,
           reason: 'INACTIVE',
         });
-        continue; // <-- means: skip the rest of THIS loop iteration
+        continue;
       }
-      // Collect all low-stock items
       if (item.count > variant.stock) {
         issues.push({
           id: item.id,
@@ -59,7 +58,6 @@ export async function POST(req: Request) {
         });
       }
     }
-    // 🧩 Return if any problem
     if (issues.length > 0) {
       return new Response(
         JSON.stringify({
@@ -80,7 +78,7 @@ export async function POST(req: Request) {
     }
     const stripeCustomerId = user.stripeCustomerId;
     const subtotal = cartItems.reduce((acc: number, item: OrderItem) => acc + item.price * item.count, 0);
-    const tax = Math.round(subtotal * 0.10 * 100); // in cents
+    const tax = Math.round(subtotal * 0.10 * 100);
     const stripe_session = await stripe.checkout.sessions.create({
       payment_method_types: ['card'],
       mode: 'payment',
@@ -112,7 +110,6 @@ export async function POST(req: Request) {
     });
     // Pre-check before transaction
     const errors: { id: string; title: string; reason: string }[] = [];
-
     await Promise.all(
       cartItems.map(async (item: OrderItem) => {
         const variant = await prisma.productVariant.findUnique({ where: { id: item.id } });
@@ -140,7 +137,6 @@ export async function POST(req: Request) {
           })
         )
       );
-      // Create order and related items
       const order = await tx.order.create({
         data: {
           userId: user.id,
@@ -157,7 +153,6 @@ export async function POST(req: Request) {
           },
         },
       });
-
       return order;
     });
     return new Response(JSON.stringify({ url: stripe_session.url, orderId: newOrder.id }), { status: 200 });
@@ -165,7 +160,7 @@ export async function POST(req: Request) {
     console.error(err);
     return new Response(JSON.stringify({ error: 'Something went wrong' }), { status: 500 });
   } finally {
-    await prisma.$disconnect(); // ✅ Always close connection
+    await prisma.$disconnect(); 
   }
 }
 

@@ -16,14 +16,12 @@ export interface ProductVariant {
   price: number;
   availabilityStatus: 'ACTIVE' | 'INACTIVE';
 }
-
 export interface ProductCardProps {
   id: string;
   title: string;
   isDeleted: boolean;
   variants: ProductVariant[];
 }
-
 const ProductCard: React.FC<ProductCardProps> = ({ id, title, variants }) => {
   const [selectedColor, setSelectedColor] = useState<ProductVariant | null>(
     variants[0] || null
@@ -32,19 +30,15 @@ const ProductCard: React.FC<ProductCardProps> = ({ id, title, variants }) => {
     variants[0]?.size || ''
   );
   const [count, setCount] = useState(1);
-
   const { data: session } = useSession();
   const userEmail = session?.user?.email || 'guest';
-
   const [api, contextHolder] = notification.useNotification();
-
   // optional: you can show what's currently in localStorage
   useEffect(() => {
     if (userEmail) {
       getUserCart(userEmail);
     }
   }, [userEmail]);
-
   useEffect(() => {
     if (!selectedColor) return;
     const firstSizeForColor = variants.find(
@@ -57,14 +51,11 @@ const ProductCard: React.FC<ProductCardProps> = ({ id, title, variants }) => {
   const currentVariant = variants.find(
     v => v.colour === selectedColor?.colour && v.size === selectedSize
   );
-
   const handleAddToCart = () => {
     if (!currentVariant) return;
-
     const existingCart = getUserCart(userEmail);
     const existing = existingCart.find(item => item.id === currentVariant.id);
     const currentCount = existing ? existing.count : 0;
-
     if (currentCount + count > currentVariant.stock) {
       api.error({
         message: 'Cannot Add to Cart',
@@ -73,7 +64,6 @@ const ProductCard: React.FC<ProductCardProps> = ({ id, title, variants }) => {
       });
       return;
     }
-
     // ✅ Add directly to localStorage
     addToCart(userEmail, {
       productId: id,
@@ -85,24 +75,20 @@ const ProductCard: React.FC<ProductCardProps> = ({ id, title, variants }) => {
       size: currentVariant.size,
       stock: currentVariant.stock,
       count,
-      availabilityStatus:currentVariant.availabilityStatus
+      availabilityStatus: currentVariant.availabilityStatus
     });
-
     api.success({
       message: 'Added to Cart',
       description: `${title} (${currentVariant.colour} - ${currentVariant.size}) x${count} added`,
       placement: 'topRight',
     });
   };
-
   const uniqueColors = Array.from(
     new Map(variants.map(v => [v.colour, v])).values()
   );
-
   const sizesForColor = variants
     .filter(v => v.colour === selectedColor?.colour)
     .map(v => v.size);
-
   return (
     <>
       {contextHolder}
@@ -118,9 +104,8 @@ const ProductCard: React.FC<ProductCardProps> = ({ id, title, variants }) => {
               <Image
                 key={v.id}
                 src={v.img}
-                className={`thumbnail ${
-                  selectedColor?.colour === v.colour ? 'selected' : ''
-                }`}
+                className={`thumbnail ${selectedColor?.colour === v.colour ? 'selected' : ''
+                  }`}
                 onClick={() => setSelectedColor(v)}
                 width={50}
                 height={50}
@@ -130,10 +115,8 @@ const ProductCard: React.FC<ProductCardProps> = ({ id, title, variants }) => {
             ))}
           </div>
         </div>
-
         <p className="cardTitle mt-4">{title}</p>
         <p className="price">Price: ${currentVariant?.price ?? 'N/A'}</p>
-
         <div className="sizes mt-2 flex flex-wrap gap-2">
           {sizesForColor.map(size => {
             const variantForSize = variants.find(
@@ -154,7 +137,6 @@ const ProductCard: React.FC<ProductCardProps> = ({ id, title, variants }) => {
             );
           })}
         </div>
-
         <div className="quantity-cart mt-3 flex flex-wrap items-center gap-3">
           <div className="flex gap-1">
             <Button
@@ -190,5 +172,4 @@ const ProductCard: React.FC<ProductCardProps> = ({ id, title, variants }) => {
     </>
   );
 };
-
 export default ProductCard;

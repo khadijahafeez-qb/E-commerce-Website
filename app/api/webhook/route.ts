@@ -9,12 +9,10 @@ export async function POST(req: Request) {
     if (!process.env.STRIPE_SECRET_KEY || !process.env.STRIPE_WEBHOOK_SECRET) {
       return new Response('Stripe not configured', { status: 500 });
     }
-
     const stripe = new Stripe(process.env.STRIPE_SECRET_KEY, { apiVersion: '2025-09-30.clover' });
     const body = await req.text();
     const sig = req.headers.get('stripe-signature')!;
     let event: Stripe.Event;
-    
     try {
       event = stripe.webhooks.constructEvent(body, sig, process.env.STRIPE_WEBHOOK_SECRET);
     } catch (err: unknown) {
@@ -22,22 +20,18 @@ export async function POST(req: Request) {
       if (err instanceof Error) message = err.message;
       return new Response(`Webhook Error: ${message}`, { status: 400 });
     }
-    
     if (event.type === 'checkout.session.completed') {
       const session = event.data.object as Stripe.Checkout.Session;
-      // Retrieve email
       let email = session.customer_email as string | undefined;
       if (!email && session.customer) {
         const customer = await stripe.customers.retrieve(session.customer as string);
         email = (customer as Stripe.Customer).email ?? undefined;
       }
       if (session.payment_status === 'paid' && email) {
-        // Mark order as paid
         await prisma.order.updateMany({
           where: { stripeSessionId: session.id },
           data: { status: 'PAID' },
         });
-        // Send confirmation email
         try {
           await sendMail(
             email,

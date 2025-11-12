@@ -12,14 +12,12 @@ declare module 'next-auth' {
     rememberMe?: boolean;
   }
 }
-
 declare module 'next-auth' {
   interface Session {
     rememberMe: boolean;
     user: User;
   }
 }
-
 declare module '@auth/core/jwt'{
   interface JWT {
     role?: 'USER' | 'ADMIN';
@@ -40,7 +38,6 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
       },
       async authorize(credentials) {
         if (!credentials?.email || !credentials?.password) return null;
-
         const user = await prisma.user.findUnique({
           where: { email: credentials.email as string },
         });
@@ -65,74 +62,56 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
     clientSecret: process.env.GOOGLE_CLIENT_SECRET!,
   }),
   ],
-
   pages: {
     signIn: '/auth/login',
   },
-
   session: {
     strategy: 'jwt', 
-
   },
-
   callbacks: {
     async signIn({ user, account }) {
       if (account?.provider === 'google') {
-        // Find or create user
         let dbUser = await prisma.user.findUnique({
           where: { email: user.email! },
         });
-
-        // ✅ Initialize Stripe instance
         const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
           apiVersion: '2025-09-30.clover',
         });
-
         if (!dbUser) {
-          // ✅ Create Stripe Customer
           const customer = await stripe.customers.create({
             email: user.email!,
             name: user.name || 'No Name',
           });
-
-          // ✅ Store user + stripeCustomerId in DB
           dbUser = await prisma.user.create({
             data: {
               email: user.email!,
               fullname: user.name || 'No Name',
-              password: '', // Google users have no password
+              password: '', 
               role: 'USER',
               stripeCustomerId: customer.id,
             },
           });
         } else if (!dbUser.stripeCustomerId) {
-          // ✅ If existing user but no stripe ID, create one now
           const customer = await stripe.customers.create({
             email: dbUser.email,
             name: dbUser.fullname,
           });
-
           dbUser = await prisma.user.update({
             where: { id: dbUser.id },
             data: { stripeCustomerId: customer.id },
           });
         }
-
-        // Attach updated info to session user
         user.id = String(dbUser.id);
         user.role = dbUser.role;
         user.rememberMe = true;
       }
-
       return true;
     },
     async jwt({ token, user }) {
-
       if (user) {
         token.role = user.role;
         const u = user as User & { rememberMe?: boolean };
         token.rememberMe = u.rememberMe;
-         
         const maxAge = token.rememberMe
           ? 30 * 24 * 60 * 60 
           : 24 * 60 * 60;    
