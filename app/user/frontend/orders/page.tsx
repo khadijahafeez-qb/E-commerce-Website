@@ -3,7 +3,6 @@
 import React, { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { useDebounce } from 'use-debounce';
-import './page.css';
 
 import { Table, Button, Input } from 'antd';
 import { ExportOutlined, ArrowLeftOutlined, SearchOutlined } from '@ant-design/icons';
@@ -15,6 +14,8 @@ import { fetchOrders, Order } from '@/lib/features/cart/orderslice';
 import type { RootState } from '@/lib/store';
 import MainLayout from '@/app/components/mainlayout';
 import { tableClasses } from '@/utils/tableClasses';
+
+import './page.css';
 
 export interface ordertable {
   key: string;

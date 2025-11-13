@@ -18,6 +18,7 @@ import {
   getProductsThunk,
   reactivateVariantThunk
 } from '@/lib/features/cart/product-slice';
+
 import './page.css';
 
 interface ProductResponse {
