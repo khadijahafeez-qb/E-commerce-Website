@@ -10,19 +10,21 @@ export async function POST(
   try {
     const { productId } = await context.params;
     const body = await req.json();
-    const existingVariant = await prisma.productVariant.findFirst({
+    const existingVariant = await prisma.productVariant.findUnique({
       where: {
-        productId,
-        colour: body.colour,
-        size: body.size,
-      },
+        productId_colour_size: {  
+          productId,
+          colour: body.colour,
+          size: body.size
+        }
+      }
     });
     if (existingVariant) {
       return NextResponse.json(
         {
           success: false,
           error: `Variant with colour "${body.colour}" and size "${body.size}" already exists.`,
-          code: 'DUPLICATE_VARIANT', 
+          code: 'DUPLICATE_VARIANT',
         },
         { status: 400 }
       );
@@ -30,12 +32,12 @@ export async function POST(
     const variant = await prisma.productVariant.create({
       data: {
         productId,
-        colour:body.colour,
-        colourcode:body.colourcode,
-        size:body.size,
+        colour: body.colour,
+        colourcode: body.colourcode,
+        size: body.size,
         stock: body.stock,
         price: body.price,
-        img:body.img,
+        img: body.img,
       },
     });
     return NextResponse.json({ success: true, variant });
