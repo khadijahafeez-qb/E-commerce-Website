@@ -367,7 +367,11 @@ const ProductPage: React.FC = () => {
       />
       <DeleteConfirmModal
         open={isVariantDeleteModalOpen}
-        onCancel={() => setIsVariantDeleteModalOpen(false)}
+        onCancel={() => {
+          setIsVariantDeleteModalOpen(false);
+          setSelectedVariant(null);
+          setVariantToDelete(null);
+        }}
         onConfirm={handleInactivateVariant}
         getItemName={() => selectedVariant ? `${selectedVariant.colour} - ${selectedVariant.size}` : ''}
       />

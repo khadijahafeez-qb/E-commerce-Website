@@ -132,7 +132,7 @@ const Orders: React.FC = () => {
         const checkColor =
           record.status === 'PAID' ? 'green' :
             record.status === 'PENDING' ? 'gray' :
-              'blue';
+              'blue'; 
         const isDisabled = record.status !== 'PAID';
         return (
           <div className="flex items-center gap-2">

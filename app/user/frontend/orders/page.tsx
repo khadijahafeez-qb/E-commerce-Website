@@ -23,7 +23,6 @@ export interface ordertable {
   Order: string;
   Products: number;
   Amount: number;
-
 }
 const Orders: React.FC = () => {
   const [search, setSearch] = useState('');
@@ -150,12 +149,12 @@ const Orders: React.FC = () => {
         </p>
       </div>
       <OrderDetailDrawer
-  orderId={selectedOrderId}
-  visible={drawerVisible}
-  onClose={() => setDrawerVisible(false)}
-/>
+        orderId={selectedOrderId}
+        visible={drawerVisible}
+        onClose={() => setDrawerVisible(false)}
+      />
     </MainLayout>
-    
+
   );
 };
 
