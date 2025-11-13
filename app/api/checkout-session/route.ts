@@ -1,4 +1,3 @@
-// app/api/checkout-session/route.ts
 import Stripe from 'stripe';
 
 export async function GET(req: Request) {

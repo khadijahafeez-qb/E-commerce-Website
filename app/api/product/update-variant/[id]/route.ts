@@ -16,7 +16,7 @@ export async function PUT(
         colour,
         size,
         productId: body.productId,
-        NOT: { id },//ignore curr var
+        NOT: { id },
       },
     });
     if (duplicate) {

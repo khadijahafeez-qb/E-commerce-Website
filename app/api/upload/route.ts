@@ -9,8 +9,8 @@ export async function POST(req: Request) {
     if (!file) {
       return NextResponse.json({ success: false, error: 'No file provided' }, { status: 400 });
     }
-    const bytes = await file.arrayBuffer();//file to binary bytes 
-    const buffer = Buffer.from(bytes);//convert raw bytes to buffer (node.js format)
+    const bytes = await file.arrayBuffer();
+    const buffer = Buffer.from(bytes);
     const uploadDir = path.join(process.cwd(), 'public', 'uploads');
     await mkdir(uploadDir, { recursive: true });
     const fileName = `${Date.now()}-${file.name.replace(/\s+/g, '_')}`;

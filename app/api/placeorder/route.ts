@@ -105,10 +105,9 @@ export async function POST(req: Request) {
       cancel_url: `${req.headers.get('origin')}/user/frontend/shopping-cart`,
       automatic_tax: { enabled: false },
       payment_intent_data: {
-        receipt_email: user.email, // ensure Stripe sends the receipt
+        receipt_email: user.email, 
       },
     });
-    // Pre-check before transaction
     const errors: { id: string; title: string; reason: string }[] = [];
     await Promise.all(
       cartItems.map(async (item: OrderItem) => {
