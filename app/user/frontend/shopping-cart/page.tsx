@@ -261,7 +261,7 @@ const ShoppingCartPage: React.FC = () => {
       ),
     },
     {
-      title: <span className={tableClasses.heading}>qty</span>,
+      title: <span className={tableClasses.heading}>Quantity</span>,
       dataIndex: 'qty',
       key: 'qty',
       render: (qty: number, record: cartList) => (
@@ -295,7 +295,7 @@ const ShoppingCartPage: React.FC = () => {
       ),
     },
     {
-      title: <span className={tableClasses.heading}>Price</span>,
+      title: <span className={tableClasses.heading}>Actions</span>,
       key: 'actions',
       render: (_: unknown, record: cartList) => (
         <Button
