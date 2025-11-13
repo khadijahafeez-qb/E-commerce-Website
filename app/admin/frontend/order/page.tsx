@@ -124,30 +124,42 @@ const Orders: React.FC = () => {
     {
       title: 'Actions',
       key: 'Actions',
-      render: (_: unknown, record: admin_order_table) => (
-        <div className="flex items-center gap-2">
-          {record.status === 'PAID' && (
-            <Tooltip title="Mark as Fulfilled">
+      render: (_: unknown, record: admin_order_table) => {
+        let tooltipText = '';
+        if (record.status === 'PAID') tooltipText = 'Mark as Fulfilled';
+        else if (record.status === 'PENDING') tooltipText = 'Cannot fulfill yet';
+        else if (record.status === 'FULFILLED') tooltipText = 'Order is already fulfilled';
+        const checkColor =
+          record.status === 'PAID' ? 'green' :
+            record.status === 'PENDING' ? 'gray' :
+              'blue';
+        const isDisabled = record.status !== 'PAID';
+        return (
+          <div className="flex items-center gap-2">
+            <Tooltip title={tooltipText}>
+              <span>
+                <Button
+                  type="text"
+                  icon={<CheckOutlined style={{ color: checkColor }} />}
+                  onClick={() => showConfirm(record.key)}
+                  disabled={isDisabled}
+                />
+              </span>
+            </Tooltip>
+            <Tooltip title="View Details">
               <Button
                 type="text"
-                icon={<CheckOutlined style={{ color: 'green' }} />}
-                onClick={() => showConfirm(record.key)}
+                icon={<ExportOutlined />}
+                onClick={() => {
+                  setSelectedOrderId(record.key);
+                  setDrawerVisible(true);
+                }}
               />
             </Tooltip>
-          )}
-          <Tooltip title="View Details">
-            <Button
-              type="text"
-              icon={<ExportOutlined />}
-              onClick={() => {
-                setSelectedOrderId(record.key);
-                setDrawerVisible(true);
-              }}
-            />
-          </Tooltip>
-        </div>
-      ),
-    },
+          </div>
+        );
+      },
+    }
   ];
   const tableData: admin_order_table[] = data.map((order: ExtendedOrder) => ({
     key: order.id,
