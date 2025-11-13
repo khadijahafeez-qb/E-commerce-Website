@@ -1,7 +1,7 @@
 'use client';
 
 import { useSession, signOut } from 'next-auth/react';
-import { useEffect,useState } from 'react';
+import { useEffect, useState } from 'react';
 import Link from 'next/link';
 
 import { Layout, Dropdown } from 'antd';
@@ -19,7 +19,7 @@ const MainLayout: React.FC<MainLayoutProps> = ({ children, showHeader = true, })
   const { data: session } = useSession();
   const userEmail = session?.user?.email || 'guest';
   const [cartCount, setCartCount] = useState(0);
-   useEffect(() => {
+  useEffect(() => {
     const updateCartCount = () => {
       const cart = getUserCart(userEmail);
       setCartCount(cart.length);
@@ -61,7 +61,6 @@ const MainLayout: React.FC<MainLayoutProps> = ({ children, showHeader = true, })
                 <ShoppingCartOutlined className='w-4 h-4 !text-blue-500' />
               </Badge>
             </Link>
-            <BellOutlined className='w-4 h-4 !text-blue-500' />
             {!session ? (
               <Link
                 href='/auth/login'
