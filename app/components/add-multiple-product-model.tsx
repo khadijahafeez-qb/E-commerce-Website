@@ -16,14 +16,21 @@ const AddMultipleProductsModal: React.FC<AddMultipleProductsModalProps> = ({ ope
   const [api, contextHolder] = notification.useNotification();
   const [fileList, setFileList] = useState<UploadFile[]>([]);
   const handleBeforeUpload = (file: RcFile) => {
+    if (file.type !== 'text/csv' && !file.name.endsWith('.csv')) {
+      api.error({
+        message: 'Invalid File',
+        description: 'Only CSV files are allowed.',
+      });
+      return Upload.LIST_IGNORE; 
+    }
     const uploadFile: UploadFile = {
       uid: String(Date.now()),
       name: file.name,
       status: 'done',
-      originFileObj: file, //originFileObj exists
+      originFileObj: file,
     };
     setFileList([uploadFile]);
-    return false; // prevent auto-upload
+    return false; 
   };
   const handleRemove = () => {
     setFileList([]);
@@ -73,9 +80,9 @@ const AddMultipleProductsModal: React.FC<AddMultipleProductsModalProps> = ({ ope
   };
   const handleDownloadSample = () => {
     const sampleCSV = `title,colour,colourcode,size,stock,price,img
-    T-Shirt,Red,RED001,M,50,19.99,https://example.com/tshirt.jpg
-    Jeans,Blue,BLU002,L,30,39.99,https://example.com/jeans.jpg
-    Shoes,Black,BLK003,42,20,59.99,https://example.com/shoes.jpg`;
+    T-Shirt,Red,RED001,M,50,19.99,https://static.nike.com/a/images/t_web_pdp_535_v2/f_auto/50266e78-2bcf-4dfe-bce4-293a63a05dae/NIKE+AVA+ROVER.png
+    Jeans,Blue,BLU002,L,30,39.99,https://static.nike.com/a/images/t_web_pdp_535_v2/f_auto/50266e78-2bcf-4dfe-bce4-293a63a05dae/NIKE+AVA+ROVER.png
+    Shoes,Black,BLK003,42,20,59.99,https://static.nike.com/a/images/t_web_pdp_535_v2/f_auto/50266e78-2bcf-4dfe-bce4-293a63a05dae/NIKE+AVA+ROVER.png`;
     const blob = new Blob([sampleCSV], { type: 'text/csv' });
     const url = window.URL.createObjectURL(blob);
     const a = document.createElement('a');
@@ -106,11 +113,9 @@ const AddMultipleProductsModal: React.FC<AddMultipleProductsModalProps> = ({ ope
         const text = e.target?.result as string;
         const lines = text.split(/\r\n|\n/);
         const headers = lines[0].split(',').map((h) => h.trim());
-
         const missingColumns = requiredColumns.filter(
           (col) => !headers.includes(col)
         );
-
         if (missingColumns.length > 0) {
           resolve({ valid: false, missing: missingColumns });
         } else {
@@ -146,8 +151,8 @@ const AddMultipleProductsModal: React.FC<AddMultipleProductsModalProps> = ({ ope
                 <button
                   type='button'
                   onClick={(e) => {
-                    e.stopPropagation(); // ✅ Prevent Dragger click
-                    handleDownloadSample(); // ✅ Download CSV
+                    e.stopPropagation(); //Prevent Dragger click
+                    handleDownloadSample(); 
                   }}
                   className='text-blue-500 text-sm mb-2 underline'
                 >
