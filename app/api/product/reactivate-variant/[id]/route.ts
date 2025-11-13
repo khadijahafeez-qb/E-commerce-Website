@@ -8,6 +8,10 @@ export async function PATCH(
 ) {
   const { id } = await context.params;
   try {
+    const existingVariant = await prisma.productVariant.findUnique({ where: { id } });
+    if (!existingVariant) {
+      return NextResponse.json({ error: 'Variant not found' }, { status: 404 });
+    }
     const variant = await prisma.productVariant.update({
       where: { id },
       data: { availabilityStatus: 'ACTIVE' },
