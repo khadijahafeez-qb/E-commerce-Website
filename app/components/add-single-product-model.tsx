@@ -179,12 +179,13 @@ const AddSingleProductModal: React.FC<AddSingleProductModalProps> = ({
         width={800}
         destroyOnClose
       >
-        <Form layout="vertical" onFinish={handleSubmit(onSubmit)}>
+        <Form layout="vertical" onFinish={handleSubmit(onSubmit)} requiredMark={true} >
           {/* Product Title */}
           <Form.Item
             label="Product Title"
             validateStatus={errors.title ? 'error' : ''}
             help={errors.title?.message}
+            required
           >
             <Controller
               name="title"
@@ -308,6 +309,7 @@ const AddSingleProductModal: React.FC<AddSingleProductModalProps> = ({
                         label="Color"
                         validateStatus={errors.variants?.[index]?.colour ? 'error' : ''}
                         help={errors.variants?.[index]?.colour?.message}
+                        required
                       >
                         <Controller
                           name={`variants.${index}.colour`}
@@ -323,6 +325,7 @@ const AddSingleProductModal: React.FC<AddSingleProductModalProps> = ({
                         label="Color Code"
                         validateStatus={errors.variants?.[index]?.colourcode ? 'error' : ''}
                         help={errors.variants?.[index]?.colourcode?.message}
+                        required
                       >
                         <Controller
                           name={`variants.${index}.colourcode`}
@@ -338,6 +341,7 @@ const AddSingleProductModal: React.FC<AddSingleProductModalProps> = ({
                     label="Size"
                     validateStatus={errors.variants?.[index]?.size ? 'error' : ''}
                     help={errors.variants?.[index]?.size?.message}
+                    required
                   >
                     <Controller
                       name={`variants.${index}.size`}
@@ -370,6 +374,7 @@ const AddSingleProductModal: React.FC<AddSingleProductModalProps> = ({
                     label="Price"
                     validateStatus={errors.variants?.[index]?.price ? 'error' : ''}
                     help={errors.variants?.[index]?.price?.message}
+                    required
                   >
                     <Controller
                       name={`variants.${index}.price`}
