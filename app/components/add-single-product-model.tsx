@@ -238,7 +238,7 @@ const AddSingleProductModal: React.FC<AddSingleProductModalProps> = ({
               <Row gutter={16}>
                 <Col span={12}>
                   <Form.Item
-                    label="Product Image"
+                    label="Image"
                     required
                     validateStatus={errors.variants?.[index]?.img ? 'error' : ''}
                     help={
