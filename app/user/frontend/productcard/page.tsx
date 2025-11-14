@@ -166,7 +166,6 @@ const ProductCard: React.FC<ProductCardProps> = ({ id, title, variants }) => {
           >
             Add to Cart
           </Button>
-          <span>Stock: {currentVariant?.stock ?? 0}</span>
         </div>
       </Card>
     </>

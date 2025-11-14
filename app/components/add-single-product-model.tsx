@@ -359,6 +359,7 @@ const AddSingleProductModal: React.FC<AddSingleProductModalProps> = ({
                     label="Stock"
                     validateStatus={errors.variants?.[index]?.stock ? 'error' : ''}
                     help={errors.variants?.[index]?.stock?.message}
+                    required
                   >
                     <Controller
                       name={`variants.${index}.stock`}

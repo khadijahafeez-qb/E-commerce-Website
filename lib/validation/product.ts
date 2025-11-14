@@ -25,14 +25,14 @@ export const variantSchema = z.object({
     .transform((val) => val ?? '')
     .refine((val) => val.trim().length > 0, { message: 'Size is required' }),
 
-stock: z.number()
-  .refine(val => val !== undefined, { message: 'Stock is required' })
-  .refine((val) => Number.isInteger(val), { message: 'Stock must be an integer' })
+  stock: z.number()
+    .refine(val => val !== undefined, { message: 'Stock is required' })
+    .refine((val) => Number.isInteger(val), { message: 'Stock must be an integer' })
     .refine((val) => val >= 0, { message: 'Stock cannot be negative' }),
 
-price: z.number()
-  .refine(val => val !== undefined, { message: 'Price is required' })
-  .refine(val => val > 0, { message: 'Price must be greater than 0' }),
+  price: z.number()
+    .refine(val => val !== undefined, { message: 'Price is required' })
+    .refine(val => val > 0, { message: 'Price must be greater than 0' }),
 
 
   availabilityStatus: z.enum(['ACTIVE', 'INACTIVE']).default('ACTIVE'),
@@ -52,7 +52,7 @@ export const productSchema = z.object({
 });
 
 
-  export const productIdSchema = z.object({
+export const productIdSchema = z.object({
   id: z.string().uuid({ message: 'Invalid product ID' }),
 });
 

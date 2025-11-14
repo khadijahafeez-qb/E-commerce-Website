@@ -21,7 +21,7 @@ const AddMultipleProductsModal: React.FC<AddMultipleProductsModalProps> = ({ ope
         message: 'Invalid File',
         description: 'Only CSV files are allowed.',
       });
-      return Upload.LIST_IGNORE; 
+      return Upload.LIST_IGNORE;
     }
     const uploadFile: UploadFile = {
       uid: String(Date.now()),
@@ -30,7 +30,7 @@ const AddMultipleProductsModal: React.FC<AddMultipleProductsModalProps> = ({ ope
       originFileObj: file,
     };
     setFileList([uploadFile]);
-    return false; 
+    return false;
   };
   const handleRemove = () => {
     setFileList([]);
@@ -152,7 +152,7 @@ const AddMultipleProductsModal: React.FC<AddMultipleProductsModalProps> = ({ ope
                   type='button'
                   onClick={(e) => {
                     e.stopPropagation(); //Prevent Dragger click
-                    handleDownloadSample(); 
+                    handleDownloadSample();
                   }}
                   className='text-blue-500 text-sm mb-2 underline'
                 >
