@@ -23,6 +23,7 @@ export interface ordertable {
   Order: string;
   Products: number;
   Amount: number;
+  Status: 'PAID' | 'PENDING' | 'FULFILLED';
 }
 const Orders: React.FC = () => {
   const [search, setSearch] = useState('');
@@ -62,7 +63,6 @@ const Orders: React.FC = () => {
         <span className={tableClasses.cellLight}>{text}</span>
       ),
     },
-
     {
       title: <span className={tableClasses.heading}>Products</span>,
       dataIndex: 'Products',
@@ -78,6 +78,27 @@ const Orders: React.FC = () => {
       render: (text: number) => (
         <span className={tableClasses.cell}>${text.toFixed(2)}</span>
       ),
+    },
+    {
+      title: <span className={tableClasses.heading}>Status</span>,
+      dataIndex: 'Status',
+      key: 'Status',
+      render: (status: 'PAID' | 'PENDING' | 'FULFILLED') => {
+        const bgColor =
+          status === 'FULFILLED'
+            ? 'bg-green-100 text-green-700'
+            : status === 'PAID'
+              ? 'bg-yellow-100 text-yellow-700'
+              : 'bg-gray-100 text-gray-600';
+        return (
+          <span
+            className={`px-2 py-1 rounded text-sm font-medium ${bgColor}`}
+            style={{ minWidth: '70px', display: 'inline-block', textAlign: 'center' }}
+          >
+            {status}
+          </span>
+        );
+      },
     },
     {
       title: <span className={tableClasses.heading}>Actions</span>,
@@ -103,6 +124,7 @@ const Orders: React.FC = () => {
     Order: `#${order.id}`,
     Products: order._count?.items,
     Amount: order.total,
+    Status: order.status,
   }));
   return (
     <MainLayout >

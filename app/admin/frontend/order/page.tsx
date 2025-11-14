@@ -20,13 +20,12 @@ import { updateOrderStatus, fetchOrders } from '@/lib/features/cart/orderslice';
 import OrderDetailDrawer from '@/app/components/order-detail/order-detail';
 import type { Order } from '@/lib/features/cart/orderslice';
 
-interface admin_order_table extends ordertable {
+interface admin_order_table extends Omit<ordertable, 'Status'> {
   key: string;
   User: string;
-  status: string;
+  status: 'PAID' | 'PENDING' | 'FULFILLED';
 }
 interface ExtendedOrder extends Order {
-  status?: string;
   user?: { fullname: string; email: string };
 }
 const Orders: React.FC = () => {
@@ -132,7 +131,7 @@ const Orders: React.FC = () => {
         const checkColor =
           record.status === 'PAID' ? 'green' :
             record.status === 'PENDING' ? 'gray' :
-              'blue'; 
+              'blue';
         const isDisabled = record.status !== 'PAID';
         return (
           <div className="flex items-center gap-2">
@@ -167,7 +166,7 @@ const Orders: React.FC = () => {
     User: order.user?.fullname || '-',
     Order: order.id,
     Products: order._count.items,
-    status: order.status ?? '',
+    status: order.status,
     Amount: order.total
   }));
   return (

@@ -5,6 +5,7 @@ export interface Order {
   createdAt: string;
   total: number;
   _count: { items: number };
+  status: 'PAID' | 'PENDING' | 'FULFILLED';
 }
 export interface OrdersResponse {
   orders: Order[];
