@@ -14,6 +14,17 @@ export async function PATCH(req: NextRequest, { params }: { params: { id: string
     if (!product) {
       return NextResponse.json({ error: 'Product not found' }, { status: 404 });
     }
+       // Check for duplicate title in other products
+    const existingProduct = await prisma.product.findFirst({
+      where: {
+        title,
+        NOT: { id }, // exclude the current product
+      },
+    });
+
+    if (existingProduct) {
+      return NextResponse.json({ error: 'A product with this title already exists' }, { status: 400 });
+    }
     const updatedProduct = await prisma.product.update({
       where: { id },
       data: { title },

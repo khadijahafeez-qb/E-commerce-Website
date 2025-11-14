@@ -19,12 +19,15 @@ export interface ProductState {
   loading: boolean;
   error: string | null;
 }
-
 const initialState: ProductState = {
   products: [],
   loading: false,
   error: null,
 };
+interface UpdateTitlePayload {
+  id: string;
+  title: string;
+}
 export const addProductThunk = createAsyncThunk(
   'product/addProduct',
   async (productData: ProductInput, { rejectWithValue }) => {
@@ -147,7 +150,32 @@ export const reactivateVariantThunk = createAsyncThunk(
     }
   }
 );
+export const updateProductTitleThunk = createAsyncThunk<
+  Product, // return type
+  UpdateTitlePayload, // argument type
+  { rejectValue: string }
+>(
+  'products/updateTitle',
+  async ({ id, title }, { rejectWithValue }) => {
+    try {
+      const res = await fetch(`/api/product/update-product-title/${id}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ title }),
+      });
 
+      const data = await res.json();
+
+      if (!res.ok) {
+        return rejectWithValue(data.error || 'Failed to update product title');
+      }
+
+      return data.product as Product;
+    } catch (err) {
+      return rejectWithValue('Network error while updating product title');
+    }
+  }
+);
 
 // 🧱 Slice
 const productSlice = createSlice({
