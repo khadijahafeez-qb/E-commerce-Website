@@ -101,17 +101,21 @@ const ProductCard: React.FC<ProductCardProps> = ({ id, title, variants }) => {
           />
           <div className="thumbnail-row">
             {uniqueColors.map(v => (
-              <Image
-                key={v.id}
-                src={v.img}
-                className={`thumbnail ${selectedColor?.colour === v.colour ? 'selected' : ''
-                  }`}
-                onClick={() => setSelectedColor(v)}
-                width={50}
-                height={50}
-                preview={false}
-                alt="row-images"
-              />
+              <div key={v.id} className="thumbnail-wrapper">
+                <Image
+                  src={v.img}
+                  className={`thumbnail ${selectedColor?.colour === v.colour ? 'selected' : ''}`}
+                  onClick={() => setSelectedColor(v)}
+                  width={50}
+                  height={50}
+                  preview={false}
+                  alt={v.colour}
+                />
+                <div
+                  className="color-dot"
+                  style={{ backgroundColor: v.colourcode || v.colour }}
+                />
+              </div>
             ))}
           </div>
         </div>

@@ -23,9 +23,16 @@
   @apply font-normal text-[14px] leading-6 !text-red-500 !border-red-500 p-0 pt-[6px] pb-[6px] pl-[12px] pr-[12px] h-[36px] w-[112px]
 }
 .thumbnail-row{
-  @apply flex gap-8 mt-2 justify-center 
+  @apply flex flex-wrap justify-center mt-2 gap-8;
 }
 .main-image {
   @apply w-full object-contain rounded-lg;
   aspect-ratio: 1 / 1; 
+}
+.thumbnail-wrapper {
+  @apply flex flex-col items-center gap-1; /* vertical alignment, small gap between image & color */
+}
+
+.color-dot {
+  @apply w-4 h-4 rounded-full border border-gray-300; /* small circle */
 }
