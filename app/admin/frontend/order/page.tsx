@@ -16,7 +16,7 @@ import {
 } from 'antd';
 
 import { ordertable } from '@/app/user/frontend/orders/page';
-import { updateOrderStatus, fetchOrders } from '@/lib/features/cart/orderslice';
+import { updateOrderStatus, fetchOrders,fetchOrderStats } from '@/lib/features/cart/orderslice';
 import OrderDetailDrawer from '@/app/components/order-detail/order-detail';
 import type { Order } from '@/lib/features/cart/orderslice';
 
@@ -45,6 +45,7 @@ const Orders: React.FC = () => {
   };
   useEffect(() => {
     loadOrders(1);
+    dispatch(fetchOrderStats());
   }, [debouncedSearch]);
   const handlePageChange = (p: number) => {
   loadOrders(p);

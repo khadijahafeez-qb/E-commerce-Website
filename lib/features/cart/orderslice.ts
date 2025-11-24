@@ -31,6 +31,7 @@ interface OrdersState {
     totalAmount: number;
     lastUpdated?: string;
   };
+  statsLoading: boolean;
   error: string | null;
 }
 
@@ -41,6 +42,7 @@ const initialState: OrdersState = {
   limit: 10,
   loading: false,
   stats: { totalOrders: 0, totalUnits: 0, totalAmount: 0 },
+  statsLoading: false, 
   error: null,
 };
 interface FetchOrdersArgs {
@@ -84,6 +86,20 @@ export const updateOrderStatus = createAsyncThunk<
     }
   }
 );
+export const fetchOrderStats = createAsyncThunk<
+  OrdersState['stats'], // return type
+  void,                 // no arguments
+  { rejectValue: string }
+>('orders/fetchOrderStats', async (_, { rejectWithValue }) => {
+  try {
+    const res = await fetch('/api/order/stats');
+    if (!res.ok) throw new Error('Failed to fetch stats');
+    return (await res.json()) as OrdersState['stats'];
+  } catch (err) {
+    if (err instanceof Error) return rejectWithValue(err.message);
+    return rejectWithValue('Unknown error');
+  }
+});
 const ordersSlice = createSlice({
   name: 'orders',
   initialState,
@@ -103,7 +119,6 @@ extraReducers: (builder) => {
       state.total = action.payload.total;
       state.page = action.payload.page;
       state.limit = action.payload.limit;
-      state.stats = action.payload.stats || { totalOrders: 0, totalUnits: 0, totalAmount: 0 };
     })
     .addCase(fetchOrders.rejected, (state, action) => {
       state.loading = false;
@@ -126,6 +141,18 @@ extraReducers: (builder) => {
     .addCase(updateOrderStatus.rejected, (state, action) => {
       state.loading = false;
       state.error = action.payload ?? 'Failed to update order status';
+    })
+        .addCase(fetchOrderStats.pending, (state) => {
+      state.loading = true;
+      state.error = null;
+    })
+    .addCase(fetchOrderStats.fulfilled, (state, action) => {
+      state.loading = false;
+      state.stats = action.payload;
+    })
+    .addCase(fetchOrderStats.rejected, (state, action) => {
+      state.loading = false;
+      state.error = action.payload ?? 'Failed to fetch stats';
     });
 },
 

@@ -64,26 +64,7 @@ export async function GET(req: Request) {
       }),
       prisma.order.count({ where }),
     ]);
-    let stats: { totalOrders: number; totalUnits: number; totalAmount: number; lastUpdated: string | null } = {
-      totalOrders: 0,
-      totalUnits: 0,
-      totalAmount: 0,
-      lastUpdated: null,
-    };
-    if (isAdmin) {
-      const latestStats = await prisma.orderStats.findFirst({
-        orderBy: { createdAt: 'desc' },
-      });
-      if (latestStats) {
-        stats = {
-          totalOrders: latestStats.totalOrders,
-          totalUnits: latestStats.totalUnits,
-          totalAmount: latestStats.totalAmount,
-          lastUpdated: latestStats.updatedAt.toISOString(),
-        };
-      }
-    }
-    return NextResponse.json({ orders, total, page, limit, stats }, { status: 200 });
+    return NextResponse.json({ orders, total, page, limit }, { status: 200 });
   } catch (error: unknown) {
     console.error('Error fetching orders:', error);
     return NextResponse.json({ error: 'Failed to fetch orders' }, { status: 500 });
