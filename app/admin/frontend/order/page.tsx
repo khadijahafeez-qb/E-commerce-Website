@@ -44,8 +44,11 @@ const Orders: React.FC = () => {
     await dispatch(fetchOrders({ page: pageNum, search: debouncedSearch }));
   };
   useEffect(() => {
-    loadOrders(page);
-  }, [page, debouncedSearch]);
+    loadOrders(1);
+  }, [debouncedSearch]);
+  const handlePageChange = (p: number) => {
+  loadOrders(p);
+};
   const handleStatusUpdate = async (orderId: string, newStatus: string) => {
     try {
       await dispatch(updateOrderStatus({ orderId, status: newStatus })).unwrap();
@@ -229,7 +232,7 @@ const Orders: React.FC = () => {
           pageSize,
           total,
           showSizeChanger: false,
-          onChange: (p) => loadOrders(p),
+          onChange:handlePageChange,
         }}
         bordered
       />
