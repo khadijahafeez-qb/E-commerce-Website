@@ -30,8 +30,8 @@ export interface Variant {
   colour: string;
   size: string;
   colourcode: string;
-  price: number;
-  stock: number;
+  price: number ;
+  stock: number ;
   img: string;
   availabilityStatus: 'ACTIVE' | 'INACTIVE';
 }
@@ -41,9 +41,11 @@ export interface Product {
   title: string;
   img: string;
   variants: Variant[];
+  variant?: Variant | null; 
 }
 
 const ProductPage: React.FC = () => {
+  const [variants, setVariants] = useState<Variant[]>([]);
   const [api, contextHolder] = notification.useNotification();
   const dispatch = useAppDispatch();
   const [titleSavingId, setTitleSavingId] = useState<string | null>(null);
@@ -105,7 +107,7 @@ const ProductPage: React.FC = () => {
       setEditingProductId(null);
       return;
     }
-    setTitleSavingId(id); 
+    setTitleSavingId(id);
     try {
       const resultAction = await dispatch(updateProductTitleThunk({ id, title: trimmed }));
       if (updateProductTitleThunk.fulfilled.match(resultAction)) {
@@ -121,7 +123,7 @@ const ProductPage: React.FC = () => {
         });
       }
     } finally {
-      setTitleSavingId(null);   
+      setTitleSavingId(null);
       setEditingProductId(null);
     }
   };
@@ -205,6 +207,7 @@ const ProductPage: React.FC = () => {
     }
   };
   const columns = [
+
     {
       title: 'Title',
       dataIndex: 'title',
@@ -261,6 +264,69 @@ const ProductPage: React.FC = () => {
         );
       },
     },
+    // {
+    //   title: 'Image',
+    //   key: 'firstVariantImage',
+    //   render: (_: Product, record: Product) => {
+    //     const v = record.variants?.[0];
+    //     return v ? (
+    //       <Image
+    //         src={v.img}
+    //         alt="variant"
+    //         width={30}
+    //         height={30}
+    //         style={{ objectFit: 'cover', borderRadius: 4 }}
+    //       />
+    //     ) : (
+    //       '-'
+    //     );
+    //   },
+    // },
+
+    // {
+    //   title: 'Colour',
+    //   key: 'firstVariantColour',
+    //   render: (_: Product, record: Product) =>
+    //     record.variants?.[0]?.colour || '-',
+    // },
+
+    // {
+    //   title: 'Size',
+    //   key: 'firstVariantSize',
+    //   render: (_: Product, record: Product) =>
+    //     record.variants?.[0]?.size || '-',
+    // },
+
+    // {
+    //   title: 'Price',
+    //   key: 'firstVariantPrice',
+    //   render: (_: Product, record: Product) =>
+    //     record.variants?.[0]
+    //       ? `$${record.variants[0].price.toFixed(2)}`
+    //       : '-',
+    // },
+
+    // {
+    //   title: 'Stock',
+    //   key: 'firstVariantStock',
+    //   render: (_: Product, record: Product) =>
+    //     record.variants?.[0]?.stock ?? '-',
+    // },
+
+    // {
+    //   title: 'Availability',
+    //   key: 'firstVariantStatus',
+    //   render: (_: Product, record: Product) => {
+    //     const status = record.variants?.[0]?.availabilityStatus;
+    //     return status ? (
+    //       <span style={{ color: status === 'ACTIVE' ? 'green' : 'red', fontWeight: 600 }}>
+    //         {status}
+    //       </span>
+    //     ) : (
+    //       '-'
+    //     );
+    //   },
+    // },
     {
       title: 'Actions',
       key: 'actions',
@@ -444,10 +510,10 @@ const ProductPage: React.FC = () => {
           setIsVariantModalOpen(false);
           setSelectedVariant(null);
         }}
-        variant={selectedVariant}
-        productId={selectedProduct?.id || ''}
-        mode={selectedVariant ? 'edit' : 'add'}
-        onSuccess={() => fetchProducts(currentPage)}
+        variant={selectedVariant || null} // pass single variant for edit, null for add
+        productId={selectedProduct?.id || ''} // pass current product ID
+        mode={selectedVariant ? 'edit' : 'add'} // decide mode dynamically
+        onSuccess={() => fetchProducts(currentPage)} // refresh table on success
       />
       <DeleteConfirmModal
         open={isVariantDeleteModalOpen}

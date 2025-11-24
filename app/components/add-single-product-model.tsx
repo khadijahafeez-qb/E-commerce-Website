@@ -54,7 +54,7 @@ const AddSingleProductModal: React.FC<AddSingleProductModalProps> = ({
       title: '',
       isDeleted: 'active',
       variants: [
-        { img: '', colour: '', colourcode: '', size: '', stock: 0, price: 0, availabilityStatus: 'ACTIVE' },
+        { img: '', colour: '', colourcode: '', size: '', stock: undefined, price: undefined, availabilityStatus: 'ACTIVE' },
       ],
     },
   });
@@ -68,7 +68,7 @@ const AddSingleProductModal: React.FC<AddSingleProductModalProps> = ({
         title: '',
         isDeleted: 'active',
         variants: [
-          { img: '', colour: '', colourcode: '', size: '', stock: 0, price: 0, availabilityStatus: 'ACTIVE' },
+          { img: '', colour: '', colourcode: '', size: '', stock: undefined, price: undefined, availabilityStatus: 'ACTIVE' },
         ],
       });
       setFiles([{ file: null, preview: '', isUploading: false }]);
@@ -365,7 +365,7 @@ const AddSingleProductModal: React.FC<AddSingleProductModalProps> = ({
                       name={`variants.${index}.stock`}
                       control={control}
                       render={({ field }) => (
-                        <InputNumber {...field} min={0} style={{ width: '100%' }} />
+                        <InputNumber {...field} min={0} style={{ width: '100%' }} placeholder="Enter stock quantity" />
                       )}
                     />
                   </Form.Item>
@@ -386,6 +386,7 @@ const AddSingleProductModal: React.FC<AddSingleProductModalProps> = ({
                           min={0}
                           step={0.01}
                           style={{ width: '100%' }}
+                          placeholder="Enter price"
                         />
                       )}
                     />
