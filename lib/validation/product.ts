@@ -1,5 +1,9 @@
 import { z } from 'zod';
 
+export const AVAILABILITY_STATUS = ['ACTIVE', 'INACTIVE'] as const;
+export const DELETE_STATUS = ['active', 'deleted'] as const;
+export const SORT_OPTIONS = ['', 'title-asc', 'title-desc', 'date-asc', 'date-desc'] as const;
+
 export const variantSchema = z.object({
   img: z.string()
     .min(1, { message: 'Image is required' }),
@@ -21,13 +25,13 @@ export const variantSchema = z.object({
   price: z.number()
     .positive({ message: 'Price must be greater than 0' }),
 
-  availabilityStatus: z.enum(['ACTIVE', 'INACTIVE']).default('ACTIVE'),
+  availabilityStatus: z.enum(AVAILABILITY_STATUS).default('ACTIVE'),
 });
 export const productSchema = z.object({
   title: z.string()
     .min(1, { message: 'Title is required' }),
 
-  isDeleted: z.enum(['active', 'deleted']).default('active'),
+  isDeleted: z.enum(DELETE_STATUS).default('active'),
 
   variants: z.array(variantSchema)
     .min(1, { message: 'At least one variant is required' }),
@@ -58,9 +62,9 @@ export const productQuerySchema = z
       .refine((val) => val > 0, { message: 'Limit must be greater than 0' }),
 
     search: z.string().optional(),
-    sort: z.enum(['', 'title-asc', 'title-desc', 'date-asc', 'date-desc']).optional(),
+    sort: z.enum(SORT_OPTIONS).optional(),
   })
-  .strict(); //no unknown query keys
+  .strict(); 
 
 // Types
 export type ProductInput = z.input<typeof productSchema>;
