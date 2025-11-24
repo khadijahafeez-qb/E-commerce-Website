@@ -24,7 +24,7 @@ export async function POST(req: Request) {
       'Password Reset Request',
       resetPasswordEmail(resetUrl)
     );
-    return NextResponse.json({ message: 'Password reset link sent to your email' });
+    return NextResponse.json({ message: 'Password reset link sent to your email' }, { status: 200 });
   } catch (err) {
     console.error(err);
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });

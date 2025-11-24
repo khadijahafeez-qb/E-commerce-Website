@@ -29,7 +29,7 @@ export async function PATCH(req: NextRequest, { params }: { params: { id: string
       where: { id },
       data: { title },
     });
-    return NextResponse.json({ product: updatedProduct });
+    return NextResponse.json({ product: updatedProduct },{ status: 200 });
   } catch (err) {
     console.error('Update product title error:', err);
     return NextResponse.json(

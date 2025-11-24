@@ -36,7 +36,7 @@ export async function GET(req: NextRequest, context: { params: Promise<{ id: str
       Quantity: item.quantity,
       image: item.variant.img,
     }));
-    return NextResponse.json({ orderInfo, products });
+    return NextResponse.json({ orderInfo, products }, { status: 200 });
   } catch (error) {
     console.error('Error fetching orders:', error);
     return NextResponse.json({ error: 'Failed to fetch orders' }, { status: 500 });

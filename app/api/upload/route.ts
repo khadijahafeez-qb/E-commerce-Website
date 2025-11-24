@@ -17,7 +17,7 @@ export async function POST(req: Request) {
     const filePath = path.join(uploadDir, fileName);
     await writeFile(filePath, buffer);
     const publicPath = `/uploads/${fileName}`;
-    return NextResponse.json({ success: true, path: publicPath });
+    return NextResponse.json({ success: true, path: publicPath },{status:200});
   } catch (error) {
     console.error('❌ Upload failed:', error);
     return NextResponse.json({ success: false, error: 'File upload failed' }, { status: 500 });

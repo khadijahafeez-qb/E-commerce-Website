@@ -52,7 +52,7 @@ export async function POST(req: Request) {
       },
       include: { variants: true },
     });
-    return NextResponse.json({ success: true, product });
+    return NextResponse.json({ success: true, product }, { status: 201 });
   } catch (error) {
     console.error('Error creating product:', error);
     const message = error instanceof Error ? error.message : 'Unknown error';

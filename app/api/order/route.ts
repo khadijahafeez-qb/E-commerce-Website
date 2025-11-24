@@ -83,7 +83,7 @@ export async function GET(req: Request) {
         };
       }
     }
-    return NextResponse.json({ orders, total, page, limit, stats });
+    return NextResponse.json({ orders, total, page, limit, stats }, { status: 200 });
   } catch (error: unknown) {
     console.error('Error fetching orders:', error);
     return NextResponse.json({ error: 'Failed to fetch orders' }, { status: 500 });

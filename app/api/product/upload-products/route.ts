@@ -17,7 +17,7 @@ formData.append('file', file, file.name);
       throw new Error(`FastAPI error: ${errText}`);
     }
     const result = await res.json();
-    return NextResponse.json({ success: true, result });
+    return NextResponse.json({ success: true, result }, { status: 200 });
   } catch (error: unknown) {
     const message =
       error instanceof Error ? error.message : 'File upload failed';

@@ -34,7 +34,7 @@ export async function PATCH(
       where: { id },
       data: { status },
     });
-    return NextResponse.json(updatedOrder);
+    return NextResponse.json((updatedOrder), { status: 200 });
   } catch (error) {
     console.error('Error updating order status:', error);
     return NextResponse.json(

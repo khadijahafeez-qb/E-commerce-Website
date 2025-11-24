@@ -40,7 +40,7 @@ export async function POST(
         img: body.img,
       },
     });
-    return NextResponse.json({ success: true, variant });
+    return NextResponse.json({ success: true, variant }, { status: 201 });
   } catch (err: unknown) {
     const message =
       err instanceof Error ? err.message : 'Failed to add variant';

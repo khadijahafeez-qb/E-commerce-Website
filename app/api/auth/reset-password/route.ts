@@ -17,7 +17,7 @@ export async function POST(req: Request) {
       where: { email },
       data: { password: hashedPassword, resetToken: null, resetTokenExpires: null },
     });
-    return NextResponse.json({ message: 'Password reset successfully' });
+    return NextResponse.json({ message: 'Password reset successfully' }, { status: 200 });
   } catch (err) {
     console.error(err);
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });

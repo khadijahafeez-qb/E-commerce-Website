@@ -19,7 +19,7 @@ export async function PATCH(req: Request, context: { params: Promise<{ id: strin
       where: { id },
       data: { availabilityStatus: 'INACTIVE' },
     });
-    return NextResponse.json({ success: true, variant });
+    return NextResponse.json({ success: true, variant }, { status: 200 });
   } catch (err: unknown) {
     const message = err instanceof Error ? err.message : 'Unknown error';
     return NextResponse.json({ success: false, error: message }, { status: 500 });

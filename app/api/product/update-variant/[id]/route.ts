@@ -41,7 +41,7 @@ export async function PUT(
         updatedAt: new Date(),
       },
     });
-    return NextResponse.json({ success: true, variant: updatedVariant });
+    return NextResponse.json({ success: true, variant: updatedVariant }, { status: 200 });
   } catch (error: unknown) {
     console.error('Error updating variant:', error);
     const message =
