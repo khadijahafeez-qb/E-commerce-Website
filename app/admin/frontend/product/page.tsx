@@ -264,54 +264,54 @@ const ProductPage: React.FC = () => {
         );
       },
     },
-    // {
-    //   title: 'Image',
-    //   key: 'firstVariantImage',
-    //   render: (_: Product, record: Product) => {
-    //     const v = record.variants?.[0];
-    //     return v ? (
-    //       <Image
-    //         src={v.img}
-    //         alt="variant"
-    //         width={30}
-    //         height={30}
-    //         style={{ objectFit: 'cover', borderRadius: 4 }}
-    //       />
-    //     ) : (
-    //       '-'
-    //     );
-    //   },
-    // },
+    {
+      title: 'Image',
+      key: 'firstVariantImage',
+      render: (_: Product, record: Product) => {
+        const v = record.variants?.[0];
+        return v ? (
+          <Image
+            src={v.img}
+            alt="variant"
+            width={30}
+            height={30}
+            style={{ objectFit: 'cover', borderRadius: 4 }}
+          />
+        ) : (
+          '-'
+        );
+      },
+    },
 
-    // {
-    //   title: 'Colour',
-    //   key: 'firstVariantColour',
-    //   render: (_: Product, record: Product) =>
-    //     record.variants?.[0]?.colour || '-',
-    // },
+    {
+      title: 'Colour',
+      key: 'firstVariantColour',
+      render: (_: Product, record: Product) =>
+        record.variants?.[0]?.colour || '-',
+    },
 
-    // {
-    //   title: 'Size',
-    //   key: 'firstVariantSize',
-    //   render: (_: Product, record: Product) =>
-    //     record.variants?.[0]?.size || '-',
-    // },
+    {
+      title: 'Size',
+      key: 'firstVariantSize',
+      render: (_: Product, record: Product) =>
+        record.variants?.[0]?.size || '-',
+    },
 
-    // {
-    //   title: 'Price',
-    //   key: 'firstVariantPrice',
-    //   render: (_: Product, record: Product) =>
-    //     record.variants?.[0]
-    //       ? `$${record.variants[0].price.toFixed(2)}`
-    //       : '-',
-    // },
+    {
+      title: 'Price',
+      key: 'firstVariantPrice',
+      render: (_: Product, record: Product) =>
+        record.variants?.[0]
+          ? `$${record.variants[0].price.toFixed(2)}`
+          : '-',
+    },
 
-    // {
-    //   title: 'Stock',
-    //   key: 'firstVariantStock',
-    //   render: (_: Product, record: Product) =>
-    //     record.variants?.[0]?.stock ?? '-',
-    // },
+    {
+      title: 'Stock',
+      key: 'firstVariantStock',
+      render: (_: Product, record: Product) =>
+        record.variants?.[0]?.stock ?? '-',
+    },
 
     // {
     //   title: 'Availability',
@@ -327,28 +327,28 @@ const ProductPage: React.FC = () => {
     //     );
     //   },
     // },
-    {
-      title: 'Actions',
-      key: 'actions',
-      render: (record: Product) => (
-        <div className="flex gap-[12px]">
-          <EditOutlined
-            className="!text-blue-500 !text-[16px] cursor-pointer"
-            onClick={() => {
-              setEditingProductId(record.id);
-              setEditingTitle(record.title);
-            }}
-          />
-          <DeleteOutlined
-            className="!text-red-500 !text-[16px]"
-            onClick={() => {
-              setSelectedProduct(record);
-              setIsDeleteOpen(true);
-            }}
-          />
-        </div>
-      ),
-    },
+    // {
+    //   title: 'Actions',
+    //   key: 'actions',
+    //   render: (record: Product) => (
+    //     <div className="flex gap-[12px]">
+    //       <EditOutlined
+    //         className="!text-blue-500 !text-[16px] cursor-pointer"
+    //         onClick={() => {
+    //           setEditingProductId(record.id);
+    //           setEditingTitle(record.title);
+    //         }}
+    //       />
+    //       <DeleteOutlined
+    //         className="!text-red-500 !text-[16px]"
+    //         onClick={() => {
+    //           setSelectedProduct(record);
+    //           setIsDeleteOpen(true);
+    //         }}
+    //       />
+    //     </div>
+    //   ),
+    // },
   ];
 
   return (
