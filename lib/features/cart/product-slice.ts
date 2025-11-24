@@ -176,6 +176,27 @@ export const updateProductTitleThunk = createAsyncThunk<
     }
   }
 );
+export const addMultipleVariantsThunk = createAsyncThunk<
+  { createdVariants: VariantInput[] },
+  { productId: string; variants: VariantInput[] }
+>(
+  'product/addMultipleVariants',
+  async ({ productId, variants }, { rejectWithValue }) => {
+    try {
+      const res = await fetch(`/api/product/add-variants/${productId}`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ variants })
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || 'Failed to add variants');
+      return data;
+    } catch (err) {
+      if (err instanceof Error) return rejectWithValue(err.message);
+      return rejectWithValue('Unknown error while adding variants');
+    }
+  }
+);
 
 // 🧱 Slice
 const productSlice = createSlice({

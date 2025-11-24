@@ -5,7 +5,7 @@ import { useAppDispatch } from '@/lib/hook';
 
 import { Table, Button, Input, notification, Image } from 'antd';
 import { EditOutlined, DeleteOutlined, UndoOutlined, CheckOutlined, CloseOutlined } from '@ant-design/icons';
-
+import AddVarinatModal from '@/app/components/add-multiple-var';
 import ProductModal from '@/app/components/product-model';
 import DeleteConfirmModal from '@/app/components/deleteconfirmmodal';
 import AddMultipleProductsModal from '@/app/components/add-multiple-product-model';
@@ -30,8 +30,8 @@ export interface Variant {
   colour: string;
   size: string;
   colourcode: string;
-  price: number ;
-  stock: number ;
+  price: number;
+  stock: number;
   img: string;
   availabilityStatus: 'ACTIVE' | 'INACTIVE';
 }
@@ -41,11 +41,11 @@ export interface Product {
   title: string;
   img: string;
   variants: Variant[];
-  variant?: Variant | null; 
+  variant?: Variant | null;
 }
 
 const ProductPage: React.FC = () => {
-  const [variants, setVariants] = useState<Variant[]>([]);
+  const [addVariantModalOpen, setAddVariantModalOpen] = useState(false);
   const [api, contextHolder] = notification.useNotification();
   const dispatch = useAppDispatch();
   const [titleSavingId, setTitleSavingId] = useState<string | null>(null);
@@ -312,21 +312,6 @@ const ProductPage: React.FC = () => {
       render: (_: Product, record: Product) =>
         record.variants?.[0]?.stock ?? '-',
     },
-
-    // {
-    //   title: 'Availability',
-    //   key: 'firstVariantStatus',
-    //   render: (_: Product, record: Product) => {
-    //     const status = record.variants?.[0]?.availabilityStatus;
-    //     return status ? (
-    //       <span style={{ color: status === 'ACTIVE' ? 'green' : 'red', fontWeight: 600 }}>
-    //         {status}
-    //       </span>
-    //     ) : (
-    //       '-'
-    //     );
-    //   },
-    // },
     {
       title: 'Actions',
       key: 'actions',
@@ -478,7 +463,7 @@ const ProductPage: React.FC = () => {
                       size="small"
                       onClick={() => {
                         setSelectedProduct(product);
-                        setIsVariantModalOpen(true);
+                        setAddVariantModalOpen(true); 
                       }}
                     >
                       + Add Variant
@@ -550,6 +535,15 @@ const ProductPage: React.FC = () => {
           selectedVariant ? `${selectedVariant.colour} - ${selectedVariant.size}` : ''
         }
         actionType="reactivate"
+      />
+      <AddVarinatModal
+        open={addVariantModalOpen}
+        onCancel={() => {
+          setAddVariantModalOpen(false);
+          setSelectedProduct(null);
+        }}
+        productId={selectedProduct?.id || ''}
+        onSuccess={() => fetchProducts(currentPage)}
       />
     </>
   );

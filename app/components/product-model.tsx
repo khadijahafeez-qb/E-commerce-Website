@@ -95,7 +95,7 @@ const ProductModal: React.FC<ProductModalProps> = ({
       setFile(selected);
       const blobURL = URL.createObjectURL(selected);//show img preview without saving to backend(bloburl)
       setImg(blobURL);//set img to show
-      setValue('img', blobURL, { shouldValidate: true }); 
+      setValue('img', blobURL, { shouldValidate: true });
     } else {
       setImg('');
       setValue('img', '', { shouldValidate: true }); // ✅ Triggers validation if no image
@@ -132,7 +132,7 @@ const ProductModal: React.FC<ProductModalProps> = ({
         });
       }
       if (onSuccess) onSuccess();
-      onCancel(); 
+      onCancel();
     } catch (err: unknown) {
       console.error('Failed to save variant:', err);
       let description = 'Something went wrong while saving variant.';
@@ -163,6 +163,9 @@ const ProductModal: React.FC<ProductModalProps> = ({
         width={480}
       >
         <form className="flex flex-col gap-4 mt-3" onSubmit={handleSubmit(onSubmit)}>
+          <label className="block text-sm mb-1">
+            Variant Image <span className="text-red-500">*</span>
+          </label>
           <div className={`relative w-full h-48 rounded-lg overflow-hidden border ${errors.img ? 'border-red-500' : 'border-gray-300'}`}>
             {img ? (
               <Image
@@ -196,7 +199,7 @@ const ProductModal: React.FC<ProductModalProps> = ({
           </div>
           {/* Colour */}
           <div>
-            <label className="block text-sm mb-1">Colour</label>
+            <label className="block text-sm mb-1">Colour<span className="text-red-500"> *</span></label>
             <Controller
               name="colour"
               control={control}
@@ -208,7 +211,7 @@ const ProductModal: React.FC<ProductModalProps> = ({
           </div>
           {/* Colour Code */}
           <div>
-            <label className="block text-sm mb-1">Colour Code</label>
+            <label className="block text-sm mb-1">Colour Code<span className="text-red-500"> *</span></label>
             <Controller
               name="colourcode"
               control={control}
@@ -222,7 +225,7 @@ const ProductModal: React.FC<ProductModalProps> = ({
           </div>
           {/* Size */}
           <div>
-            <label className="block text-sm mb-1">Size</label>
+            <label className="block text-sm mb-1">Size<span className="text-red-500"> *</span></label>
             <Controller
               name="size"
               control={control}
@@ -232,7 +235,7 @@ const ProductModal: React.FC<ProductModalProps> = ({
           </div>
           {/* Price */}
           <div>
-            <label className="block text-sm mb-1">Price</label>
+            <label className="block text-sm mb-1">Price<span className="text-red-500"> *</span></label>
             <Controller
               name="price"
               control={control}
@@ -244,7 +247,7 @@ const ProductModal: React.FC<ProductModalProps> = ({
           </div>
           {/* Stock */}
           <div>
-            <label className="block text-sm mb-1">Stock</label>
+            <label className="block text-sm mb-1">Stock<span className="text-red-500"> *</span></label>
             <Controller
               name="stock"
               control={control}
