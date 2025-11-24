@@ -327,28 +327,28 @@ const ProductPage: React.FC = () => {
     //     );
     //   },
     // },
-    // {
-    //   title: 'Actions',
-    //   key: 'actions',
-    //   render: (record: Product) => (
-    //     <div className="flex gap-[12px]">
-    //       <EditOutlined
-    //         className="!text-blue-500 !text-[16px] cursor-pointer"
-    //         onClick={() => {
-    //           setEditingProductId(record.id);
-    //           setEditingTitle(record.title);
-    //         }}
-    //       />
-    //       <DeleteOutlined
-    //         className="!text-red-500 !text-[16px]"
-    //         onClick={() => {
-    //           setSelectedProduct(record);
-    //           setIsDeleteOpen(true);
-    //         }}
-    //       />
-    //     </div>
-    //   ),
-    // },
+    {
+      title: 'Actions',
+      key: 'actions',
+      render: (record: Product) => (
+        <div className="flex gap-[12px]">
+          <EditOutlined
+            className="!text-blue-500 !text-[16px] cursor-pointer"
+            onClick={() => {
+              setEditingProductId(record.id);
+              setEditingTitle(record.title);
+            }}
+          />
+          <DeleteOutlined
+            className="!text-red-500 !text-[16px]"
+            onClick={() => {
+              setSelectedProduct(record);
+              setIsDeleteOpen(true);
+            }}
+          />
+        </div>
+      ),
+    },
   ];
 
   return (
